@@ -28,7 +28,17 @@
       "Bash(npm install:*)",
       "Bash(npm run:*)",
       "Bash(export PATH=\"$PATH:/c/Program Files/nodejs:/c/Users/tangu/AppData/Roaming/npm:/c/Program Files/GitHub CLI:/c/Users/tangu/AppData/Local/Programs/GitHub CLI\")",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(git push:*)",
+      "Bash(unzip -l \"Design Lokadia Mobile App UI.zip\")",
+      "Bash(unzip -o \"Design Lokadia Mobile App UI.zip\" -d /c/Users/tangu/Desktop/Lokadia_full)",
+      "Bash(grep -n \"icon:\" src/app/data/*.ts)",
+      "Bash(grep -rn \"icon:\\\\|emoji\\\\|👋\\\\|🚔\\\\|🚑\\\\|🆘\\\\|☀️\\\\|☁️\\\\|🌧️\\\\|⛈️\\\\|❄️\\\\|🚒\\\\|👮\\\\|ℹ️\\\\|☠️\\\\|🌦️\\\\|⛰️\\\\|🏖️\\\\|🌫️\\\\|🌪️\\\\|🌋\\\\|💨\\\\|✅\\\\|❌\\\\|⚠️\" src/app/data/*.ts src/app/services/weatherService.ts src/app/translations/*.ts)",
+      "Bash(grep -rn \"icon:\" src/app/data/*.ts)",
+      "Bash(find src/app/data -name '*.ts' -exec sed -i -e 's/icon: \"🆘\"/icon: \"AlertCircle\"/g' -e 's/icon: \"🚔\"/icon: \"Shield\"/g' -e 's/icon: \"🚑\"/icon: \"Ambulance\"/g' -e 's/icon: \"🚒\"/icon: \"Flame\"/g' -e 's/icon: \"👮\"/icon: \"ShieldCheck\"/g' -e 's/icon: \"ℹ️\"/icon: \"Info\"/g' -e 's/icon: \"🏥\"/icon: \"Hospital\"/g' -e 's/icon: \"🚗\"/icon: \"Car\"/g' -e 's/icon: \"🚓\"/icon: \"Shield\"/g' -e 's/icon: \"☠️\"/icon: \"Skull\"/g' -e 's/icon: \"⛰️\"/icon: \"Mountain\"/g' -e 's/icon: \"🌦️\"/icon: \"CloudRain\"/g' -e 's/icon: \"🏖️\"/icon: \"Waves\"/g' '{}' ';')",
+      "Bash(grep -v '^\\\\s*//')",
+      "Bash(sed -i -e 's/emoji.includes\\('\\\\''🆘'\\\\''\\)/emoji.includes\\('\\\\''AlertCircle'\\\\''\\)/g' -e 's/emoji.includes\\('\\\\''🚔'\\\\''\\)/emoji.includes\\('\\\\''Shield'\\\\''\\)/g' -e 's/emoji.includes\\('\\\\''🏥'\\\\''\\)/emoji.includes\\('\\\\''Hospital'\\\\''\\)/g' src/app/components/TripOnLocationTab.tsx)",
+      "Bash(sed -i -e 's/emoji.includes\\('\\\\''🆘'\\\\''\\)/emoji.includes\\('\\\\''AlertCircle'\\\\''\\)/g' -e 's/emoji.includes\\('\\\\''🚔'\\\\''\\)/emoji.includes\\('\\\\''Shield'\\\\''\\)/g' -e 's/emoji.includes\\('\\\\''🏥'\\\\''\\)/emoji.includes\\('\\\\''Hospital'\\\\''\\)/g' src/app/components/TripOverviewTab.tsx)"
     ]
   }
 }

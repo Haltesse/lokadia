@@ -1,132 +1,289 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-
-type Language = "fr" | "en" | "es" | "de" | "it" | "pt" | "ar" | "zh" | "ja";
-
-interface Translations {
-  nav: {
-    home: string;
-    alerts: string;
-    profile: string;
-    trips: string;
-    community: string;
-  };
-  home: {
-    greeting: string;
-    search: string;
-    destinations: string;
-    trending: string;
-    seeAll: string;
-    featured: string;
-  };
-  common: {
-    loading: string;
-    error: string;
-    retry: string;
-    cancel: string;
-    save: string;
-    delete: string;
-    edit: string;
-    close: string;
-    back: string;
-    next: string;
-    done: string;
-  };
-}
-
-const translations: Record<Language, Translations> = {
-  fr: {
-    nav: { home: "Accueil", alerts: "Alertes", profile: "Profil", trips: "Voyages", community: "Social" },
-    home: { greeting: "Bonjour", search: "Rechercher une destination…", destinations: "Destinations", trending: "Tendances", seeAll: "Voir tout", featured: "À la une" },
-    common: { loading: "Chargement…", error: "Erreur", retry: "Réessayer", cancel: "Annuler", save: "Enregistrer", delete: "Supprimer", edit: "Modifier", close: "Fermer", back: "Retour", next: "Suivant", done: "Terminé" },
-  },
-  en: {
-    nav: { home: "Home", alerts: "Alerts", profile: "Profile", trips: "Trips", community: "Social" },
-    home: { greeting: "Hello", search: "Search a destination…", destinations: "Destinations", trending: "Trending", seeAll: "See all", featured: "Featured" },
-    common: { loading: "Loading…", error: "Error", retry: "Retry", cancel: "Cancel", save: "Save", delete: "Delete", edit: "Edit", close: "Close", back: "Back", next: "Next", done: "Done" },
-  },
-  es: {
-    nav: { home: "Inicio", alerts: "Alertas", profile: "Perfil", trips: "Viajes", community: "Social" },
-    home: { greeting: "Hola", search: "Buscar destino…", destinations: "Destinos", trending: "Tendencias", seeAll: "Ver todo", featured: "Destacado" },
-    common: { loading: "Cargando…", error: "Error", retry: "Reintentar", cancel: "Cancelar", save: "Guardar", delete: "Eliminar", edit: "Editar", close: "Cerrar", back: "Atrás", next: "Siguiente", done: "Listo" },
-  },
-  de: {
-    nav: { home: "Startseite", alerts: "Benachrichtigungen", profile: "Profil", trips: "Reisen", community: "Social" },
-    home: { greeting: "Hallo", search: "Reiseziel suchen…", destinations: "Reiseziele", trending: "Beliebt", seeAll: "Alle sehen", featured: "Empfohlen" },
-    common: { loading: "Laden…", error: "Fehler", retry: "Wiederholen", cancel: "Abbrechen", save: "Speichern", delete: "Löschen", edit: "Bearbeiten", close: "Schließen", back: "Zurück", next: "Weiter", done: "Fertig" },
-  },
-  it: {
-    nav: { home: "Home", alerts: "Avvisi", profile: "Profilo", trips: "Viaggi", community: "Social" },
-    home: { greeting: "Ciao", search: "Cerca destinazione…", destinations: "Destinazioni", trending: "Tendenze", seeAll: "Vedi tutto", featured: "In evidenza" },
-    common: { loading: "Caricamento…", error: "Errore", retry: "Riprova", cancel: "Annulla", save: "Salva", delete: "Elimina", edit: "Modifica", close: "Chiudi", back: "Indietro", next: "Avanti", done: "Fatto" },
-  },
-  pt: {
-    nav: { home: "Início", alerts: "Alertas", profile: "Perfil", trips: "Viagens", community: "Social" },
-    home: { greeting: "Olá", search: "Pesquisar destino…", destinations: "Destinos", trending: "Tendências", seeAll: "Ver tudo", featured: "Destaque" },
-    common: { loading: "Carregando…", error: "Erro", retry: "Tentar novamente", cancel: "Cancelar", save: "Salvar", delete: "Excluir", edit: "Editar", close: "Fechar", back: "Voltar", next: "Próximo", done: "Concluído" },
-  },
-  ar: {
-    nav: { home: "الرئيسية", alerts: "التنبيهات", profile: "الملف", trips: "الرحلات", community: "المجتمع" },
-    home: { greeting: "مرحباً", search: "ابحث عن وجهة…", destinations: "الوجهات", trending: "الأكثر رواجاً", seeAll: "عرض الكل", featured: "مميز" },
-    common: { loading: "جارٍ التحميل…", error: "خطأ", retry: "إعادة المحاولة", cancel: "إلغاء", save: "حفظ", delete: "حذف", edit: "تعديل", close: "إغلاق", back: "رجوع", next: "التالي", done: "تم" },
-  },
-  zh: {
-    nav: { home: "首页", alerts: "提醒", profile: "我的", trips: "行程", community: "社区" },
-    home: { greeting: "你好", search: "搜索目的地…", destinations: "目的地", trending: "热门", seeAll: "查看全部", featured: "精选" },
-    common: { loading: "加载中…", error: "错误", retry: "重试", cancel: "取消", save: "保存", delete: "删除", edit: "编辑", close: "关闭", back: "返回", next: "下一步", done: "完成" },
-  },
-  ja: {
-    nav: { home: "ホーム", alerts: "アラート", profile: "プロフィール", trips: "旅行", community: "コミュニティ" },
-    home: { greeting: "こんにちは", search: "目的地を検索…", destinations: "目的地", trending: "トレンド", seeAll: "すべて表示", featured: "おすすめ" },
-    common: { loading: "読み込み中…", error: "エラー", retry: "再試行", cancel: "キャンセル", save: "保存", delete: "削除", edit: "編集", close: "閉じる", back: "戻る", next: "次へ", done: "完了" },
-  },
-};
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { translations, type Translations, type Language } from '../translations';
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
+  translateText: (text: string, targetLang?: Language) => Promise<string>;
+  isTranslating: boolean;
   t: Translations;
-  availableLanguages: { code: Language; name: string; flag: string }[];
+  // Nouvelle fonction pour traduction instantanée avec cache
+  translate: (text: string) => string;
+  // Version du cache pour forcer les re-renders
+  cacheVersion: number;
 }
 
-const LanguageContext = createContext<LanguageContextType | null>(null);
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const availableLanguages: { code: Language; name: string; flag: string }[] = [
-  { code: "fr", name: "Français", flag: "🇫🇷" },
-  { code: "en", name: "English", flag: "🇬🇧" },
-  { code: "es", name: "Español", flag: "🇪🇸" },
-  { code: "de", name: "Deutsch", flag: "🇩🇪" },
-  { code: "it", name: "Italiano", flag: "🇮🇹" },
-  { code: "pt", name: "Português", flag: "🇧🇷" },
-  { code: "ar", name: "العربية", flag: "🇸🇦" },
-  { code: "zh", name: "中文", flag: "🇨🇳" },
-  { code: "ja", name: "日本語", flag: "🇯🇵" },
-];
+// Cache de traduction pour éviter les appels API répétés
+const translationCache = new Map<string, string>();
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => {
-    return (localStorage.getItem("lokadia_lang") as Language) || "fr";
-  });
+// File d'attente pour les traductions en batch
+const translationQueue = new Set<string>();
+let translationTimer: NodeJS.Timeout | null = null;
 
+// Cache persistant dans localStorage
+const CACHE_KEY = 'lokadia_translation_cache_v2';
+
+const loadCacheFromStorage = () => {
+  try {
+    const stored = localStorage.getItem(CACHE_KEY);
+    if (stored) {
+      const data = JSON.parse(stored);
+      Object.entries(data).forEach(([key, value]) => {
+        translationCache.set(key, value as string);
+      });
+    }
+  } catch (error) {
+    console.error('Erreur chargement cache:', error);
+  }
+};
+
+const saveCacheToStorage = () => {
+  try {
+    const data = Object.fromEntries(translationCache);
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.error('Erreur sauvegarde cache:', error);
+  }
+};
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  // Version du cache pour forcer les re-renders
+  const [cacheVersion, setCacheVersion] = useState(0);
+  
+  const [language, setLanguageState] = useState<Language>('fr');
+  const [isTranslating, setIsTranslating] = useState(false);
+  
+  // Initialiser la langue et charger le cache au montage
+  useEffect(() => {
+    try {
+      // Charger le cache
+      loadCacheFromStorage();
+      
+      // Récupérer la langue sauvegardée ou détecter la langue du navigateur
+      const saved = localStorage.getItem('lokadia_language');
+      if (saved && saved in translations) {
+        setLanguageState(saved as Language);
+        return;
+      }
+      
+      const browserLang = navigator.language.split('-')[0];
+      const supportedLangs: Language[] = ['fr', 'en', 'es', 'de', 'it', 'pt', 'ja', 'zh', 'ar'];
+      if (supportedLangs.includes(browserLang as Language)) {
+        setLanguageState(browserLang as Language);
+      }
+    } catch (error) {
+      console.error('Erreur initialisation langue:', error);
+      setLanguageState('fr');
+    }
+  }, []);
+  
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem("lokadia_lang", lang);
+    localStorage.setItem('lokadia_language', lang);
+    
+    // NE PAS vider le cache, juste sauvegarder
+    saveCacheToStorage();
+  };
+
+  // Obtenir les traductions pour la langue actuelle
+  const t = translations[language];
+
+  // Fonction de traduction SYNCHRONE avec cache (pour utilisation directe dans le JSX)
+  const translate = (text: string): string => {
+    if (!text || text.trim() === '') return text;
+    
+    // Si français, retourner tel quel
+    if (language === 'fr') return text;
+    
+    // Vérifier le cache
+    const cacheKey = `${text}_${language}`;
+    if (translationCache.has(cacheKey)) {
+      const cached = translationCache.get(cacheKey)!;
+      // Ne retourner que si c'est une vraie traduction, pas le placeholder
+      if (cached !== text) return cached;
+    }
+    
+    // Si pas en cache, lancer traduction en arrière-plan et retourner texte original
+    translateInBackground(text, language);
+    return text;
+  };
+
+  // Traduction en arrière-plan avec délai pour éviter de surcharger l'API
+  const translateInBackground = async (text: string, targetLang: Language) => {
+    const cacheKey = `${text}_${targetLang}`;
+    
+    // Si déjà traduit (pas juste un placeholder), ne pas relancer
+    const existing = translationCache.get(cacheKey);
+    if (existing && existing !== text) return;
+    
+    // Si déjà en cours de traduction (le placeholder est le texte original)
+    if (existing === text) return;
+    
+    // Marquer comme en cours avec le placeholder
+    translationCache.set(cacheKey, text);
+    
+    // Ajouter un petit délai aléatoire pour éviter de surcharger l'API
+    await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
+    
+    try {
+      const textToTranslate = text.length > 500 ? text.substring(0, 500) : text;
+      const encodedText = encodeURIComponent(textToTranslate);
+      
+      console.log('🔄 Traduction en cours:', text.substring(0, 50) + '...', '→', targetLang);
+      
+      const response = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=fr|${targetLang}`,
+        {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.responseStatus === 200 && data.responseData?.translatedText) {
+          const translated = data.responseData.translatedText;
+          console.log('✅ Traduit:', text.substring(0, 30), '→', translated.substring(0, 30));
+          translationCache.set(cacheKey, translated);
+          saveCacheToStorage();
+          // Incrémenter la version du cache pour forcer les re-renders
+          setCacheVersion(prev => prev + 1);
+        } else if (data.responseStatus === 403) {
+          console.warn('⚠️ Limite API atteinte, réessayera plus tard');
+          translationCache.delete(cacheKey);
+        }
+      }
+    } catch (error) {
+      console.warn('❌ Erreur traduction arrière-plan:', error);
+      // Retirer le placeholder en cas d'erreur pour réessayer plus tard
+      translationCache.delete(cacheKey);
+    }
+  };
+
+  // Fonction de traduction ASYNCHRONE (pour les cas spéciaux)
+  const translateText = async (text: string, targetLang?: Language): Promise<string> => {
+    if (!text || text.trim() === '') return text;
+    
+    const target = targetLang || language;
+    
+    // Si le texte est déjà en langue cible, le retourner directement
+    if (target === 'en' && /^[a-zA-Z0-9\s.,!?;:()\-'"]+$/.test(text)) {
+      return text;
+    }
+    
+    // Limiter la taille du texte
+    const textToTranslate = text.length > 500 ? text.substring(0, 500) : text;
+    
+    // Vérifier le cache
+    const cacheKey = `${textToTranslate}_${target}`;
+    if (translationCache.has(cacheKey)) {
+      return translationCache.get(cacheKey)!;
+    }
+    
+    try {
+      setIsTranslating(true);
+      
+      // API MyMemory (gratuite et fiable)
+      const encodedText = encodeURIComponent(textToTranslate);
+      const response = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=en|${target}`,
+        {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+        }
+      );
+      
+      if (!response.ok) {
+        console.warn('Traduction API échouée, retour du texte original');
+        return text;
+      }
+      
+      const data = await response.json();
+      
+      if (data.responseStatus === 200 && data.responseData?.translatedText) {
+        const translated = data.responseData.translatedText;
+        
+        // Sauvegarder dans le cache
+        translationCache.set(cacheKey, translated);
+        saveCacheToStorage();
+        
+        return translated;
+      } else {
+        return text;
+      }
+    } catch (error) {
+      console.warn('Erreur de traduction:', error);
+      return text; // Retourner le texte original en cas d'erreur
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   return (
-    <LanguageContext.Provider
-      value={{ language, setLanguage, t: translations[language], availableLanguages }}
-    >
+    <LanguageContext.Provider value={{ language, setLanguage, translateText, isTranslating, t, translate, cacheVersion }}>
       {children}
     </LanguageContext.Provider>
   );
 }
 
 export function useLanguage() {
-  const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error("useLanguage must be used within LanguageProvider");
-  return ctx;
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error('useLanguage must be used within LanguageProvider');
+  }
+  return context;
 }
 
+// Hook sécurisé qui retourne null si le provider n'est pas disponible (pour hot-reload)
 export function useLanguageSafe() {
-  return useContext(LanguageContext);
+  const context = useContext(LanguageContext);
+  return context || null;
 }
+
+// Hook pour traduire automatiquement un texte
+export function useTranslate(text: string): string {
+  const context = useLanguageSafe();
+  const [translated, setTranslated] = useState(text);
+
+  useEffect(() => {
+    if (!context) {
+      setTranslated(text);
+      return;
+    }
+    
+    let isMounted = true;
+    const { translateText, language } = context;
+
+    const translate = async () => {
+      const result = await translateText(text);
+      if (isMounted) {
+        setTranslated(result);
+      }
+    };
+
+    translate();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [text, context]);
+
+  return translated;
+}
+
+// Langues supportées avec leurs noms natifs
+export const SUPPORTED_LANGUAGES: Record<Language, { name: string; flag: string }> = {
+  fr: { name: 'Français', flag: 'FR' },
+  en: { name: 'English', flag: 'GB' },
+  es: { name: 'Español', flag: 'ES' },
+  de: { name: 'Deutsch', flag: 'DE' },
+  it: { name: 'Italiano', flag: 'IT' },
+  pt: { name: 'Português', flag: 'PT' },
+  ja: { name: '日本語', flag: 'JP' },
+  zh: { name: '中文', flag: 'CN' },
+  ar: { name: 'العربية', flag: 'SA' },
+};

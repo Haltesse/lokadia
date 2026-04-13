@@ -1,88 +1,139 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { motion } from "motion/react";
+import { useAuth } from "../context/AuthContext";
 
 export function SplashScreen() {
   const navigate = useNavigate();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    const user = localStorage.getItem("lokadia_user");
+    // Timeout de sécurité : forcer la navigation après 5 secondes
+    const safetyTimeout = setTimeout(() => {
+      console.log('⚠️ Timeout de sécurité atteint, redirection forcée vers /login');
+      navigate("/login");
+    }, 5000);
+
+    // Attendre que AuthContext ait fini de charger
+    if (isLoading) {
+      console.log('🔄 SplashScreen: Chargement de la session...');
+      return () => clearTimeout(safetyTimeout);
+    }
+
     const timer = setTimeout(() => {
-      navigate(user ? "/global-home" : "/login");
-    }, 2400);
-    return () => clearTimeout(timer);
-  }, [navigate]);
+      if (isAuthenticated) {
+        console.log('✅ SplashScreen: Utilisateur authentifié, redirection vers /global-home');
+        navigate("/global-home");
+      } else {
+        console.log('✅ SplashScreen: Pas d\'utilisateur, redirection vers /login');
+        navigate("/login");
+      }
+    }, 2500);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(safetyTimeout);
+    };
+  }, [navigate, isAuthenticated, isLoading]);
 
   return (
     <div
-      className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
+      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
       style={{
-        background: "linear-gradient(160deg, #0a0f1e 0%, #0F4C81 50%, #06B6D4 100%)",
+        background: "linear-gradient(135deg, #0B2545 0%, #134074 50%, #1E5A8E 100%)",
       }}
     >
-      {/* Background decoration circles */}
+      {/* Ambient Light Effect */}
       <div
-        className="absolute top-[-20%] left-[-20%] w-[70vw] h-[70vw] rounded-full opacity-10"
-        style={{ background: "radial-gradient(circle, #06B6D4, transparent)" }}
-      />
-      <div
-        className="absolute bottom-[-15%] right-[-15%] w-[60vw] h-[60vw] rounded-full opacity-10"
-        style={{ background: "radial-gradient(circle, #8B5CF6, transparent)" }}
-      />
+        className="absolute inset-0 opacity-30"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 70%)",
+        }}
+      ></div>
 
-      {/* Logo */}
-      <motion.div
-        initial={{ scale: 0.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 200, damping: 18, delay: 0.2 }}
-        className="flex flex-col items-center gap-5"
-      >
-        {/* Icon */}
-        <div
-          className="w-24 h-24 rounded-[28px] flex items-center justify-center shadow-2xl"
-          style={{
-            background: "rgba(255,255,255,0.12)",
-            border: "1.5px solid rgba(255,255,255,0.25)",
-            backdropFilter: "blur(12px)",
-          }}
+      {/* Logo and Tagline */}
+      <div className="relative z-10 text-center px-8">
+        <h1
+          className="text-5xl font-bold text-white mb-4 tracking-tight animate-fade-in"
+          style={{ fontWeight: 700 }}
         >
-          <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-            <path
-              d="M26 4C17.163 4 10 11.163 10 20c0 13.5 16 28 16 28s16-14.5 16-28c0-8.837-7.163-16-16-16z"
-              fill="white"
-              fillOpacity="0.9"
-            />
-            <circle cx="26" cy="20" r="6" fill="#06B6D4" />
-          </svg>
-        </div>
+          Lokadia
+        </h1>
+        <p
+          className="text-white/80 text-lg mb-12 animate-fade-in-delayed"
+          style={{ animationDelay: "0.3s" }}
+        >
+          Voyagez en terrain connu
+        </p>
 
-        {/* Name */}
-        <div className="flex flex-col items-center gap-1">
-          <h1 className="text-5xl font-black text-white tracking-tight">
-            Lokadia
-          </h1>
-          <p className="text-white/60 text-sm font-medium tracking-[0.2em] uppercase">
-            Your travel companion
-          </p>
+        {/* Loading Bar */}
+        <div className="w-48 h-1 bg-white/20 rounded-full mx-auto overflow-hidden">
+          <div
+            className="h-full bg-white rounded-full animate-loading-bar"
+            style={{ width: "0%" }}
+          ></div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Loading dots */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        className="absolute bottom-16 flex gap-2"
-      >
-        {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            className="w-2 h-2 rounded-full bg-white/50"
-            animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-          />
-        ))}
-      </motion.div>
+      {/* Pulsing Light Effect */}
+      <div
+        className="absolute bottom-1/3 left-1/2 transform -translate-x-1/2 w-64 h-64 rounded-full animate-pulse-slow"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%)",
+        }}
+      ></div>
+
+      {/* Inline Animations */}
+      <style>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes loading-bar {
+          from {
+            width: 0%;
+          }
+          to {
+            width: 100%;
+          }
+        }
+
+        @keyframes pulse-slow {
+          0%, 100% {
+            opacity: 0.3;
+            transform: translate(-50%, 0) scale(1);
+          }
+          50% {
+            opacity: 0.5;
+            transform: translate(-50%, 0) scale(1.1);
+          }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 1s ease-out forwards;
+        }
+
+        .animate-fade-in-delayed {
+          opacity: 0;
+          animation: fade-in 1s ease-out 0.3s forwards;
+        }
+
+        .animate-loading-bar {
+          animation: loading-bar 2s ease-in-out forwards;
+        }
+
+        .animate-pulse-slow {
+          animation: pulse-slow 3s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,0 +1,21 @@
+NOTE: Ce fichier contient le code complet pour additionalDestinations.ts avec TOUTES les 50 destinations enrichies.
+
+Le fichier est trop volumineux pour être ajouté en une seule fois via les outils.
+Approche: Ajouter progressivement les destinations par lots de 5-7.
+
+Destinations déjà ajoutées:
+✅ Istanbul (complet)
+✅ Bangkok (complet)
+
+Destinations restantes à ajouter (par priorité):
+1. New York, London, Dubai, Singapore (très populaires)
+2. Barcelona, Amsterdam, Rome, Berlin, Sydney (populaires)
+3. Lisbon, Prague, Vienna, Athens (Europe)
+4. Mexico City, Toronto, Buenos Aires (Amériques)
+5. Seoul, Tokyo déjà fait, Hong Kong, Shanghai (Asie)
+6. Marrakech, Cape Town, Dubai, Mumbai (Afrique/Moyen-Orient)
+7. Copenhagen, Stockholm, Oslo, Helsinki, Reykjavik (Nordiques)
+8. Edinburgh, Dublin, Brussels (Europe)
+9. Moscow, Kuala Lumpur, autres
+
+Total: ~45 destinations à enrichir

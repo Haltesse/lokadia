@@ -1,75 +1,125 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-
-type Currency = "EUR" | "USD" | "GBP" | "JPY" | "CAD" | "AUD" | "CHF" | "CNY";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  fetchExchangeRates,
+  detectUserCurrency,
+  convertCurrency,
+  formatCurrency as formatCurrencyUtil,
+  SUPPORTED_CURRENCIES,
+  type ExchangeRates,
+  type Currency,
+} from '../services/currencyService';
 
 interface CurrencyContextType {
-  currency: Currency;
-  setCurrency: (c: Currency) => void;
-  symbol: string;
-  format: (amount: number) => string;
-  availableCurrencies: { code: Currency; symbol: string; name: string }[];
+  selectedCurrency: string;
+  setSelectedCurrency: (code: string) => void;
+  exchangeRates: ExchangeRates | null;
+  loading: boolean;
+  convertAmount: (amount: number, fromCurrency: string) => number;
+  formatAmount: (amount: number, fromCurrency: string) => string;
+  getCurrency: (code: string) => Currency | undefined;
+  supportedCurrencies: Currency[];
 }
 
-const currencies = {
-  EUR: { symbol: "€", name: "Euro" },
-  USD: { symbol: "$", name: "US Dollar" },
-  GBP: { symbol: "£", name: "British Pound" },
-  JPY: { symbol: "¥", name: "Japanese Yen" },
-  CAD: { symbol: "CA$", name: "Canadian Dollar" },
-  AUD: { symbol: "A$", name: "Australian Dollar" },
-  CHF: { symbol: "CHF", name: "Swiss Franc" },
-  CNY: { symbol: "¥", name: "Chinese Yuan" },
-};
+const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
-// Approximate rates vs EUR
-const rates: Record<Currency, number> = {
-  EUR: 1,
-  USD: 1.09,
-  GBP: 0.86,
-  JPY: 162,
-  CAD: 1.48,
-  AUD: 1.67,
-  CHF: 0.96,
-  CNY: 7.88,
-};
-
-const CurrencyContext = createContext<CurrencyContextType | null>(null);
+const STORAGE_KEY = 'lokadia_selected_currency';
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
-  const [currency, setCurrencyState] = useState<Currency>(() => {
-    return (localStorage.getItem("lokadia_currency") as Currency) || "EUR";
+  const [selectedCurrency, setSelectedCurrencyState] = useState<string>(() => {
+    // Essayer de récupérer depuis localStorage
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return stored;
+    
+    // Sinon, détecter automatiquement
+    return detectUserCurrency();
   });
+  
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const setCurrency = (c: Currency) => {
-    setCurrencyState(c);
-    localStorage.setItem("lokadia_currency", c);
-  };
+  // Charger les taux de change au démarrage et quand la devise change
+  useEffect(() => {
+    let isMounted = true;
 
-  const symbol = currencies[currency].symbol;
-
-  const format = (amountEur: number) => {
-    const converted = amountEur * rates[currency];
-    if (currency === "JPY" || currency === "CNY") {
-      return `${symbol}${Math.round(converted).toLocaleString()}`;
+    async function loadRates() {
+      try {
+        setLoading(true);
+        const rates = await fetchExchangeRates('EUR'); // Base EUR
+        if (isMounted) {
+          setExchangeRates(rates);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Erreur chargement taux de change:', error);
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
     }
-    return `${symbol}${converted.toFixed(0)}`;
+
+    loadRates();
+
+    // Rafraîchir les taux toutes les 6 heures
+    const interval = setInterval(loadRates, 6 * 60 * 60 * 1000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const setSelectedCurrency = (code: string) => {
+    setSelectedCurrencyState(code);
+    localStorage.setItem(STORAGE_KEY, code);
   };
 
-  const availableCurrencies = Object.entries(currencies).map(([code, val]) => ({
-    code: code as Currency,
-    symbol: val.symbol,
-    name: val.name,
-  }));
+  const convertAmount = (amount: number, fromCurrency: string): number => {
+    if (!exchangeRates) return amount;
+    return convertCurrency(amount, fromCurrency, selectedCurrency, exchangeRates);
+  };
 
-  return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, symbol, format, availableCurrencies }}>
-      {children}
-    </CurrencyContext.Provider>
-  );
+  const formatAmount = (amount: number, fromCurrency: string): string => {
+    const converted = convertAmount(amount, fromCurrency);
+    return formatCurrencyUtil(converted, selectedCurrency);
+  };
+
+  const getCurrency = (code: string): Currency | undefined => {
+    return SUPPORTED_CURRENCIES.find(c => c.code === code);
+  };
+
+  const value: CurrencyContextType = {
+    selectedCurrency,
+    setSelectedCurrency,
+    exchangeRates,
+    loading,
+    convertAmount,
+    formatAmount,
+    getCurrency,
+    supportedCurrencies: SUPPORTED_CURRENCIES,
+  };
+
+  return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;
 }
 
 export function useCurrency() {
-  const ctx = useContext(CurrencyContext);
-  if (!ctx) throw new Error("useCurrency must be used within CurrencyProvider");
-  return ctx;
+  const context = useContext(CurrencyContext);
+  if (context === undefined) {
+    // En développement avec HMR, parfois le provider n'est pas encore monté
+    if (typeof window !== 'undefined' && import.meta.hot) {
+      console.log('⚠️  CurrencyProvider temporairement indisponible (HMR), utilisation des valeurs par défaut...');
+      // Retourner des valeurs par défaut pour éviter le crash complet
+      return {
+        selectedCurrency: 'EUR',
+        setSelectedCurrency: () => {},
+        exchangeRates: null,
+        loading: false,
+        convertAmount: (amount: number) => amount,
+        formatAmount: (amount: number) => `${amount}€`,
+        getCurrency: () => undefined,
+        supportedCurrencies: SUPPORTED_CURRENCIES,
+      } as CurrencyContextType;
+    }
+    throw new Error('useCurrency doit être utilisé dans un CurrencyProvider');
+  }
+  return context;
 }
