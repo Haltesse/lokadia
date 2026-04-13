@@ -5,7 +5,23 @@
       "Bash(unzip -o \"Design Lokadia Mobile App UI.zip\" -d /c/Users/tangu/Desktop/Lokadia_extract)",
       "Bash(cmd /c \"node -v\")",
       "Bash(cmd /c \"npm -v\")",
-      "Bash(cmd /c \"where node\")"
+      "Bash(cmd /c \"where node\")",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI:/c/Program Files \\(x86\\)/GitHub CLI:/c/Users/tangu/AppData/Local/Programs/GitHub CLI:/c/Users/tangu/scoop/shims:/c/ProgramData/chocolatey/bin\")",
+      "Bash(gh --version)",
+      "Bash(where.exe gh:*)",
+      "Bash(powershell -Command \"Get-Command gh -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")",
+      "Bash(export PATH=\"$PATH:/c/Program Files/nodejs:/c/Users/tangu/AppData/Roaming/npm:/c/Users/tangu/AppData/Local/Programs/nodejs\")",
+      "Bash(npm --version)",
+      "Bash(where.exe node:*)",
+      "Bash(powershell -Command \"Get-Command node -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI:/c/Users/tangu/AppData/Local/Programs/GitHub CLI:/c/Program Files/nodejs:/c/Users/tangu/AppData/Roaming/npm\")",
+      "Bash(git -C /c/Users/tangu/Desktop/Lokadia status)",
+      "Bash(git -C /c/Users/tangu/Desktop/Lokadia log --oneline -5)",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI:/c/Users/tangu/AppData/Local/Programs/GitHub CLI\")",
+      "Bash(gh auth:*)",
+      "Bash(git -C /c/Users/tangu/Desktop/Lokadia diff .claude/settings.local.json)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)"
     ]
   }
 }
