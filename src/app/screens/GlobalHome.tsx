@@ -1,17 +1,11 @@
 import { TrendingDestinationCard } from "../components/TrendingDestinationCard";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { 
-  Search, 
-  Shield, 
-  MapPin, 
-  Plus, 
-  TrendingUp, 
-  Globe, 
-  Plane, 
-  Smartphone,
-  Bell,
-  CheckSquare,
+import {
+  Search,
+  Shield,
+  MapPin,
+  TrendingUp,
   ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -125,27 +119,54 @@ export function GlobalHome() {
     },
   ];
 
-  const whyLokadia = [
+  const popularDestinations = [
     {
-      icon: Shield,
-      titleKey: 'verifiedInfo' as const,
-      descKey: 'verifiedInfoDesc' as const,
-      link: "/community",
-      screen: "community"
+      id: "rome-italy",
+      city: "Rome",
+      country: "Italie",
+      tag: "Culture",
+      safetyScore: 80,
+      image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=600&q=80",
     },
     {
-      icon: Bell,
-      titleKey: 'realTimeAlerts' as const,
-      descKey: 'realTimeAlertsDesc' as const,
-      link: "/alerts",
-      screen: "alerts"
+      id: "bali-indonesia",
+      city: "Bali",
+      country: "Indonésie",
+      tag: "Nature",
+      safetyScore: 74,
+      image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80",
     },
     {
-      icon: CheckSquare,
-      titleKey: 'travelChecklist' as const,
-      descKey: 'travelChecklistDesc' as const,
-      link: "/checklist",
-      screen: "checklist"
+      id: "santorini-greece",
+      city: "Santorin",
+      country: "Grèce",
+      tag: "Romantique",
+      safetyScore: 86,
+      image: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600&q=80",
+    },
+    {
+      id: "marrakech-morocco",
+      city: "Marrakech",
+      country: "Maroc",
+      tag: "Découverte",
+      safetyScore: 70,
+      image: "https://images.unsplash.com/photo-1577147443647-81856d5e4a5c?w=600&q=80",
+    },
+    {
+      id: "amsterdam-netherlands",
+      city: "Amsterdam",
+      country: "Pays-Bas",
+      tag: "Tendance",
+      safetyScore: 83,
+      image: "https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=600&q=80",
+    },
+    {
+      id: "bangkok-thailand",
+      city: "Bangkok",
+      country: "Thaïlande",
+      tag: "Aventure",
+      safetyScore: 72,
+      image: "https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=600&q=80",
     },
   ];
 
@@ -303,57 +324,86 @@ export function GlobalHome() {
         </div>
       </div>
 
-      {/* Why Lokadia Section */}
+      {/* Popular Destinations Section */}
       <div className="px-6 mb-8">
-        <h2 className="text-xl font-semibold mb-5" style={{ color: 'var(--lokadia-gray-900)' }}>
-          {t.home.whyLokadia}
-        </h2>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-xl font-bold mb-0.5" style={{ color: 'var(--lokadia-gray-900)' }}>
+              Destinations du moment
+            </h2>
+            <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
+              Coup de cœur de la communauté
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/all-destinations')}
+            className="flex items-center gap-1 text-sm font-medium"
+            style={{ color: 'var(--lokadia-primary)' }}
+          >
+            Voir tout
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
 
-        <div className="space-y-3">
-          {whyLokadia.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-              >
-                <button
-                  onClick={() => navigate(item.link)}
-                  className="block w-full"
+        <div className="grid grid-cols-2 gap-3">
+          {popularDestinations.map((dest, index) => (
+            <motion.button
+              key={dest.id}
+              onClick={() => navigate(`/destination/${dest.id}`)}
+              className="relative rounded-2xl overflow-hidden text-left"
+              style={{
+                height: index === 0 || index === 3 ? '180px' : '140px',
+                boxShadow: 'var(--shadow-md)'
+              }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.07 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <ImageWithFallback
+                src={dest.image}
+                alt={dest.city}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+              {/* Tag */}
+              <div className="absolute top-2.5 left-2.5">
+                <span
+                  className="text-white text-[10px] font-semibold px-2 py-1 rounded-full backdrop-blur-sm"
+                  style={{ background: 'rgba(255,255,255,0.25)' }}
                 >
-                  <motion.div
-                    className="bg-white rounded-3xl p-5 flex items-start gap-4 transition-all"
-                    style={{ boxShadow: 'var(--shadow-md)' }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    <div
-                      className="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center"
-                      style={{ 
-                        backgroundColor: 'var(--lokadia-category-safety-bg)'
-                      }}
-                    >
-                      <Icon className="h-7 w-7" style={{ color: 'var(--lokadia-category-safety)' }} />
-                    </div>
-                    <div className="flex-1 pt-1">
-                      <h3 className="font-semibold mb-1 text-lg" style={{ color: 'var(--lokadia-gray-900)' }}>
-                        {t.home[item.titleKey]}
-                      </h3>
-                      <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
-                        {t.home[item.descKey]}
-                      </p>
-                    </div>
-                    <ChevronRight 
-                      className="h-5 w-5 flex-shrink-0 mt-2" 
-                      style={{ color: 'var(--lokadia-gray-400)' }} 
-                    />
-                  </motion.div>
-                </button>
-              </motion.div>
-            );
-          })}
+                  {dest.tag}
+                </span>
+              </div>
+
+              {/* Safety score */}
+              <div className="absolute top-2.5 right-2.5">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm"
+                  style={{
+                    background: dest.safetyScore >= 80
+                      ? 'rgba(16, 185, 129, 0.85)'
+                      : dest.safetyScore >= 70
+                      ? 'rgba(245, 158, 11, 0.85)'
+                      : 'rgba(239, 68, 68, 0.85)'
+                  }}
+                >
+                  <span className="text-white text-[10px] font-bold">{dest.safetyScore}</span>
+                </div>
+              </div>
+
+              {/* City + Country */}
+              <div className="absolute bottom-0 left-0 right-0 p-3">
+                <p className="text-white font-bold text-sm leading-tight">{dest.city}</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <MapPin className="h-3 w-3 text-white/70" />
+                  <p className="text-white/80 text-xs">{dest.country}</p>
+                </div>
+              </div>
+            </motion.button>
+          ))}
         </div>
       </div>
 
