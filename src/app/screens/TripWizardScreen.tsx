@@ -29,6 +29,7 @@ import { createTrip, getTripById, updateTrip } from '../lib/tripService';
 import { addStopToTrip, getTripStops } from '../lib/tripStopService';
 import { BottomNav } from '../components/BottomNav';
 import { useAuth } from '../context/AuthContext';
+import { EmirateDatePicker } from '../components/EmirateDatePicker';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -538,48 +539,12 @@ export default function TripWizardScreen() {
               >
                 Quand partez-vous ?
               </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label 
-                    className="block text-sm font-medium mb-2"
-                    style={{ color: 'var(--lokadia-gray-700)' }}
-                  >
-                    Date de départ
-                  </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full p-4 border rounded-2xl focus:outline-none transition-all"
-                    style={{ 
-                      borderColor: 'var(--lokadia-gray-300)',
-                      backgroundColor: 'white',
-                      boxShadow: 'var(--shadow-sm)',
-                      color: 'var(--lokadia-gray-900)'
-                    }}
-                  />
-                </div>
-                <div>
-                  <label 
-                    className="block text-sm font-medium mb-2"
-                    style={{ color: 'var(--lokadia-gray-700)' }}
-                  >
-                    Date de retour
-                  </label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full p-4 border rounded-2xl focus:outline-none transition-all"
-                    style={{ 
-                      borderColor: 'var(--lokadia-gray-300)',
-                      backgroundColor: 'white',
-                      boxShadow: 'var(--shadow-sm)',
-                      color: 'var(--lokadia-gray-900)'
-                    }}
-                  />
-                </div>
-              </div>
+              <EmirateDatePicker
+                startDate={startDate}
+                endDate={endDate}
+                onStartDateChange={setStartDate}
+                onEndDateChange={setEndDate}
+              />
             </div>
 
             <div>
