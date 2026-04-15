@@ -1,29 +1,35 @@
 import { Outlet, useLocation } from "react-router";
 import { useEffect } from "react";
 import { BottomNav } from "./BottomNav";
+import { TopBar } from "./TopBar";
 import { NetworkStatus } from "./NetworkStatus";
 
 /**
- * Layout racine qui gère :
- * - Le scroll automatique vers le haut à chaque changement de route
- * - Le statut réseau
- * - La navigation mobile avec BottomNav
+ * Layout racine responsive :
+ * - Mobile (< md) : BottomNav (ancienne nav)
+ * - Tablette/Desktop (md+) : TopBar sticky style Airbnb, pleine largeur
+ * - Container fluide : mobile full-width, tablette max-w-3xl, desktop max-w-7xl
  */
 export function RootLayout() {
   const location = useLocation();
 
-  // Scroll automatique vers le haut lors du changement de route
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen relative">
+    <div className="bg-white min-h-screen">
       <NetworkStatus />
-      {/* Container avec padding-bottom fixe pour la BottomNav */}
-      <div className="pb-24">
+      <TopBar />
+
+      {/* Conteneur responsive :
+          - mobile : full width (max-w-md centré historique)
+          - md : max-w-3xl pour tablette
+          - lg+ : max-w-7xl site complet */}
+      <div className="mx-auto w-full max-w-md md:max-w-3xl lg:max-w-7xl pb-24 md:pb-12">
         <Outlet />
       </div>
+
       <BottomNav />
     </div>
   );

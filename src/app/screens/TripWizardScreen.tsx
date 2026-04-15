@@ -30,6 +30,7 @@ import { addStopToTrip, getTripStops } from '../lib/tripStopService';
 import { BottomNav } from '../components/BottomNav';
 import { useAuth } from '../context/AuthContext';
 import { EmirateDatePicker } from '../components/EmirateDatePicker';
+import { BOOKING_PARTNERS } from '../components/PartnerBookingSection';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -841,8 +842,8 @@ export default function TripWizardScreen() {
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {selectedStops.map(stopId => (
-                    <span 
-                      key={stopId} 
+                    <span
+                      key={stopId}
                       className="px-3 py-1.5 rounded-full text-sm font-medium"
                       style={{
                         backgroundColor: 'var(--lokadia-category-accommodation-bg)',
@@ -854,6 +855,60 @@ export default function TripWizardScreen() {
                   ))}
                 </div>
               </div>
+            </div>
+
+            {/* Réserve les essentiels — driver de commission */}
+            <div className="mt-6">
+              <div className="mb-4">
+                <h3
+                  className="text-lg font-bold"
+                  style={{ color: 'var(--lokadia-gray-900)' }}
+                >
+                  Sécurise ton voyage
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
+                  Réserve les essentiels avant de partir, en 2 clics.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {BOOKING_PARTNERS.map((p) => {
+                  const Icon = p.icon;
+                  return (
+                    <a
+                      key={p.id}
+                      href={p.href}
+                      target="_blank"
+                      rel="noopener nofollow sponsored"
+                      className="flex items-center gap-4 p-4 rounded-2xl bg-white transition-all"
+                      style={{
+                        border: '1px solid var(--lokadia-gray-200)',
+                        boxShadow: 'var(--shadow-sm)',
+                      }}
+                    >
+                      <div
+                        className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: p.bg }}
+                      >
+                        <Icon className="h-5 w-5" style={{ color: p.color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm leading-tight" style={{ color: 'var(--lokadia-gray-900)' }}>
+                          {p.label}
+                        </p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: p.color }}>
+                          {p.provider}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--lokadia-gray-400)' }} />
+                    </a>
+                  );
+                })}
+              </div>
+
+              <p className="mt-3 text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>
+                Lokadia reste 100 % gratuit. Liens partenaires — nous sommes rémunérés par nos partenaires.
+              </p>
             </div>
           </motion.div>
         )}

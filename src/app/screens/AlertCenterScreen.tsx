@@ -160,16 +160,16 @@ export function AlertCenterScreen() {
         />
 
         <div className="relative z-10">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-5">
             <div>
               <h1 className="text-3xl font-bold text-white mb-1">
-                Centre d'Alertes
+                Alertes temps réel
               </h1>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                 <p className="text-white/80 text-sm">
-                  {loading 
-                    ? "Chargement..." 
+                  {loading
+                    ? "Chargement..."
                     : searchQuery || selectedType !== "all" || selectedLevel !== "all" || selectedDestination !== "all"
                       ? `${filteredAlerts.length} alerte${filteredAlerts.length > 1 ? 's' : ''} trouvée${filteredAlerts.length > 1 ? 's' : ''}`
                       : `${alerts.length} alertes actives`
@@ -190,6 +190,29 @@ export function AlertCenterScreen() {
             >
               <RefreshCw className={`h-5 w-5 text-white ${refreshing ? 'animate-spin' : ''}`} />
             </button>
+          </div>
+
+          {/* Sources officielles — pilier de crédibilité */}
+          <div className="flex flex-wrap gap-2 mb-5">
+            {[
+              { code: 'MAE', label: 'Ministère Affaires Étrangères' },
+              { code: 'GDACS', label: 'Catastrophes naturelles' },
+              { code: 'OMS', label: 'Santé & sanitaire' },
+              { code: 'IATA', label: 'Transport aérien' },
+            ].map((s) => (
+              <div
+                key={s.code}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-md"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                }}
+                title={s.label}
+              >
+                <CheckCircle2 className="h-3 w-3 text-white" />
+                <span className="text-[11px] font-bold text-white tracking-wide">{s.code}</span>
+              </div>
+            ))}
           </div>
 
           {/* Barre de recherche moderne */}
@@ -661,10 +684,10 @@ export function AlertCenterScreen() {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-gray-900 mb-1">
-                  Données en temps réel
+                  Données en temps réel · 4 sources officielles vérifiées
                 </p>
                 <p className="text-xs text-gray-600 leading-relaxed">
-                  8 sources officielles : Open-Meteo • GDACS • NASA • GDELT • WHO/OMS • SNCF • TfL • Conseils Officiels
+                  <span className="font-semibold">MAE</span> (Ministère des Affaires Étrangères) · <span className="font-semibold">GDACS</span> (catastrophes) · <span className="font-semibold">OMS</span> (santé) · <span className="font-semibold">IATA</span> (aérien) — complétées par Open-Meteo, GDELT, SNCF, TfL.
                 </p>
                 <p className="text-xs text-gray-500 mt-2">
                   Dernière mise à jour : {lastUpdate.toLocaleString('fr-FR')}

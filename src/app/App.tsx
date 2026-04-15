@@ -10,13 +10,12 @@ import { TripCreateScreen } from "./screens/TripCreateScreen";
 import TripsScreen from "./screens/TripsScreen";
 import TripWizardScreen from "./screens/TripWizardScreen";
 import TripDetailScreen from "./screens/TripDetailScreen";
-import { Community } from "./screens/Community";
 import { Premium } from "./screens/Premium";
+import LandingScreen from "./screens/LandingScreen";
+import GoSafePage from "./screens/GoSafePage";
+import ProPage from "./screens/ProPage";
 import { ProfileScreen } from "./screens/ProfileScreen";
-import { MyPostsScreen } from "./screens/MyPostsScreen";
-import { MyCommentsScreen } from "./screens/MyCommentsScreen";
 import { FavoritesScreen } from "./screens/FavoritesScreen";
-import { FollowedScreen } from "./screens/FollowedScreen";
 import { AllDestinationsScreen } from "./screens/AllDestinationsScreen";
 import { LoginScreen } from "./screens/LoginScreen";
 import { RootLayout } from "./components/RootLayout";
@@ -126,11 +125,14 @@ function App() {
                 }}
               >
                 <Routes>
-                  <Route path="/" element={<SplashScreen />} />
+                  <Route path="/splash" element={<SplashScreen />} />
                   <Route path="/login" element={<LoginScreen />} />
-              
-              {/* Routes avec layout */}
+
+              {/* Routes avec layout (TopBar desktop + BottomNav mobile) */}
               <Route element={<RootLayout />}>
+                <Route path="/" element={<LandingScreen />} />
+                <Route path="/gosafe" element={<GoSafePage />} />
+                <Route path="/pro" element={<ProPage />} />
                 <Route path="/global-home" element={<GlobalHome />} />
                 <Route path="/search" element={<SearchScreen />} />
                 <Route path="/destination-count" element={<DestinationCountScreen />} />
@@ -144,13 +146,9 @@ function App() {
                 <Route path="/trips/create" element={<TripWizardScreen />} />
                 <Route path="/trips/:tripId" element={<TripDetailScreen />} />
                 <Route path="/trips/:tripId/edit" element={<TripWizardScreen />} />
-                <Route path="/community" element={<Community />} />
                 <Route path="/premium" element={<Premium />} />
                 <Route path="/profile" element={<ProfileScreen />} />
-                <Route path="/my-posts" element={<MyPostsScreen />} />
-                <Route path="/my-comments" element={<MyCommentsScreen />} />
                 <Route path="/favorites" element={<FavoritesScreen />} />
-                <Route path="/followed" element={<FollowedScreen />} />
                 <Route path="/all-destinations" element={<AllDestinationsScreen />} />
                 </Route>
               </Routes>

@@ -633,14 +633,8 @@ export function ProfileScreen() {
             count={favorites.length}
             onClick={() => navigate("/favorites")}
           />
-          <SelectionCard 
-            icon={MapPin} 
-            label={t.profile.followedDestinations} 
-            count={0}
-            onClick={() => navigate("/followed")}
-          />
-          <SelectionCard 
-            icon={Bell} 
+          <SelectionCard
+            icon={Bell}
             label={t.profile.savedAlerts} 
             count={0}
             onClick={() => navigate("/alerts")}
@@ -840,70 +834,6 @@ export function ProfileScreen() {
             onClick={() => setShowDeleteModal(true)}
             danger
           />
-        </div>
-      </Section>
-
-      {/* Communauté */}
-      <Section title={t.profile.communitySection} icon={MessageCircle}>
-        <div className="space-y-4">
-          <div>
-            <h4 className="text-sm font-medium mb-3" style={{ color: "var(--lokadia-text-dark)" }}>
-              {t.profile.communityVisibility}
-            </h4>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCommunityVisibility("public")}
-                className={`flex-1 py-3 rounded-lg font-medium text-sm transition-colors flex flex-col items-center gap-1 ${
-                  communityVisibility === "public" ? "text-white" : "bg-gray-100"
-                }`}
-                style={
-                  communityVisibility === "public"
-                    ? { backgroundColor: "var(--lokadia-deep-blue)" }
-                    : { color: "var(--lokadia-text-light)" }
-                }
-              >
-                <Eye className="h-4 w-4" />
-                {t.profile.visibilityPublic}
-              </button>
-              <button
-                onClick={() => setCommunityVisibility("anonymous")}
-                className={`flex-1 py-3 rounded-lg font-medium text-sm transition-colors flex flex-col items-center gap-1 ${
-                  communityVisibility === "anonymous" ? "text-white" : "bg-gray-100"
-                }`}
-                style={
-                  communityVisibility === "anonymous"
-                    ? { backgroundColor: "var(--lokadia-deep-blue)" }
-                    : { color: "var(--lokadia-text-light)" }
-                }
-              >
-                <EyeOff className="h-4 w-4" />
-                {t.profile.visibilityAnonymous}
-              </button>
-            </div>
-          </div>
-
-          <ToggleRow
-            label={t.profile.allowPrivateMessages}
-            enabled={allowPrivateMessages}
-            onChange={setAllowPrivateMessages}
-          />
-
-          <div className="grid grid-cols-2 gap-2">
-            <MenuButton 
-              icon={MessageSquare} 
-              label={t.profile.myPosts} 
-              count={0} 
-              onClick={() => navigate("/my-posts")} 
-              compact 
-            />
-            <MenuButton 
-              icon={MessageCircle} 
-              label={t.profile.myComments} 
-              count={commentStats.totalComments} 
-              onClick={() => navigate("/my-comments")} 
-              compact 
-            />
-          </div>
         </div>
       </Section>
 

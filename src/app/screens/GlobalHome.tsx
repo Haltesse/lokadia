@@ -11,6 +11,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useLanguageSafe } from "../context/LanguageContext";
+import { PartnerBookingSection } from "../components/PartnerBookingSection";
 
 export function GlobalHome() {
   const navigate = useNavigate();
@@ -172,12 +173,12 @@ export function GlobalHome() {
 
   return (
     <div 
-      className="min-h-screen pb-20 relative" 
+      className="min-h-screen relative"
       style={{ background: 'var(--lokadia-background)' }}
     >
       {/* Hero Header Section - Slideshow avec images de voyage */}
-      <div 
-        className="px-6 pt-8 pb-10 relative overflow-hidden"
+      <div
+        className="px-6 pt-8 pb-10 relative overflow-hidden md:rounded-3xl md:mt-4 lg:mt-6 md:mx-4 lg:mx-0"
         style={{ height: '320px' }}
       >
         {/* Slideshow Background */}
@@ -260,7 +261,7 @@ export function GlobalHome() {
       </div>
 
       {/* Search Bar - Central Action */}
-      <div className="px-6 -mt-6 relative z-10 mb-8">
+      <div className="px-6 -mt-6 relative z-10 mb-8 max-w-3xl mx-auto w-full">
         <button onClick={() => navigate("/destination-count")} className="block w-full">
           <motion.div
             className="flex items-center gap-4 bg-white rounded-3xl p-5 border-2 transition-all"
@@ -324,15 +325,18 @@ export function GlobalHome() {
         </div>
       </div>
 
+      {/* Partner commission section — driver de revenu */}
+      <PartnerBookingSection />
+
       {/* Popular Destinations Section */}
       <div className="px-6 mb-8">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-xl font-bold mb-0.5" style={{ color: 'var(--lokadia-gray-900)' }}>
+            <h2 className="text-xl md:text-2xl font-bold mb-0.5" style={{ color: 'var(--lokadia-gray-900)' }}>
               Destinations du moment
             </h2>
             <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
-              Coup de cœur de la communauté
+              Les plus populaires cette saison
             </p>
           </div>
           <button
@@ -345,7 +349,7 @@ export function GlobalHome() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 md:gap-4">
           {popularDestinations.map((dest, index) => (
             <motion.button
               key={dest.id}
