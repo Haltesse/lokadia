@@ -31,6 +31,9 @@ import { BottomNav } from '../components/BottomNav';
 import { useAuth } from '../context/AuthContext';
 import { EmirateDatePicker } from '../components/EmirateDatePicker';
 import { BOOKING_PARTNERS } from '../components/PartnerBookingSection';
+import { FlightOffers } from '../components/FlightOffers';
+import { HotelOffers } from '../components/HotelOffers';
+import { generateFlightOffers, generateHotelOffers, computeBudgetEstimate } from '../lib/travelOffers';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -303,20 +306,42 @@ export default function TripWizardScreen() {
         <h1 className="text-3xl font-bold mb-2">
           {isEditMode ? 'Modifier mon voyage' : 'Créer mon voyage'}
         </h1>
-        <p className="text-white/90 text-base mb-4">Étape {currentStep} sur 5</p>
+        <p className="text-white/90 text-base mb-4">
+          {['Destination', 'Dates & voyageurs', 'Profil', 'Étapes', 'Récapitulatif & offres'][currentStep - 1]}
+          {' · '}
+          <span className="text-white/70">Étape {currentStep} sur 5</span>
+        </p>
 
-        {/* Progress bar élégant */}
-        <div 
-          className="h-2.5 rounded-full overflow-hidden"
-          style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-        >
-          <motion.div
-            className="h-full"
-            style={{ background: 'var(--gradient-secondary)' }}
-            initial={{ width: 0 }}
-            animate={{ width: `${(currentStep / 5) * 100}%` }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-          />
+        {/* Progress bar avec points d'étape */}
+        <div className="relative">
+          <div
+            className="h-2 rounded-full overflow-hidden"
+            style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+          >
+            <motion.div
+              className="h-full"
+              style={{ background: 'var(--gradient-secondary)' }}
+              initial={{ width: 0 }}
+              animate={{ width: `${(currentStep / 5) * 100}%` }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+            />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-between px-0.5">
+            {[1, 2, 3, 4, 5].map((s) => {
+              const done = s <= currentStep;
+              return (
+                <motion.div
+                  key={s}
+                  animate={{ scale: s === currentStep ? 1.25 : 1 }}
+                  className="w-3 h-3 rounded-full"
+                  style={{
+                    background: done ? '#fff' : 'rgba(255,255,255,0.35)',
+                    boxShadow: s === currentStep ? '0 0 0 3px rgba(255,255,255,0.3)' : 'none',
+                  }}
+                />
+              );
+            })}
+          </div>
         </div>
       </motion.div>
 
@@ -857,22 +882,107 @@ export default function TripWizardScreen() {
               </div>
             </div>
 
-            {/* Réserve les essentiels — driver de commission */}
-            <div className="mt-6">
+            {/* Offres vols + hôtels + budget — driver de commission */}
+            {(() => {
+              if (!startDate || !endDate || !arrivalCity) return null;
+              const destName = allDestinations[arrivalCity]?.name || arrivalCity;
+              const flights = generateFlightOffers({
+                destinationId: arrivalCity,
+                destinationName: destName,
+                startDate,
+                endDate,
+                travelers,
+              });
+              const hotels = generateHotelOffers({
+                destinationId: arrivalCity,
+                destinationName: destName,
+                startDate,
+                endDate,
+                travelers,
+              });
+              const nights = Math.max(1, Math.round(
+                (new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000
+              ));
+              const budget = computeBudgetEstimate({
+                flightPrice: flights[0].price,
+                hotelTotal: hotels[0].totalPrice,
+                travelers,
+                nights,
+              });
+
+              return (
+                <>
+                  {/* Vols */}
+                  <div className="mt-8">
+                    <div className="flex items-end justify-between mb-3">
+                      <div>
+                        <h3 className="text-lg font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>
+                          ✈️ Vols suggérés
+                        </h3>
+                        <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
+                          Paris → {destName} · aller-retour
+                        </p>
+                      </div>
+                    </div>
+                    <FlightOffers offers={flights} travelers={travelers} />
+                  </div>
+
+                  {/* Hôtels */}
+                  <div className="mt-8">
+                    <div className="flex items-end justify-between mb-3">
+                      <div>
+                        <h3 className="text-lg font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>
+                          🏨 Hôtels à {destName}
+                        </h3>
+                        <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
+                          {nights} nuit{nights > 1 ? 's' : ''} · {travelers} voyageur{travelers > 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <HotelOffers offers={hotels} nights={nights} />
+                  </div>
+
+                  {/* Budget estimé */}
+                  <div
+                    className="mt-8 rounded-3xl p-5 text-white"
+                    style={{ background: 'var(--gradient-primary)', boxShadow: 'var(--shadow-lg)' }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-bold">💰 Budget estimé</h3>
+                      <span className="text-xs bg-white/20 px-2 py-1 rounded-full">hors essentiels</span>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between"><span className="opacity-85">Vols ({travelers}×)</span><span className="font-semibold">{budget.flights}€</span></div>
+                      <div className="flex justify-between"><span className="opacity-85">Hôtel ({nights} nuits)</span><span className="font-semibold">{budget.hotel}€</span></div>
+                      <div className="flex justify-between"><span className="opacity-85">Restauration</span><span className="font-semibold">{budget.food}€</span></div>
+                      <div className="flex justify-between"><span className="opacity-85">Activités</span><span className="font-semibold">{budget.activities}€</span></div>
+                      <div className="h-px my-2" style={{ background: 'rgba(255,255,255,0.25)' }} />
+                      <div className="flex justify-between text-base">
+                        <span className="font-bold">Total estimé</span>
+                        <span className="font-bold text-2xl">{budget.total}€</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+
+            {/* Essentiels sécurité — driver de commission */}
+            <div className="mt-8">
               <div className="mb-4">
                 <h3
                   className="text-lg font-bold"
                   style={{ color: 'var(--lokadia-gray-900)' }}
                 >
-                  Sécurise ton voyage
+                  🛡️ Sécurise les essentiels
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
-                  Réserve les essentiels avant de partir, en 2 clics.
+                  e-SIM, assurance et activités — en 2 clics.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {BOOKING_PARTNERS.map((p) => {
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {BOOKING_PARTNERS.filter((p) => ['esim', 'insurance', 'activity'].includes(p.id)).map((p) => {
                   const Icon = p.icon;
                   return (
                     <a
@@ -880,27 +990,27 @@ export default function TripWizardScreen() {
                       href={p.href}
                       target="_blank"
                       rel="noopener nofollow sponsored"
-                      className="flex items-center gap-4 p-4 rounded-2xl bg-white transition-all"
+                      className="flex items-center gap-3 p-3 rounded-2xl bg-white transition-all hover:-translate-y-0.5"
                       style={{
                         border: '1px solid var(--lokadia-gray-200)',
                         boxShadow: 'var(--shadow-sm)',
                       }}
                     >
                       <div
-                        className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{ background: p.bg }}
                       >
-                        <Icon className="h-5 w-5" style={{ color: p.color }} />
+                        <Icon className="h-4 w-4" style={{ color: p.color }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm leading-tight" style={{ color: 'var(--lokadia-gray-900)' }}>
+                        <p className="font-bold text-xs leading-tight" style={{ color: 'var(--lokadia-gray-900)' }}>
                           {p.label}
                         </p>
-                        <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: p.color }}>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: p.color }}>
                           {p.provider}
                         </p>
                       </div>
-                      <ArrowRight className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--lokadia-gray-400)' }} />
+                      <ArrowRight className="h-3.5 w-3.5 flex-shrink-0" style={{ color: 'var(--lokadia-gray-400)' }} />
                     </a>
                   );
                 })}
