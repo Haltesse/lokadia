@@ -52,7 +52,9 @@ export default function TripWizardScreen() {
 
   // Données du formulaire
   const [mainDestination, setMainDestination] = useState('');
-  const [arrivalCity, setArrivalCity] = useState('');
+  const [arrivalCities, setArrivalCities] = useState<string[]>([]);
+  // Ville principale = premier élément de arrivalCities (utilisée pour vols/hôtels)
+  const arrivalCity = arrivalCities[0] || '';
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [travelers, setTravelers] = useState(1);
@@ -76,7 +78,7 @@ export default function TripWizardScreen() {
   useEffect(() => {
     if (passedDestination && !isEditMode) {
       console.log('🎯 Destination pré-remplie depuis fiche destination:', passedDestination);
-      setArrivalCity(passedDestination.id);
+      setArrivalCities([passedDestination.id]);
       setCitySearch(passedDestination.name);
       setMainDestination(passedDestination.country);
       setCountrySearch(passedDestination.country);
@@ -105,7 +107,7 @@ export default function TripWizardScreen() {
 
       // Pré-remplir le formulaire avec les données existantes
       setMainDestination(allDestinations[trip.destinationId]?.country || '');
-      setArrivalCity(trip.destinationId);
+      setArrivalCities([trip.destinationId]);
       setCountrySearch(allDestinations[trip.destinationId]?.country || '');
       setCitySearch(trip.destinationName);
       setStartDate(trip.startDate.split('T')[0]);
@@ -199,8 +201,12 @@ export default function TripWizardScreen() {
           status: 'planned',
         });
 
-        // Ajouter les étapes
-        for (const stopId of selectedStops) {
+        // Étapes = villes d'arrivée secondaires + étapes additionnelles (dédupliquées)
+        const allStops = Array.from(new Set([
+          ...arrivalCities.slice(1),
+          ...selectedStops,
+        ]));
+        for (const stopId of allStops) {
           const coords = destinationCoordinates[stopId];
           await addStopToTrip(
             trip.id,
@@ -237,18 +243,25 @@ export default function TripWizardScreen() {
     return availableDestinations.filter(([_, dest]) => dest.country === country);
   };
 
-  // Réinitialiser arrivalCity quand le pays change
+  // Réinitialiser arrivalCities quand le pays change
   const handleCountryChange = (country: string) => {
     setMainDestination(country);
-    setArrivalCity('');
+    setArrivalCities([]);
     setSelectedStops([]);
   };
 
+  // Ajouter / retirer une ville d'arrivée (la première = destination principale)
+  const toggleArrivalCity = (cityId: string) => {
+    setArrivalCities((prev) =>
+      prev.includes(cityId) ? prev.filter((c) => c !== cityId) : [...prev, cityId]
+    );
+  };
+
   const canProceed = () => {
-    if (currentStep === 1) return mainDestination && arrivalCity;
+    if (currentStep === 1) return mainDestination && arrivalCities.length > 0;
     if (currentStep === 2) return startDate && endDate && travelers > 0 && !!departureCityId;
     if (currentStep === 3) return interests.length > 0;
-    if (currentStep === 4) return selectedStops.length > 0;
+    if (currentStep === 4) return true; // étapes additionnelles optionnelles
     return true;
   };
 
@@ -457,18 +470,49 @@ export default function TripWizardScreen() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <h2 
+                <h2
                   className="text-2xl font-bold mb-2"
                   style={{ color: 'var(--lokadia-gray-900)' }}
                 >
-                  Ville d'arrivée
+                  Villes visitées
                 </h2>
-                <p 
+                <p
                   className="text-sm mb-4"
                   style={{ color: 'var(--lokadia-gray-600)' }}
                 >
-                  Sélectionnez votre ville d'arrivée en {mainDestination}
+                  Sélectionne une ou plusieurs villes en {mainDestination}. La 1ʳᵉ = destination principale.
                 </p>
+
+                {/* Chips des villes sélectionnées */}
+                {arrivalCities.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {arrivalCities.map((id, idx) => (
+                      <motion.button
+                        key={id}
+                        onClick={() => toggleArrivalCity(id)}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold"
+                        style={{
+                          background: idx === 0 ? 'var(--gradient-primary)' : 'var(--lokadia-category-accommodation-bg)',
+                          color: idx === 0 ? '#fff' : 'var(--lokadia-category-accommodation)',
+                        }}
+                      >
+                        <span
+                          className="flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold"
+                          style={{
+                            background: idx === 0 ? 'rgba(255,255,255,0.25)' : 'rgba(15,76,129,0.12)',
+                          }}
+                        >
+                          {idx + 1}
+                        </span>
+                        {allDestinations[id]?.name || id}
+                        {idx === 0 && <span className="text-[10px] uppercase opacity-80">Principale</span>}
+                        <span className="ml-1 opacity-70">✕</span>
+                      </motion.button>
+                    ))}
+                  </div>
+                )}
                 <div className="relative">
                   <div className="relative">
                     <Search 
@@ -510,28 +554,31 @@ export default function TripWizardScreen() {
                           citySearch.length === 0 || 
                           dest.name.toLowerCase().includes(citySearch.toLowerCase())
                         )
-                        .map(([id, dest]) => (
+                        .map(([id, dest]) => {
+                          const selected = arrivalCities.includes(id);
+                          return (
                           <button
                             key={id}
                             onClick={() => {
-                              setArrivalCity(id);
-                              setCitySearch(dest.name);
-                              setShowCityDropdown(false);
+                              toggleArrivalCity(id);
+                              setCitySearch('');
                             }}
-                            className={`w-full p-4 text-left transition-all border-b ${arrivalCity === id ? 'font-semibold' : ''}`}
+                            className={`w-full p-4 text-left transition-all border-b flex items-center justify-between ${selected ? 'font-semibold' : ''}`}
                             style={{
-                              backgroundColor: arrivalCity === id 
-                                ? 'var(--lokadia-category-accommodation-bg)' 
+                              backgroundColor: selected
+                                ? 'var(--lokadia-category-accommodation-bg)'
                                 : 'white',
-                              color: arrivalCity === id 
-                                ? 'var(--lokadia-category-accommodation)' 
+                              color: selected
+                                ? 'var(--lokadia-category-accommodation)'
                                 : 'var(--lokadia-gray-700)',
                               borderColor: 'var(--lokadia-gray-100)'
                             }}
                           >
-                            {dest.name}
+                            <span>{dest.name}</span>
+                            {selected && <Check size={18} />}
                           </button>
-                        ))}
+                          );
+                        })}
                       {getCountryDestinations(mainDestination)
                         .filter(([id, dest]) => 
                           citySearch.length === 0 || 
@@ -821,36 +868,95 @@ export default function TripWizardScreen() {
             transition={{ duration: 0.3 }}
           >
             <div>
-              <h2 
+              <h2
                 className="text-2xl font-bold mb-2"
                 style={{ color: 'var(--lokadia-gray-900)' }}
               >
-                Sélectionnez vos étapes
+                Étapes additionnelles (optionnel)
               </h2>
-              <p 
+              <p
                 className="mb-4"
                 style={{ color: 'var(--lokadia-gray-600)' }}
               >
-                Choisissez les villes que vous souhaitez visiter
+                Ajoute d'autres villes à ton itinéraire — tous pays confondus.
               </p>
-              <div className="space-y-3">
-                {getCountryDestinations(mainDestination).map(([id, dest]) => (
-                  <motion.button
-                    key={id}
-                    onClick={() => toggleStop(id)}
-                    className="w-full p-4 rounded-2xl border-2 font-semibold text-left transition-all flex items-center justify-between"
-                    style={{
-                      borderColor: selectedStops.includes(id) ? 'var(--lokadia-secondary)' : 'var(--lokadia-gray-200)',
-                      backgroundColor: selectedStops.includes(id) ? 'var(--lokadia-category-accommodation-bg)' : 'white',
-                      color: selectedStops.includes(id) ? 'var(--lokadia-secondary)' : 'var(--lokadia-gray-700)',
-                      boxShadow: selectedStops.includes(id) ? 'var(--shadow-md)' : 'var(--shadow-sm)'
-                    }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    <span>{dest.name}</span>
-                    {selectedStops.includes(id) && <Check size={20} />}
-                  </motion.button>
-                ))}
+
+              {/* Chips villes déjà dans l'itinéraire */}
+              {(arrivalCities.length > 0 || selectedStops.length > 0) && (
+                <div className="mb-4 p-3 rounded-2xl" style={{ background: 'var(--lokadia-gray-50, #F8FAFC)' }}>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--lokadia-gray-500)' }}>
+                    Ton itinéraire
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[...arrivalCities, ...selectedStops].map((id, idx) => (
+                      <span
+                        key={id}
+                        className="px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5"
+                        style={{
+                          background: idx === 0 ? 'var(--gradient-primary)' : 'var(--lokadia-category-accommodation-bg)',
+                          color: idx === 0 ? '#fff' : 'var(--lokadia-category-accommodation)',
+                        }}
+                      >
+                        <span className="text-[9px] opacity-80">{idx + 1}</span>
+                        {allDestinations[id]?.name || id}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recherche globale d'étapes */}
+              <div className="relative mb-3">
+                <Search
+                  className="absolute left-4 top-1/2 -translate-y-1/2"
+                  size={20}
+                  style={{ color: 'var(--lokadia-gray-400)' }}
+                />
+                <input
+                  type="text"
+                  value={citySearch}
+                  onChange={(e) => setCitySearch(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border rounded-2xl text-base focus:outline-none transition-all"
+                  style={{
+                    borderColor: 'var(--lokadia-gray-300)',
+                    backgroundColor: 'white',
+                    boxShadow: 'var(--shadow-sm)',
+                  }}
+                  placeholder="Rechercher une ville..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                {availableDestinations
+                  .filter(([id, dest]) =>
+                    !arrivalCities.includes(id) &&
+                    (citySearch.length === 0 ||
+                      dest.name.toLowerCase().includes(citySearch.toLowerCase()) ||
+                      dest.country.toLowerCase().includes(citySearch.toLowerCase()))
+                  )
+                  .slice(0, citySearch.length > 0 ? 30 : 12)
+                  .map(([id, dest]) => (
+                    <motion.button
+                      key={id}
+                      onClick={() => toggleStop(id)}
+                      className="w-full p-3 rounded-2xl border-2 font-semibold text-left transition-all flex items-center justify-between"
+                      style={{
+                        borderColor: selectedStops.includes(id) ? 'var(--lokadia-secondary)' : 'var(--lokadia-gray-200)',
+                        backgroundColor: selectedStops.includes(id) ? 'var(--lokadia-category-accommodation-bg)' : 'white',
+                        color: selectedStops.includes(id) ? 'var(--lokadia-secondary)' : 'var(--lokadia-gray-700)',
+                        boxShadow: selectedStops.includes(id) ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+                      }}
+                      whileTap={{ scale: 0.99 }}
+                    >
+                      <div className="flex flex-col items-start">
+                        <span className="text-sm">{dest.name}</span>
+                        <span className="text-[10px] font-normal" style={{ color: 'var(--lokadia-gray-500)' }}>
+                          {dest.country}
+                        </span>
+                      </div>
+                      {selectedStops.includes(id) && <Check size={18} />}
+                    </motion.button>
+                  ))}
               </div>
             </div>
           </motion.div>
@@ -880,17 +986,22 @@ export default function TripWizardScreen() {
               }}
             >
               <div>
-                <p 
+                <p
                   className="text-sm mb-1"
                   style={{ color: 'var(--lokadia-gray-600)' }}
                 >
-                  Destination
+                  Destination principale
                 </p>
-                <p 
+                <p
                   className="font-bold text-lg"
                   style={{ color: 'var(--lokadia-gray-900)' }}
                 >
                   {allDestinations[arrivalCity]?.name}, {mainDestination}
+                  {arrivalCities.length > 1 && (
+                    <span className="ml-2 text-sm font-semibold" style={{ color: 'var(--lokadia-secondary)' }}>
+                      +{arrivalCities.length - 1} ville{arrivalCities.length > 2 ? 's' : ''}
+                    </span>
+                  )}
                 </p>
               </div>
               <div 
@@ -936,23 +1047,24 @@ export default function TripWizardScreen() {
                 style={{ backgroundColor: 'var(--lokadia-gray-200)' }}
               />
               <div>
-                <p 
+                <p
                   className="text-sm mb-2"
                   style={{ color: 'var(--lokadia-gray-600)' }}
                 >
-                  Étapes ({selectedStops.length})
+                  Itinéraire ({arrivalCities.length + selectedStops.length} ville{arrivalCities.length + selectedStops.length > 1 ? 's' : ''})
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {selectedStops.map(stopId => (
+                  {[...arrivalCities, ...selectedStops].map((id, idx) => (
                     <span
-                      key={stopId}
-                      className="px-3 py-1.5 rounded-full text-sm font-medium"
+                      key={id}
+                      className="px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-1.5"
                       style={{
-                        backgroundColor: 'var(--lokadia-category-accommodation-bg)',
-                        color: 'var(--lokadia-category-accommodation)'
+                        background: idx === 0 ? 'var(--gradient-primary)' : 'var(--lokadia-category-accommodation-bg)',
+                        color: idx === 0 ? '#fff' : 'var(--lokadia-category-accommodation)',
                       }}
                     >
-                      {allDestinations[stopId]?.name}
+                      <span className="text-[10px] opacity-80">{idx + 1}</span>
+                      {allDestinations[id]?.name}
                     </span>
                   ))}
                 </div>
