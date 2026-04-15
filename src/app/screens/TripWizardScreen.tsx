@@ -33,7 +33,7 @@ import { EmirateDatePicker } from '../components/EmirateDatePicker';
 import { BOOKING_PARTNERS } from '../components/PartnerBookingSection';
 import { FlightOffers } from '../components/FlightOffers';
 import { HotelOffers } from '../components/HotelOffers';
-import { generateFlightOffers, generateHotelOffers, computeBudgetEstimate } from '../lib/travelOffers';
+import { generateFlightOffers, generateHotelOffers, computeBudgetEstimate, DEPARTURE_CITIES } from '../lib/travelOffers';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -60,6 +60,9 @@ export default function TripWizardScreen() {
   const [pace, setPace] = useState<'relax' | 'normal' | 'intense'>('normal');
   const [interests, setInterests] = useState<string[]>([]);
   const [selectedStops, setSelectedStops] = useState<string[]>([]);
+  const [departureCityId, setDepartureCityId] = useState('paris');
+  const [departureSearch, setDepartureSearch] = useState('Paris');
+  const [showDepartureDropdown, setShowDepartureDropdown] = useState(false);
 
   // États pour la recherche
   const [countrySearch, setCountrySearch] = useState('');
@@ -243,7 +246,7 @@ export default function TripWizardScreen() {
 
   const canProceed = () => {
     if (currentStep === 1) return mainDestination && arrivalCity;
-    if (currentStep === 2) return startDate && endDate && travelers > 0;
+    if (currentStep === 2) return startDate && endDate && travelers > 0 && !!departureCityId;
     if (currentStep === 3) return interests.length > 0;
     if (currentStep === 4) return selectedStops.length > 0;
     return true;
@@ -559,7 +562,81 @@ export default function TripWizardScreen() {
             transition={{ duration: 0.3 }}
           >
             <div>
-              <h2 
+              <h2
+                className="text-2xl font-bold mb-2"
+                style={{ color: 'var(--lokadia-gray-900)' }}
+              >
+                D'où partez-vous ?
+              </h2>
+              <p className="text-sm mb-4" style={{ color: 'var(--lokadia-gray-600)' }}>
+                Nécessaire pour calculer le prix des vols en temps réel.
+              </p>
+              <div className="relative">
+                <div className="relative">
+                  <Search
+                    className="absolute left-4 top-1/2 -translate-y-1/2"
+                    size={20}
+                    style={{ color: 'var(--lokadia-gray-400)' }}
+                  />
+                  <input
+                    type="text"
+                    value={departureSearch}
+                    onChange={(e) => {
+                      setDepartureSearch(e.target.value);
+                      setShowDepartureDropdown(true);
+                    }}
+                    onFocus={() => setShowDepartureDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowDepartureDropdown(false), 200)}
+                    className="w-full pl-12 pr-4 py-4 border rounded-2xl text-lg focus:outline-none transition-all"
+                    style={{
+                      borderColor: 'var(--lokadia-gray-300)',
+                      backgroundColor: 'white',
+                      boxShadow: 'var(--shadow-sm)',
+                    }}
+                    placeholder="Ville de départ (Paris, Lyon, Londres...)"
+                  />
+                </div>
+                {showDepartureDropdown && (
+                  <motion.div
+                    className="absolute z-10 top-full left-0 right-0 mt-2 bg-white border rounded-2xl max-h-60 overflow-y-auto"
+                    style={{ borderColor: 'var(--lokadia-gray-200)', boxShadow: 'var(--shadow-lg)' }}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {DEPARTURE_CITIES
+                      .filter((c) =>
+                        departureSearch.length === 0 ||
+                        c.label.toLowerCase().includes(departureSearch.toLowerCase())
+                      )
+                      .map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => {
+                            setDepartureCityId(c.id);
+                            setDepartureSearch(c.label);
+                            setShowDepartureDropdown(false);
+                          }}
+                          className={`w-full p-4 text-left transition-all border-b flex items-center justify-between ${departureCityId === c.id ? 'font-semibold' : ''}`}
+                          style={{
+                            backgroundColor: departureCityId === c.id ? 'var(--lokadia-category-accommodation-bg)' : 'white',
+                            color: departureCityId === c.id ? 'var(--lokadia-category-accommodation)' : 'var(--lokadia-gray-700)',
+                            borderColor: 'var(--lokadia-gray-100)',
+                          }}
+                        >
+                          <span>{c.label}</span>
+                          <span className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-400)' }}>
+                            {c.iata}
+                          </span>
+                        </button>
+                      ))}
+                  </motion.div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h2
                 className="text-2xl font-bold mb-4"
                 style={{ color: 'var(--lokadia-gray-900)' }}
               >
@@ -886,12 +963,14 @@ export default function TripWizardScreen() {
             {(() => {
               if (!startDate || !endDate || !arrivalCity) return null;
               const destName = allDestinations[arrivalCity]?.name || arrivalCity;
+              const depCity = DEPARTURE_CITIES.find((c) => c.id === departureCityId) || DEPARTURE_CITIES[0];
               const flights = generateFlightOffers({
                 destinationId: arrivalCity,
                 destinationName: destName,
                 startDate,
                 endDate,
                 travelers,
+                originIata: depCity.iata,
               });
               const hotels = generateHotelOffers({
                 destinationId: arrivalCity,
@@ -920,7 +999,7 @@ export default function TripWizardScreen() {
                           ✈️ Vols suggérés
                         </h3>
                         <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
-                          Paris → {destName} · aller-retour
+                          {depCity.label} → {destName} · aller-retour
                         </p>
                       </div>
                     </div>

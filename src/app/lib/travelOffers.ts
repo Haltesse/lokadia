@@ -9,6 +9,32 @@
 
 // Mapping ville → IATA pour les destinations les plus courantes.
 // Fallback : nom de ville utilisé dans l'URL Skyscanner si absent.
+// Liste affichable des villes de départ principales (pour autocomplete)
+export const DEPARTURE_CITIES: Array<{ id: string; label: string; iata: string }> = [
+  { id: 'paris', label: 'Paris', iata: 'PARI' },
+  { id: 'lyon', label: 'Lyon', iata: 'LYS' },
+  { id: 'marseille', label: 'Marseille', iata: 'MRS' },
+  { id: 'toulouse', label: 'Toulouse', iata: 'TLS' },
+  { id: 'nice', label: 'Nice', iata: 'NCE' },
+  { id: 'bordeaux', label: 'Bordeaux', iata: 'BOD' },
+  { id: 'nantes', label: 'Nantes', iata: 'NTE' },
+  { id: 'strasbourg', label: 'Strasbourg', iata: 'SXB' },
+  { id: 'london', label: 'Londres', iata: 'LOND' },
+  { id: 'brussels', label: 'Bruxelles', iata: 'BRU' },
+  { id: 'geneva', label: 'Genève', iata: 'GVA' },
+  { id: 'zurich', label: 'Zurich', iata: 'ZRH' },
+  { id: 'madrid', label: 'Madrid', iata: 'MAD' },
+  { id: 'barcelona', label: 'Barcelone', iata: 'BCN' },
+  { id: 'rome', label: 'Rome', iata: 'ROME' },
+  { id: 'milan', label: 'Milan', iata: 'MIL' },
+  { id: 'berlin', label: 'Berlin', iata: 'BER' },
+  { id: 'amsterdam', label: 'Amsterdam', iata: 'AMS' },
+  { id: 'lisbon', label: 'Lisbonne', iata: 'LIS' },
+  { id: 'new-york', label: 'New York', iata: 'NYCA' },
+  { id: 'montreal', label: 'Montréal', iata: 'YMQ' },
+  { id: 'dubai', label: 'Dubaï', iata: 'DXB' },
+];
+
 export const CITY_IATA: Record<string, string> = {
   paris: 'PARI', london: 'LOND', 'new-york': 'NYCA', tokyo: 'TYOA',
   rome: 'ROME', madrid: 'MAD', barcelona: 'BCN', lisbon: 'LIS',
