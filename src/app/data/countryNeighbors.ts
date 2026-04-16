@@ -52,10 +52,15 @@ export const COUNTRY_NEIGHBORS: Record<string, string[]> = {
   'Chine (RAS)': ['Chine', 'Japon', 'Corée du Sud', 'Singapour', 'Thaïlande', 'Malaisie'],
 
   // Asie du Sud-Est
-  'Thaïlande': ['Malaisie', 'Singapour', 'Indonésie', 'Chine', 'Chine (RAS)', 'Inde'],
-  'Malaisie': ['Thaïlande', 'Singapour', 'Indonésie', 'Chine (RAS)'],
-  'Singapour': ['Malaisie', 'Thaïlande', 'Indonésie', 'Chine (RAS)'],
-  'Indonésie': ['Singapour', 'Malaisie', 'Thaïlande', 'Australie'],
+  'Thaïlande': ['Malaisie', 'Singapour', 'Indonésie', 'Vietnam', 'Chine', 'Chine (RAS)', 'Inde'],
+  'Vietnam': ['Thaïlande', 'Chine', 'Malaisie', 'Singapour', 'Indonésie'],
+  'Malaisie': ['Thaïlande', 'Singapour', 'Indonésie', 'Vietnam', 'Chine (RAS)'],
+  'Singapour': ['Malaisie', 'Thaïlande', 'Indonésie', 'Vietnam', 'Chine (RAS)'],
+  'Indonésie': ['Singapour', 'Malaisie', 'Thaïlande', 'Australie', 'Vietnam'],
+
+  // Europe Centrale / Balkans
+  'Hongrie': ['Autriche', 'Pologne', 'République tchèque', 'République Tchèque', 'Croatie'],
+  'Croatie': ['Italie', 'Hongrie', 'Autriche', 'Grèce'],
 
   // Asie du Sud
   'Inde': ['Émirats Arabes Unis', 'Thaïlande', 'Chine', 'Singapour', 'Malaisie'],
