@@ -34,6 +34,7 @@ import { BOOKING_PARTNERS } from '../components/PartnerBookingSection';
 import { FlightOffers } from '../components/FlightOffers';
 import { HotelOffers } from '../components/HotelOffers';
 import { generateFlightOffers, generateHotelOffers, computeBudgetEstimate, DEPARTURE_CITIES } from '../lib/travelOffers';
+import { getCoherentCountries } from '../data/countryNeighbors';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -73,6 +74,10 @@ export default function TripWizardScreen() {
   const [showCityDropdown, setShowCityDropdown] = useState(false);
 
   const allInterests = ['culture', 'nature', 'food', 'nightlife', 'adventure', 'shopping', 'history', 'art'];
+
+  // Pays cohérents = pays des villes d'arrivée + pays voisins (pour filtrer étapes)
+  const itineraryCountries = arrivalCities.map(id => allDestinations[id]?.country).filter(Boolean);
+  const coherentCountries = getCoherentCountries(itineraryCountries);
 
   // Pré-remplir le formulaire avec la destination passée
   useEffect(() => {
@@ -872,13 +877,13 @@ export default function TripWizardScreen() {
                 className="text-2xl font-bold mb-2"
                 style={{ color: 'var(--lokadia-gray-900)' }}
               >
-                Étapes additionnelles (optionnel)
+                Complète ton itinéraire
               </h2>
               <p
                 className="mb-4"
                 style={{ color: 'var(--lokadia-gray-600)' }}
               >
-                Ajoute d'autres villes à ton itinéraire — tous pays confondus.
+                Villes proches de ta destination — même pays et pays voisins.
               </p>
 
               {/* Chips villes déjà dans l'itinéraire */}
@@ -930,11 +935,18 @@ export default function TripWizardScreen() {
                 {availableDestinations
                   .filter(([id, dest]) =>
                     !arrivalCities.includes(id) &&
+                    coherentCountries.has(dest.country) &&
                     (citySearch.length === 0 ||
                       dest.name.toLowerCase().includes(citySearch.toLowerCase()) ||
                       dest.country.toLowerCase().includes(citySearch.toLowerCase()))
                   )
-                  .slice(0, citySearch.length > 0 ? 30 : 12)
+                  .sort((a, b) => {
+                    // Prioriser le même pays, puis voisins
+                    const aOwn = itineraryCountries.includes(a[1].country) ? 0 : 1;
+                    const bOwn = itineraryCountries.includes(b[1].country) ? 0 : 1;
+                    return aOwn - bOwn || a[1].name.localeCompare(b[1].name);
+                  })
+                  .slice(0, citySearch.length > 0 ? 30 : 15)
                   .map(([id, dest]) => (
                     <motion.button
                       key={id}
