@@ -10,29 +10,29 @@
 // Mapping ville → IATA pour les destinations les plus courantes.
 // Fallback : nom de ville utilisé dans l'URL Skyscanner si absent.
 // Liste affichable des villes de départ principales (pour autocomplete)
-export const DEPARTURE_CITIES: Array<{ id: string; label: string; iata: string }> = [
-  { id: 'paris', label: 'Paris', iata: 'PARI' },
-  { id: 'lyon', label: 'Lyon', iata: 'LYS' },
-  { id: 'marseille', label: 'Marseille', iata: 'MRS' },
-  { id: 'toulouse', label: 'Toulouse', iata: 'TLS' },
-  { id: 'nice', label: 'Nice', iata: 'NCE' },
-  { id: 'bordeaux', label: 'Bordeaux', iata: 'BOD' },
-  { id: 'nantes', label: 'Nantes', iata: 'NTE' },
-  { id: 'strasbourg', label: 'Strasbourg', iata: 'SXB' },
-  { id: 'london', label: 'Londres', iata: 'LOND' },
-  { id: 'brussels', label: 'Bruxelles', iata: 'BRU' },
-  { id: 'geneva', label: 'Genève', iata: 'GVA' },
-  { id: 'zurich', label: 'Zurich', iata: 'ZRH' },
-  { id: 'madrid', label: 'Madrid', iata: 'MAD' },
-  { id: 'barcelona', label: 'Barcelone', iata: 'BCN' },
-  { id: 'rome', label: 'Rome', iata: 'ROME' },
-  { id: 'milan', label: 'Milan', iata: 'MIL' },
-  { id: 'berlin', label: 'Berlin', iata: 'BER' },
-  { id: 'amsterdam', label: 'Amsterdam', iata: 'AMS' },
-  { id: 'lisbon', label: 'Lisbonne', iata: 'LIS' },
-  { id: 'new-york', label: 'New York', iata: 'NYCA' },
-  { id: 'montreal', label: 'Montréal', iata: 'YMQ' },
-  { id: 'dubai', label: 'Dubaï', iata: 'DXB' },
+export const DEPARTURE_CITIES: Array<{ id: string; label: string; iata: string; lat: number; lon: number; country: string }> = [
+  { id: 'paris', label: 'Paris', iata: 'PARI', lat: 48.8566, lon: 2.3522, country: 'France' },
+  { id: 'lyon', label: 'Lyon', iata: 'LYS', lat: 45.7640, lon: 4.8357, country: 'France' },
+  { id: 'marseille', label: 'Marseille', iata: 'MRS', lat: 43.2965, lon: 5.3698, country: 'France' },
+  { id: 'toulouse', label: 'Toulouse', iata: 'TLS', lat: 43.6047, lon: 1.4442, country: 'France' },
+  { id: 'nice', label: 'Nice', iata: 'NCE', lat: 43.7102, lon: 7.2620, country: 'France' },
+  { id: 'bordeaux', label: 'Bordeaux', iata: 'BOD', lat: 44.8378, lon: -0.5792, country: 'France' },
+  { id: 'nantes', label: 'Nantes', iata: 'NTE', lat: 47.2184, lon: -1.5536, country: 'France' },
+  { id: 'strasbourg', label: 'Strasbourg', iata: 'SXB', lat: 48.5734, lon: 7.7521, country: 'France' },
+  { id: 'london', label: 'Londres', iata: 'LOND', lat: 51.5074, lon: -0.1278, country: 'Royaume-Uni' },
+  { id: 'brussels', label: 'Bruxelles', iata: 'BRU', lat: 50.8503, lon: 4.3517, country: 'Belgique' },
+  { id: 'geneva', label: 'Genève', iata: 'GVA', lat: 46.2044, lon: 6.1432, country: 'Suisse' },
+  { id: 'zurich', label: 'Zurich', iata: 'ZRH', lat: 47.3769, lon: 8.5417, country: 'Suisse' },
+  { id: 'madrid', label: 'Madrid', iata: 'MAD', lat: 40.4168, lon: -3.7038, country: 'Espagne' },
+  { id: 'barcelona', label: 'Barcelone', iata: 'BCN', lat: 41.3851, lon: 2.1734, country: 'Espagne' },
+  { id: 'rome', label: 'Rome', iata: 'ROME', lat: 41.9028, lon: 12.4964, country: 'Italie' },
+  { id: 'milan', label: 'Milan', iata: 'MIL', lat: 45.4642, lon: 9.1900, country: 'Italie' },
+  { id: 'berlin', label: 'Berlin', iata: 'BER', lat: 52.5200, lon: 13.4050, country: 'Allemagne' },
+  { id: 'amsterdam', label: 'Amsterdam', iata: 'AMS', lat: 52.3676, lon: 4.9041, country: 'Pays-Bas' },
+  { id: 'lisbon', label: 'Lisbonne', iata: 'LIS', lat: 38.7223, lon: -9.1393, country: 'Portugal' },
+  { id: 'new-york', label: 'New York', iata: 'NYCA', lat: 40.7128, lon: -74.0060, country: 'États-Unis' },
+  { id: 'montreal', label: 'Montréal', iata: 'YMQ', lat: 45.5017, lon: -73.5673, country: 'Canada' },
+  { id: 'dubai', label: 'Dubaï', iata: 'DXB', lat: 25.2048, lon: 55.2708, country: 'Émirats Arabes Unis' },
 ];
 
 export const CITY_IATA: Record<string, string> = {
@@ -252,17 +252,102 @@ export function generateHotelOffers(params: {
   });
 }
 
+/**
+ * Calcule un prix « moyen » cohérent pour une jambe (leg) entre 2 villes.
+ * Utilisé pour le budget multi-étapes (vol, train ou bus selon distance).
+ * Retourne un prix par personne et le mode de transport suggéré.
+ */
+export interface LegEstimate {
+  fromId: string;
+  fromName: string;
+  toId: string;
+  toName: string;
+  distanceKm: number;
+  mode: 'plane' | 'train' | 'bus';
+  pricePerPerson: number;
+  durationLabel: string;
+}
+
+function haversine(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
+  const R = 6371;
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+export function estimateLeg(params: {
+  fromId: string;
+  fromName: string;
+  fromCoord: { lat: number; lon: number };
+  toId: string;
+  toName: string;
+  toCoord: { lat: number; lon: number };
+  startDate: string;
+  sameCountry?: boolean;
+}): LegEstimate {
+  const { fromId, fromName, toId, toName, fromCoord, toCoord, startDate, sameCountry } = params;
+  const distanceKm = Math.round(haversine(fromCoord, toCoord));
+  const rng = seedFrom(`${fromId}-${toId}-${startDate}-leg`);
+
+  // Mode: < 500 km (ou même pays < 800 km) → train, 500-2500 → vol low-cost, sinon vol
+  let mode: 'plane' | 'train' | 'bus';
+  let pricePerPerson: number;
+  let durationLabel: string;
+
+  if (distanceKm < 120) {
+    mode = 'bus';
+    pricePerPerson = Math.round((15 + distanceKm * 0.08) * (0.85 + rng() * 0.3));
+    const h = Math.max(1, Math.round(distanceKm / 75));
+    durationLabel = `${h}h en bus`;
+  } else if (distanceKm < (sameCountry ? 800 : 500)) {
+    mode = 'train';
+    pricePerPerson = Math.round((25 + distanceKm * 0.12) * (0.85 + rng() * 0.35));
+    const h = Math.max(1, Math.round(distanceKm / 150));
+    durationLabel = `${h}h en train`;
+  } else {
+    mode = 'plane';
+    // Vol court/moyen/long courrier
+    const base = 55 + distanceKm * 0.06; // ~55€ base + 6c/km
+    const daysAhead = Math.max(0, Math.round((new Date(startDate).getTime() - Date.now()) / 86400000));
+    const advance = daysAhead < 14 ? 1.4 : daysAhead < 45 ? 1.1 : 0.9;
+    pricePerPerson = Math.round((base * advance * (0.85 + rng() * 0.4)) / 5) * 5;
+    const h = Math.max(1, Math.round(distanceKm / 750));
+    durationLabel = `${h}h de vol`;
+  }
+
+  return { fromId, fromName, toId, toName, distanceKm, mode, pricePerPerson, durationLabel };
+}
+
 export function computeBudgetEstimate(params: {
-  flightPrice: number;
+  /** Prix par personne de chaque tronçon (aller origine→stops→retour). Ex: [Paris→Tokyo, Tokyo→Osaka, Osaka→Paris]. */
+  legPrices?: number[];
+  /** Ancien mode : prix d'un seul vol (aller-retour par personne). Utilisé si legPrices absent. */
+  flightPrice?: number;
   hotelTotal: number;
   travelers: number;
   nights: number;
 }) {
-  const { flightPrice, hotelTotal, travelers, nights } = params;
-  const flights = flightPrice * travelers;
-  const food = 35 * travelers * nights; // estimation repas / personne / jour
+  const { legPrices, flightPrice, hotelTotal, travelers, nights } = params;
+  const flightPerPerson = legPrices && legPrices.length > 0
+    ? legPrices.reduce((a, b) => a + b, 0)
+    : (flightPrice || 0);
+  const flights = flightPerPerson * travelers;
+  const food = 35 * travelers * nights;
   const activities = 25 * travelers * nights;
-  const essentials = 45; // eSIM + assurance lite
+  const essentials = 45;
   const total = flights + hotelTotal + food + activities + essentials;
-  return { flights, hotel: hotelTotal, food, activities, essentials, total };
+  return {
+    flights,
+    flightPerPerson,
+    legCount: legPrices?.length ?? 1,
+    hotel: hotelTotal,
+    food,
+    activities,
+    essentials,
+    total,
+  };
 }

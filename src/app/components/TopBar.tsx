@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router";
 import { useState } from "react";
-import { Shield, Search, Menu, X, Globe, User as UserIcon } from "lucide-react";
+import { Shield, Search, Menu, X, Globe, User as UserIcon, Map, Route as RouteIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 
@@ -16,11 +16,12 @@ export function TopBar() {
   const isAuth = !!auth?.user;
 
   const navLinks = [
-    { path: "/global-home", label: "Explorer" },
-    { path: "/trips", label: "Mes voyages" },
+    { path: "/global-home", label: "Accueil" },
+    { path: "/map", label: "Carte" },
+    { path: "/trips", label: "Voyages" },
     { path: "/alerts", label: "Alertes" },
-    { path: "/gosafe", label: "GoSafe Score" },
-    { path: "/pro", label: "Espace Pro" },
+    { path: "/gosafe", label: "GoSafe" },
+    { path: "/pro", label: "Pro" },
   ];
 
   const isActive = (path: string) => location.pathname === path ||
@@ -32,7 +33,7 @@ export function TopBar() {
       style={{ borderBottom: "1px solid var(--lokadia-gray-100)" }}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
+        <div className="flex items-center justify-between h-16 lg:h-20 gap-4">
           {/* Logo */}
           <button
             onClick={() => navigate(isAuth ? "/global-home" : "/")}
@@ -49,8 +50,24 @@ export function TopBar() {
             </span>
           </button>
 
+          <button
+            onClick={() => navigate("/destination-count")}
+            className="hidden xl:flex min-w-[280px] items-center gap-3 rounded-full border bg-white px-4 py-2.5 text-left transition-all hover:border-sky-300 hover:shadow-md"
+            style={{ borderColor: "var(--lokadia-gray-200)" }}
+          >
+            <Search className="h-4 w-4" style={{ color: "var(--lokadia-primary)" }} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
+                Rechercher une destination
+              </p>
+              <p className="truncate text-[11px]" style={{ color: "var(--lokadia-gray-500)" }}>
+                Quartier, commerce, monument
+              </p>
+            </div>
+          </button>
+
           {/* Nav links desktop */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
             {navLinks.map((link) => (
               <button
                 key={link.path}
@@ -76,6 +93,18 @@ export function TopBar() {
           <div className="flex items-center gap-2">
             {/* CTA création voyage — driver de commission */}
             <button
+              onClick={() => navigate("/map")}
+              className="hidden xl:inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition-all"
+              style={{
+                background: "var(--lokadia-info-bg)",
+                color: "var(--lokadia-primary)",
+              }}
+            >
+              <Map className="h-4 w-4" />
+              Carte locale
+            </button>
+
+            <button
               onClick={() => navigate("/trips/create")}
               className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-all"
               style={{
@@ -83,7 +112,7 @@ export function TopBar() {
                 boxShadow: "var(--shadow-md)",
               }}
             >
-              <Search className="h-4 w-4" />
+              <RouteIcon className="h-4 w-4" />
               Planifier un voyage
             </button>
 

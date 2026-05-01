@@ -1,0 +1,243 @@
+/**
+ * Lokadia animations layer — couche premium "compact SaaS travel".
+ *
+ * Inspiration : Linear, Raycast, Apple, Stripe, Vercel, Airbnb, Booking.
+ *
+ * Principes :
+ *   - Animations courtes (150-350 ms), opacity + transform uniquement (GPU-accel).
+ *   - Toujours respectueuses de prefers-reduced-motion.
+ *   - Cohérentes : mêmes durées, mêmes courbes (cubic-bezier swift), même easing.
+ *   - Composables via classes utilitaires : `.lk-card-hover`, `.lk-fade-in-up`, etc.
+ *
+ * Convention de prefix : `.lk-*` pour ne jamais entrer en collision avec
+ * Tailwind ni d'autres libs.
+ */
+
+/* ─── Tokens d'easing & durées ─── */
+:root {
+  --lk-ease: cubic-bezier(0.16, 1, 0.3, 1);          /* swift "out-expo" — premium feel */
+  --lk-ease-soft: cubic-bezier(0.4, 0, 0.2, 1);      /* Material standard */
+  --lk-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* léger overshoot */
+  --lk-dur-fast: 150ms;
+  --lk-dur-base: 220ms;
+  --lk-dur-slow: 320ms;
+}
+
+/* ─── Keyframes premium ─── */
+@keyframes lk-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes lk-fade-in-up {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes lk-fade-in-down {
+  from { opacity: 0; transform: translate3d(0, -12px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes lk-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes lk-pop-in {
+  0%   { opacity: 0; transform: scale(0.85); }
+  60%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes lk-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes lk-pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+@keyframes lk-tab-indicator {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes lk-toast-in {
+  from { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.96); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+/* ─── Classes utilitaires d'animation d'entrée ─── */
+.lk-fade-in       { animation: lk-fade-in     var(--lk-dur-base) var(--lk-ease) both; }
+.lk-fade-in-up    { animation: lk-fade-in-up  var(--lk-dur-slow) var(--lk-ease) both; }
+.lk-fade-in-down  { animation: lk-fade-in-down var(--lk-dur-slow) var(--lk-ease) both; }
+.lk-scale-in      { animation: lk-scale-in    var(--lk-dur-base) var(--lk-ease) both; }
+.lk-pop-in        { animation: lk-pop-in      var(--lk-dur-slow) var(--lk-ease-spring) both; }
+.lk-toast-in      { animation: lk-toast-in    var(--lk-dur-base) var(--lk-ease) both; }
+
+/* Délais en cascade (stagger) — utilisation : <div class="lk-fade-in-up lk-delay-2"> */
+.lk-delay-1 { animation-delay: 40ms;  }
+.lk-delay-2 { animation-delay: 80ms;  }
+.lk-delay-3 { animation-delay: 120ms; }
+.lk-delay-4 { animation-delay: 160ms; }
+.lk-delay-5 { animation-delay: 200ms; }
+.lk-delay-6 { animation-delay: 240ms; }
+
+/* ─── Cards interactives — élévation + scale subtil au hover ─── */
+.lk-card {
+  transition:
+    transform var(--lk-dur-base) var(--lk-ease),
+    box-shadow var(--lk-dur-base) var(--lk-ease),
+    border-color var(--lk-dur-base) var(--lk-ease);
+  will-change: transform;
+}
+.lk-card-hover {
+  transition:
+    transform var(--lk-dur-base) var(--lk-ease),
+    box-shadow var(--lk-dur-base) var(--lk-ease),
+    border-color var(--lk-dur-base) var(--lk-ease);
+  will-change: transform;
+}
+@media (hover: hover) {
+  .lk-card-hover:hover {
+    transform: translate3d(0, -2px, 0);
+    box-shadow: 0 16px 32px -12px rgba(15, 23, 42, 0.15),
+                0 4px 8px -2px rgba(15, 23, 42, 0.06);
+  }
+  .lk-card-hover-lift:hover {
+    transform: translate3d(0, -4px, 0);
+    box-shadow: 0 24px 48px -16px rgba(15, 23, 42, 0.18),
+                0 8px 16px -4px rgba(15, 23, 42, 0.08);
+  }
+}
+.lk-card-hover:active,
+.lk-card-hover-lift:active {
+  transform: translate3d(0, 0, 0) scale(0.985);
+  transition: transform 80ms ease-out;
+}
+
+/* ─── Image zoom subtil au hover (group required parent) ─── */
+.lk-img-zoom {
+  transition: transform 600ms var(--lk-ease);
+  will-change: transform;
+}
+.group:hover .lk-img-zoom,
+.lk-card-hover:hover .lk-img-zoom,
+.lk-card-hover-lift:hover .lk-img-zoom {
+  transform: scale(1.06);
+}
+
+/* ─── Overlay qui s'éclaircit subtilement au hover ─── */
+.lk-overlay-fade {
+  transition: opacity var(--lk-dur-base) var(--lk-ease);
+}
+.group:hover .lk-overlay-fade,
+.lk-card-hover:hover .lk-overlay-fade,
+.lk-card-hover-lift:hover .lk-overlay-fade {
+  opacity: 0.85;
+}
+
+/* ─── Boutons & links premium ─── */
+.lk-btn {
+  position: relative;
+  transition:
+    transform var(--lk-dur-fast) var(--lk-ease),
+    background-color var(--lk-dur-fast) var(--lk-ease),
+    box-shadow var(--lk-dur-fast) var(--lk-ease),
+    color var(--lk-dur-fast) var(--lk-ease);
+}
+.lk-btn:active {
+  transform: scale(0.97);
+  transition: transform 80ms ease-out;
+}
+
+/* Indicateur d'onglet animé (largeur scaleX) */
+.lk-tab-indicator {
+  transform-origin: center;
+  animation: lk-tab-indicator var(--lk-dur-base) var(--lk-ease) both;
+}
+
+/* ─── Inputs / search bar premium focus state ─── */
+.lk-input,
+.lk-search {
+  transition:
+    border-color var(--lk-dur-fast) var(--lk-ease),
+    box-shadow var(--lk-dur-fast) var(--lk-ease),
+    background-color var(--lk-dur-fast) var(--lk-ease);
+}
+.lk-input:focus-visible,
+.lk-search:focus-within {
+  outline: none;
+  border-color: var(--lokadia-primary, #0F4C81);
+  box-shadow: 0 0 0 4px rgba(15, 76, 129, 0.10);
+}
+
+/* ─── Badges & prix : pop subtil au mount ─── */
+.lk-badge {
+  animation: lk-scale-in var(--lk-dur-base) var(--lk-ease) both;
+}
+
+/* ─── Skeleton loader moderne (shimmer linéaire) ─── */
+.lk-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 0%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(0, 0, 0, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: lk-shimmer 1.4s linear infinite;
+  border-radius: 0.75rem;
+}
+
+/* ─── Pulse douce pour indicateurs "live" ─── */
+.lk-pulse {
+  animation: lk-pulse-soft 1.6s ease-in-out infinite;
+}
+
+/* ─── Toast / feedback action (utilisé après "Ajouter à mon voyage" etc.) ─── */
+.lk-toast {
+  animation: lk-toast-in var(--lk-dur-base) var(--lk-ease) both;
+}
+
+/* ─── Modal / dropdown — utilisable sur le wrapper Framer Motion aussi ─── */
+.lk-modal-enter {
+  animation: lk-scale-in var(--lk-dur-base) var(--lk-ease) both;
+}
+.lk-backdrop-enter {
+  animation: lk-fade-in var(--lk-dur-base) var(--lk-ease) both;
+}
+
+/* ─── Section heading underline animé ─── */
+.lk-heading-accent {
+  position: relative;
+  display: inline-block;
+}
+.lk-heading-accent::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 28px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--lokadia-primary, #0F4C81), var(--lokadia-secondary, #06B6D4));
+  transform-origin: left;
+  animation: lk-tab-indicator var(--lk-dur-slow) var(--lk-ease) both;
+}
+
+/* ─── Density utility — réduction des paddings ─── */
+.lk-section { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+@media (min-width: 768px) {
+  .lk-section { padding-top: 1.75rem; padding-bottom: 1.75rem; }
+}
+
+/* ─── prefers-reduced-motion : on coupe TOUTES les animations ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .lk-skeleton {
+    animation: none;
+    background: rgba(0, 0, 0, 0.06);
+  }
+}

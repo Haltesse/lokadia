@@ -16,6 +16,7 @@ import { generateOnLocationInfo } from '../lib/tripBriefService';
 import { setActiveCityForTrip } from '../lib/tripService';
 import type { TripDashboard } from '../lib/tripBriefService';
 import type { TripWithChecklist } from '../lib/tripService';
+import { LocalActivitiesSection } from './LocalActivitiesSection';
 
 interface Props {
   dashboard: TripDashboard;
@@ -125,6 +126,9 @@ export default function TripOnLocationTab({ dashboard, trip }: Props) {
           ))}
         </div>
       </section>
+
+      {/* Activités locales (partenaires : GetYourGuide, Viator, Tiqets) */}
+      <LocalActivitiesSection cityName={locationInfo.cityName} />
 
       {/* Urgences */}
       <section className="bg-red-50 border-2 border-red-300 rounded-xl overflow-hidden">

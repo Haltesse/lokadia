@@ -296,6 +296,54 @@ export async function createTripSegment(
 }
 
 /**
+ * Met à jour le mode de transport choisi par l'utilisateur pour un segment.
+ * Stocké dans metadata.selectedMode (jsonb — pas besoin de migration).
+ */
+export async function updateTripSegmentMode(
+  segmentId: string,
+  selectedMode: string,
+  existingMetadata?: any
+): Promise<void> {
+  const metadata = { ...(existingMetadata || {}), selectedMode };
+  const { error } = await supabase
+    .from('trip_segments')
+    .update({ metadata })
+    .eq('id', segmentId);
+  if (error) {
+    console.error('❌ Erreur mise à jour mode segment:', error);
+    throw error;
+  }
+}
+
+/**
+ * Crée les segments manquants pour un voyage (à appeler si trip_segments est vide).
+ * Les segments sont calculés à la volée depuis les stops + calculateTransportOptions.
+ */
+export async function ensureTripSegments(
+  tripId: string,
+  stops: TripStop[]
+): Promise<TripSegment[]> {
+  const existing = await getTripSegments(tripId);
+  if (existing.length > 0) return existing;
+  if (stops.length < 2) return [];
+
+  // Import dynamique pour éviter la dépendance circulaire
+  const { createTripSegment: buildSegment } = await import('./transportService');
+
+  const created: TripSegment[] = [];
+  for (let i = 0; i < stops.length - 1; i++) {
+    try {
+      const segData = buildSegment(tripId, stops[i], stops[i + 1]);
+      const seg = await createTripSegment(segData);
+      created.push(seg);
+    } catch (e) {
+      console.warn('⚠️ Impossible de créer le segment', i, e);
+    }
+  }
+  return created;
+}
+
+/**
  * Supprime un segment
  */
 export async function deleteTripSegment(segmentId: string): Promise<void> {

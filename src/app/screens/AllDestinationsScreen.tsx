@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Shield, MapPin, TrendingUp, Search } from "lucide-react";
-import { motion } from "motion/react";
+import { Shield, MapPin, TrendingUp, Search, X } from "lucide-react";
 import { destinationsDatabase } from "../data/destinationData";
 import { useGoSafeScore } from "../hooks/useGoSafeScore";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { DestinationImage } from "../components/DestinationImage";
 
 interface DestinationCardProps {
   destination: {
@@ -15,9 +14,10 @@ interface DestinationCardProps {
     goSafeScore: number;
   };
   onClick: () => void;
+  index: number;
 }
 
-function DestinationCard({ destination, onClick }: DestinationCardProps) {
+function DestinationCard({ destination, onClick, index }: DestinationCardProps) {
   const { score: goSafeScore, loading } = useGoSafeScore(destination.id);
   const displayedScore = goSafeScore || destination.goSafeScore;
 
@@ -27,52 +27,54 @@ function DestinationCard({ destination, onClick }: DestinationCardProps) {
     return 'var(--lokadia-danger)';
   };
 
+  // Stagger compact (max delay-6) basé sur l'index
+  const delayClass = `lk-delay-${Math.min((index % 6) + 1, 6)}`;
+
   return (
-    <button onClick={onClick} className="block w-full">
-      <div
-        className="bg-white rounded-2xl overflow-hidden transition-all"
-        style={{ boxShadow: 'var(--shadow-md)' }}
-      >
-        <div className="relative h-32 overflow-hidden">
-          <ImageWithFallback
-            src={destination.image}
-            alt={`${destination.name}, ${destination.country}`}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40"></div>
+    <button
+      onClick={onClick}
+      className={`lk-card-hover-lift lk-fade-in-up ${delayClass} block w-full group bg-white rounded-2xl overflow-hidden text-left`}
+      style={{ boxShadow: 'var(--shadow-sm)' }}
+    >
+      <div className="relative h-32 md:h-36 overflow-hidden">
+        <DestinationImage
+          src={destination.image}
+          alt={`${destination.name}, ${destination.country}`}
+          cityName={destination.name}
+          countryName={destination.country}
+          preferWikipedia
+          className="lk-img-zoom w-full h-full object-cover"
+        />
+        <div className="lk-overlay-fade absolute inset-0 bg-gradient-to-b from-transparent to-black/55"></div>
 
-          {/* Safety Badge */}
-          <div
-            className="absolute top-2 right-2 px-2.5 py-1 rounded-full backdrop-blur-md flex items-center gap-1"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.9)",
-              boxShadow: 'var(--shadow-sm)'
-            }}
-          >
-            {loading ? (
-              <div className="h-3 w-12 rounded animate-pulse" style={{ backgroundColor: 'var(--lokadia-gray-300)' }} />
-            ) : (
-              <>
-                <Shield className="h-3 w-3" style={{ color: getBadgeColor(displayedScore) }} />
-                <span className="font-semibold text-xs" style={{ color: 'var(--lokadia-gray-900)' }}>
-                  {displayedScore}
-                </span>
-              </>
-            )}
-          </div>
-
-          {/* Location */}
-          <div className="absolute bottom-2 left-2">
-            <div className="flex items-center gap-1">
-              <MapPin className="h-3 w-3 text-white/90 drop-shadow-lg" />
-              <span className="text-xs font-semibold text-white drop-shadow-lg">
-                {destination.name}
+        {/* Safety Badge */}
+        <div
+          className="absolute top-2 right-2 px-2 py-1 rounded-full backdrop-blur-md flex items-center gap-1 shadow-md"
+          style={{ backgroundColor: "rgba(255, 255, 255, 0.92)" }}
+        >
+          {loading ? (
+            <div className="lk-skeleton h-3 w-9 rounded" />
+          ) : (
+            <>
+              <Shield className="h-3 w-3" strokeWidth={2.5} style={{ color: getBadgeColor(displayedScore) }} />
+              <span className="font-bold text-[11px] tabular-nums" style={{ color: 'var(--lokadia-gray-900)' }}>
+                {displayedScore}
               </span>
-            </div>
-            <span className="text-xs text-white/80 drop-shadow-md ml-4">
-              {destination.country}
+            </>
+          )}
+        </div>
+
+        {/* Location */}
+        <div className="absolute bottom-2 left-2.5 right-2.5">
+          <div className="flex items-center gap-1">
+            <MapPin className="h-3 w-3 text-white/90 drop-shadow-lg flex-shrink-0" />
+            <span className="text-sm font-bold text-white drop-shadow-lg tracking-tight truncate">
+              {destination.name}
             </span>
           </div>
+          <span className="text-[11px] text-white/85 drop-shadow ml-4 truncate block">
+            {destination.country}
+          </span>
         </div>
       </div>
     </button>
@@ -85,7 +87,6 @@ export function AllDestinationsScreen() {
   const [allDestinations, setAllDestinations] = useState<any[]>([]);
 
   useEffect(() => {
-    // Convertir destinationsDatabase en array
     const destinations = Object.values(destinationsDatabase);
     setAllDestinations(destinations);
   }, []);
@@ -104,30 +105,33 @@ export function AllDestinationsScreen() {
       className="min-h-screen pb-20"
       style={{ background: 'var(--lokadia-background)' }}
     >
-      {/* Header */}
-      <div className="px-6 pt-8 pb-6" style={{ background: 'var(--gradient-primary)' }}>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="flex items-center gap-3 mb-4">
+      {/* ───────── HEADER plus compact + search bar premium ───────── */}
+      <div
+        className="px-5 pt-6 pb-5 lk-fade-in-down"
+        style={{ background: 'var(--gradient-primary)' }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-2.5 mb-3">
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+              className="w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-md"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.22)' }}
             >
-              <TrendingUp className="h-6 w-6 text-white" />
+              <TrendingUp className="h-5 w-5 text-white" strokeWidth={2.5} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Toutes les destinations</h1>
-              <p className="text-white/90 text-sm">{allDestinations.length} destinations disponibles</p>
+              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight leading-tight">
+                Toutes les destinations
+              </h1>
+              <p className="text-white/85 text-xs md:text-sm tabular-nums">
+                {allDestinations.length} destinations disponibles
+              </p>
             </div>
           </div>
 
-          {/* Search Bar */}
-          <div className="relative">
+          {/* Search Bar premium avec focus state animé */}
+          <div className="lk-search relative bg-white/95 rounded-2xl shadow-lg flex items-center pr-2">
             <Search
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5"
+              className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5"
               style={{ color: 'var(--lokadia-gray-500)' }}
             />
             <input
@@ -135,42 +139,63 @@ export function AllDestinationsScreen() {
               placeholder="Rechercher une destination..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-2xl border-2 transition-all"
-              style={{
-                borderColor: 'transparent',
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                outline: 'none'
-              }}
+              className="lk-input flex-1 pl-11 pr-2 py-2.5 rounded-2xl text-sm bg-transparent outline-none"
+              style={{ color: 'var(--lokadia-gray-900)' }}
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="lk-btn p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Effacer la recherche"
+              >
+                <X className="h-4 w-4" style={{ color: 'var(--lokadia-gray-500)' }} />
+              </button>
+            )}
           </div>
-        </motion.div>
+        </div>
       </div>
 
-      {/* Destinations Grid */}
-      <div className="px-6 py-6">
-        <div className="grid grid-cols-2 gap-4">
-          {filteredDestinations.map((destination, index) => (
-            <motion.div
-              key={destination.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.02 }}
-            >
+      {/* ───────── COUNTER avec transition douce sur changement ───────── */}
+      <div className="max-w-7xl mx-auto px-5 pt-4 pb-2 flex items-center justify-between">
+        <p
+          key={filteredDestinations.length}
+          className="text-xs lk-fade-in tabular-nums"
+          style={{ color: 'var(--lokadia-gray-500)' }}
+        >
+          <span className="font-bold" style={{ color: 'var(--lokadia-gray-700)' }}>
+            {filteredDestinations.length}
+          </span>{' '}
+          {filteredDestinations.length > 1 ? 'résultats' : 'résultat'}
+          {searchQuery && <> pour « <span className="italic">{searchQuery}</span> »</>}
+        </p>
+      </div>
+
+      {/* ───────── GRILLE dense premium 2/3/4/5 cols ───────── */}
+      <div className="max-w-7xl mx-auto px-5 pb-6">
+        {filteredDestinations.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {filteredDestinations.map((destination, index) => (
               <DestinationCard
+                key={destination.id}
                 destination={destination}
+                index={index}
                 onClick={() => navigate(`/destination/${destination.id}`)}
               />
-            </motion.div>
-          ))}
-        </div>
-
-        {filteredDestinations.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-lg font-medium" style={{ color: 'var(--lokadia-gray-600)' }}>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 lk-fade-in">
+            <div
+              className="inline-flex w-16 h-16 rounded-full items-center justify-center mb-3 mx-auto"
+              style={{ backgroundColor: 'var(--lokadia-gray-100)' }}
+            >
+              <Search className="h-7 w-7" style={{ color: 'var(--lokadia-gray-400)' }} />
+            </div>
+            <p className="text-base font-semibold" style={{ color: 'var(--lokadia-gray-700)' }}>
               Aucune destination trouvée
             </p>
-            <p className="text-sm" style={{ color: 'var(--lokadia-gray-500)' }}>
-              Essayez une autre recherche
+            <p className="text-sm mt-1" style={{ color: 'var(--lokadia-gray-500)' }}>
+              Essayez avec un autre mot-clé
             </p>
           </div>
         )}

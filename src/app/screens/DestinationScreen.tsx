@@ -28,7 +28,8 @@ import { WeatherCard, WeatherCardSkeleton } from "../components/WeatherCard";
 import { NumbeoLoadingIndicator } from "../components/NumbeoLoadingIndicator";
 import { getDestinationData, type DestinationDetails } from "../data/destinationData";
 import { useLanguageSafe } from "../context/LanguageContext";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { DestinationImage } from "../components/DestinationImage";
+import { GoSafeScoreInfo } from "../components/GoSafeScoreInfo";
 import { Badge } from "../components/Badge";
 import { Chip } from "../components/Chip";
 import { Modal } from "../components/Modal";
@@ -206,9 +207,11 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
 
       {/* Header Image */}
       <div className="relative h-64">
-        <ImageWithFallback
+        <DestinationImage
           src={destination.image}
           alt={destination.name}
+          cityName={destination.name}
+          countryName={destination.country}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70"></div>
@@ -217,7 +220,8 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
         <div className="absolute top-12 right-4 flex gap-2">
           <button
             onClick={() => setIsFavorite(!isFavorite)}
-            className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center transition-transform active:scale-95"
+            aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+            className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center transition-transform active:scale-95"
           >
             <Heart
               className={`h-5 w-5 ${isFavorite ? "fill-red-500 text-red-500" : "text-white"}`}
@@ -225,7 +229,8 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
           </button>
           <button
             onClick={handleShare}
-            className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center transition-transform active:scale-95"
+            aria-label="Partager"
+            className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center transition-transform active:scale-95"
           >
             <Share2 className="h-5 w-5 text-white" />
           </button>
@@ -313,6 +318,15 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
             )}
           </button>
         </div>
+      </div>
+
+      {/* Comment ce score est-il calculé + sources officielles */}
+      <div className="px-6 mb-6">
+        <GoSafeScoreInfo
+          cityName={destination.name}
+          countryName={destination.country}
+          score={displayedScore}
+        />
       </div>
 
       {/* Tabs */}

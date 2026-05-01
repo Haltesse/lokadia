@@ -33,9 +33,11 @@ import { EmirateDatePicker } from '../components/EmirateDatePicker';
 import { BOOKING_PARTNERS } from '../components/PartnerBookingSection';
 import { FlightOffers } from '../components/FlightOffers';
 import { HotelOffers } from '../components/HotelOffers';
-import { generateFlightOffers, generateHotelOffers, computeBudgetEstimate, DEPARTURE_CITIES } from '../lib/travelOffers';
+import { generateFlightOffers, generateHotelOffers, computeBudgetEstimate, estimateLeg, DEPARTURE_CITIES, type LegEstimate } from '../lib/travelOffers';
 import { getCoherentCountries } from '../data/countryNeighbors';
 import { STOP_CITIES, type StopCity } from '../data/stopCities';
+import { TripMap, type TripMapPoint } from '../components/TripMap';
+import { Plane, Train, Bus, Map as MapIcon } from 'lucide-react';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -1119,8 +1121,79 @@ export default function TripWizardScreen() {
               const nights = Math.max(1, Math.round(
                 (new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000
               ));
+
+              // ─── Construction de la fiche de route (départ → toutes les villes → retour) ───
+              // Helper: récupère coords + nom pour une ville d'arrivée/étape (dest id)
+              const resolveCoords = (id: string): { name: string; country: string; lat: number; lon: number } | null => {
+                const dest = allDestinations[id];
+                if (dest && destinationCoordinates[id]) {
+                  return {
+                    name: dest.name,
+                    country: dest.country,
+                    lat: destinationCoordinates[id].lat,
+                    lon: destinationCoordinates[id].lon,
+                  };
+                }
+                const stop = STOP_CITIES.find((c) => c.id === id);
+                if (stop && stop.lat != null && stop.lon != null) {
+                  return { name: stop.name, country: stop.country, lat: stop.lat, lon: stop.lon };
+                }
+                return null;
+              };
+
+              const routeCityIds: string[] = [...arrivalCities, ...selectedStops];
+              const mapPoints: TripMapPoint[] = [];
+              // Point de départ
+              mapPoints.push({
+                id: `dep-${depCity.id}`,
+                name: depCity.label,
+                country: depCity.country,
+                lat: depCity.lat,
+                lon: depCity.lon,
+                kind: 'origin',
+              });
+              // Étapes
+              for (const id of routeCityIds) {
+                const c = resolveCoords(id);
+                if (c) {
+                  mapPoints.push({ id, name: c.name, country: c.country, lat: c.lat, lon: c.lon, kind: 'stop' });
+                }
+              }
+              // Retour au point de départ (boucle visuelle)
+              if (mapPoints.length > 1) {
+                mapPoints.push({
+                  id: `ret-${depCity.id}`,
+                  name: depCity.label,
+                  country: depCity.country,
+                  lat: depCity.lat,
+                  lon: depCity.lon,
+                  kind: 'return',
+                });
+              }
+
+              // Calcul des legs entre chaque paire consécutive
+              const legs: LegEstimate[] = [];
+              for (let i = 0; i < mapPoints.length - 1; i++) {
+                const a = mapPoints[i];
+                const b = mapPoints[i + 1];
+                legs.push(
+                  estimateLeg({
+                    fromId: a.id,
+                    fromName: a.name,
+                    fromCoord: { lat: a.lat, lon: a.lon },
+                    toId: b.id,
+                    toName: b.name,
+                    toCoord: { lat: b.lat, lon: b.lon },
+                    startDate,
+                    sameCountry: a.country === b.country,
+                  })
+                );
+              }
+
+              const legPrices = legs.map((l) => l.pricePerPerson);
+
               const budget = computeBudgetEstimate({
-                flightPrice: flights[0].price,
+                legPrices,
                 hotelTotal: hotels[0].totalPrice,
                 travelers,
                 nights,
@@ -1128,6 +1201,68 @@ export default function TripWizardScreen() {
 
               return (
                 <>
+                  {/* Carte interactive */}
+                  <div className="mt-8">
+                    <div className="flex items-end justify-between mb-3">
+                      <div>
+                        <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: 'var(--lokadia-gray-900)' }}>
+                          <MapIcon size={18} /> Fiche de route
+                        </h3>
+                        <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
+                          {mapPoints.length > 0 ? `${mapPoints.length} points · ${legs.length} trajets` : 'Aucune étape'}
+                        </p>
+                      </div>
+                    </div>
+                    <TripMap
+                      points={mapPoints}
+                      legs={legs}
+                      startDate={startDate}
+                      endDate={endDate}
+                      travelers={travelers}
+                    />
+
+                    {/* Liste des trajets */}
+                    {legs.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        {legs.map((leg, i) => {
+                          const ModeIco = leg.mode === 'plane' ? Plane : leg.mode === 'train' ? Train : Bus;
+                          const modeColor = leg.mode === 'plane' ? '#6366F1' : leg.mode === 'train' ? '#10B981' : '#F59E0B';
+                          const modeBg = leg.mode === 'plane' ? '#EEF2FF' : leg.mode === 'train' ? '#ECFDF5' : '#FFFBEB';
+                          return (
+                            <div
+                              key={`leg-${i}`}
+                              className="flex items-center gap-3 p-3 rounded-2xl bg-white"
+                              style={{ border: '1px solid var(--lokadia-gray-200)' }}
+                            >
+                              <div
+                                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                                style={{ background: modeBg }}
+                              >
+                                <ModeIco size={16} style={{ color: modeColor }} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold truncate" style={{ color: 'var(--lokadia-gray-900)' }}>
+                                  {leg.fromName} → {leg.toName}
+                                </p>
+                                <p className="text-[11px]" style={{ color: 'var(--lokadia-gray-600)' }}>
+                                  {leg.durationLabel} · {leg.distanceKm} km
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-bold" style={{ color: modeColor }}>
+                                  {leg.pricePerPerson}€
+                                </p>
+                                <p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>
+                                  /pers
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
                   {/* Vols */}
                   <div className="mt-8">
                     <div className="flex items-end justify-between mb-3">
@@ -1168,7 +1303,12 @@ export default function TripWizardScreen() {
                       <span className="text-xs bg-white/20 px-2 py-1 rounded-full">hors essentiels</span>
                     </div>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between"><span className="opacity-85">Vols ({travelers}×)</span><span className="font-semibold">{budget.flights}€</span></div>
+                      <div className="flex justify-between">
+                        <span className="opacity-85">
+                          Transports ({budget.legCount} trajet{budget.legCount > 1 ? 's' : ''} × {travelers})
+                        </span>
+                        <span className="font-semibold">{budget.flights}€</span>
+                      </div>
                       <div className="flex justify-between"><span className="opacity-85">Hôtel ({nights} nuits)</span><span className="font-semibold">{budget.hotel}€</span></div>
                       <div className="flex justify-between"><span className="opacity-85">Restauration</span><span className="font-semibold">{budget.food}€</span></div>
                       <div className="flex justify-between"><span className="opacity-85">Activités</span><span className="font-semibold">{budget.activities}€</span></div>

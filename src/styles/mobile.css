@@ -1,0 +1,181 @@
+/**
+ * Mobile-friendly enhancements — appliquées globalement à tous les éléments
+ * interactifs sur écrans tactiles, sans toucher aux composants individuels.
+ *
+ * Cible : appareils tactiles (pointer: coarse) — détecte mobile + tablette,
+ * mais pas un trackpad/souris sur desktop. Plus fiable que `@media (max-width)`.
+ *
+ * Conventions :
+ *   - Ajouter `data-touch="compact"` à un bouton pour l'exempter du min-44px
+ *     (utile pour les pastilles dans les listes denses, tags cliquables…)
+ */
+
+/* ─── Tap highlight & comportement par défaut sur tous les écrans tactiles ─── */
+@media (hover: none) and (pointer: coarse) {
+  /* Désactive le flash bleu Android/iOS au tap */
+  button,
+  a,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  label {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Supprime le délai 300ms du double-tap-zoom sur les éléments interactifs */
+  button,
+  a,
+  [role="button"],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  input[type="button"],
+  select {
+    touch-action: manipulation;
+  }
+
+  /* ─── Touch targets minimum 44×44 (Apple HIG) ─── */
+  /* On force min-height: 44px sur tous les boutons sauf opt-out explicite. */
+  button:not([data-touch="compact"]),
+  a[role="button"]:not([data-touch="compact"]),
+  [role="button"]:not([data-touch="compact"]) {
+    min-height: 44px;
+  }
+
+  /* Pour les liens d'icônes seuls (sans role=button), on agrandit aussi
+     s'ils sont visiblement cliquables (avec une classe de fond ou rounded) */
+  a.btn,
+  a.button,
+  a.icon-btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* ─── Feedback tactile global : scale-down au tap ─── */
+  button:not([data-touch="no-feedback"]):active,
+  a:not([data-touch="no-feedback"]):active,
+  [role="button"]:not([data-touch="no-feedback"]):active {
+    transform: scale(0.97);
+    transition: transform 80ms ease-out;
+  }
+
+  /* Désactive le scale sur les éléments dans une carte qui en ont déjà un */
+  button.no-touch-feedback:active,
+  [role="button"].no-touch-feedback:active {
+    transform: none;
+  }
+
+  /* ─── Anti-zoom iOS sur les inputs ─── */
+  /* Safari iOS zoome automatiquement sur les inputs avec font-size < 16px.
+     On force 16px minimum pour tous les types texte. */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="month"],
+  input[type="time"],
+  input[type="week"],
+  textarea,
+  select {
+    font-size: max(16px, 1rem) !important;
+  }
+
+  /* ─── Scroll fluide & inertie iOS ─── */
+  .overflow-y-auto,
+  .overflow-x-auto,
+  .overflow-auto,
+  .overflow-y-scroll,
+  .overflow-x-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* ─── Safe area insets pour iPhone X+ (toujours appliqué) ─── */
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.safe-top {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+
+/* ─── Utilitaires explicites (toutes plateformes) ─── */
+
+/* Force une zone de tap minimum sans changer la taille visuelle.
+   À combiner avec un bouton plus petit visuellement.
+   Usage : <button class="touch-target relative"><span>X</span></button> */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Étend la zone de tap d'un bouton via pseudo-element invisible.
+   Le bouton garde sa taille visuelle, mais devient cliquable dans une
+   zone 44×44 centrée. Le parent doit avoir `position: relative`. */
+.tap-extend::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
+}
+
+/* Suppression manuelle du flash bleu mobile (utile partout) */
+.no-tap-highlight {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Suppression du callout long-press iOS (sélection texte/image) */
+.no-callout {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ─── Inputs & focus visible élégant ─── */
+@media (hover: none) and (pointer: coarse) {
+  /* Focus ring plus lisible sur mobile */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--lokadia-primary, #0F4C81);
+    outline-offset: 2px;
+  }
+}
+
+/* ─── Scrollbars invisibles utilitaire (déjà dans theme.css mais redondant ici pour cohérence) ─── */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ─── Sticky bottom CTAs : ajoutent automatiquement la safe-area ─── */
+.sticky-bottom-cta {
+  position: sticky;
+  bottom: 0;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  background: white;
+  z-index: 30;
+}

@@ -177,20 +177,17 @@ export default function TripsScreen() {
   }
 
   return (
-    <div 
-      className="min-h-screen pb-24"
+    <div
+      className="min-h-screen pb-20"
       style={{ background: 'var(--lokadia-background)' }}
     >
-      {/* Header avec dégradé subtil */}
-      <motion.div 
-        className="text-white px-6 py-12 relative overflow-hidden"
-        style={{ 
-          borderBottomLeftRadius: '2rem',
-          borderBottomRightRadius: '2rem',
+      {/* ───────── HEADER plus compact (py-12 → py-8), tabs intégrés en bas ───────── */}
+      <motion.div
+        className="text-white px-5 pt-7 pb-6 relative overflow-hidden lk-fade-in-down"
+        style={{
+          borderBottomLeftRadius: '1.5rem',
+          borderBottomRightRadius: '1.5rem',
         }}
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
       >
         {/* Images du diaporama */}
         {headerImages.map((img, index) => (
@@ -203,63 +200,87 @@ export default function TripsScreen() {
               backgroundPosition: 'center',
             }}
             initial={false}
-            animate={{ 
+            animate={{
               opacity: index === currentSlide ? 1 : 0,
             }}
             transition={{ duration: 1.2, ease: "easeInOut" }}
           />
         ))}
         {/* Overlay sombre pour lisibilité du texte */}
-        <div 
+        <div
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%)',
+            background: 'linear-gradient(135deg, rgba(15,76,129,0.55) 0%, rgba(0,0,0,0.55) 100%)',
           }}
         />
-        {/* Contenu */}
-        <div className="relative z-10">
-          <h1 className="text-4xl font-bold mb-3">Mes Voyages</h1>
-          <p className="text-white/90 text-lg">Gérez vos itinéraires et préparations</p>
+        {/* Contenu compact */}
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <h1 className="text-2xl md:text-3xl font-extrabold mb-1 tracking-tight drop-shadow-lg">
+            Mes voyages
+          </h1>
+          <p className="text-white/90 text-sm md:text-base drop-shadow">
+            Gérez vos itinéraires et préparations
+          </p>
         </div>
       </motion.div>
 
-      {/* Tabs élégants */}
-      <div 
-        className="px-6 pt-6 pb-4 flex gap-4"
-        style={{ background: 'var(--lokadia-background)' }}
-      >
-        <button
-          onClick={() => setActiveTab('upcoming')}
-          className={`flex-1 py-4 px-5 text-base font-bold rounded-2xl transition-all duration-300 ${
-            activeTab === 'upcoming' 
-              ? 'text-white shadow-xl'
-              : 'bg-white'
-          }`}
-          style={{ 
-            background: activeTab === 'upcoming' ? 'var(--gradient-primary)' : 'white',
-            color: activeTab === 'upcoming' ? 'white' : 'var(--lokadia-gray-600)',
-          }}
+      {/* ───────── TABS premium glass — segmented control style ───────── */}
+      <div className="max-w-7xl mx-auto px-5 pt-4 pb-3">
+        <div
+          className="inline-flex p-1 rounded-2xl gap-1 lk-fade-in-up"
+          style={{ background: 'var(--lokadia-gray-100)' }}
         >
-          À venir
-        </button>
-        <button
-          onClick={() => setActiveTab('past')}
-          className={`flex-1 py-4 px-5 text-base font-bold rounded-2xl transition-all duration-300 ${
-            activeTab === 'past' 
-              ? 'text-white shadow-xl'
-              : 'bg-white'
-          }`}
-          style={{ 
-            background: activeTab === 'past' ? 'var(--gradient-primary)' : 'white',
-            color: activeTab === 'past' ? 'white' : 'var(--lokadia-gray-600)',
-          }}
-        >
-          Passés
-        </button>
+          <button
+            onClick={() => setActiveTab('upcoming')}
+            className={`lk-btn relative px-5 py-2 text-sm font-bold rounded-xl transition-all duration-200 ${
+              activeTab === 'upcoming' ? 'shadow-md' : ''
+            }`}
+            style={{
+              background: activeTab === 'upcoming' ? 'white' : 'transparent',
+              color: activeTab === 'upcoming' ? 'var(--lokadia-primary)' : 'var(--lokadia-gray-600)',
+            }}
+          >
+            À venir
+            {upcomingTrips.length > 0 && (
+              <span
+                className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums"
+                style={{
+                  background: activeTab === 'upcoming' ? 'var(--lokadia-info-bg)' : 'rgba(255,255,255,0.6)',
+                  color: 'var(--lokadia-primary)',
+                }}
+              >
+                {upcomingTrips.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('past')}
+            className={`lk-btn relative px-5 py-2 text-sm font-bold rounded-xl transition-all duration-200 ${
+              activeTab === 'past' ? 'shadow-md' : ''
+            }`}
+            style={{
+              background: activeTab === 'past' ? 'white' : 'transparent',
+              color: activeTab === 'past' ? 'var(--lokadia-primary)' : 'var(--lokadia-gray-600)',
+            }}
+          >
+            Passés
+            {pastTrips.length > 0 && (
+              <span
+                className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums"
+                style={{
+                  background: activeTab === 'past' ? 'var(--lokadia-gray-100)' : 'rgba(255,255,255,0.6)',
+                  color: 'var(--lokadia-gray-700)',
+                }}
+              >
+                {pastTrips.length}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Liste des voyages avec animations */}
-      <div className="px-6 py-4 space-y-4">
+      {/* ───────── LISTE des voyages — grille md+ pour densité ───────── */}
+      <div className="max-w-7xl mx-auto px-5 pt-2 pb-4 space-y-3">
         {displayTrips.length === 0 ? (
           <motion.div 
             className="mt-4 mb-4"
@@ -345,167 +366,230 @@ export default function TripsScreen() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <button
-                  onClick={() => navigate("/trips/create")}
-                  className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300"
-                  style={{ 
-                    background: 'white',
-                    color: 'var(--lokadia-deep-blue)',
-                    boxShadow: '0 10px 40px rgba(15, 76, 129, 0.25)',
-                    border: '2px solid var(--lokadia-deep-blue)',
-                  }}
-                >
-                  <Plus size={24} strokeWidth={2.5} />
-                  Créer mon premier voyage
-                </button>
+                <div className="flex flex-col gap-3 items-center">
+                  <button
+                    onClick={() => navigate("/trips/map-planner")}
+                    className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 text-white"
+                    style={{
+                      background: 'linear-gradient(135deg, #10B981, #059669)',
+                      boxShadow: '0 10px 40px rgba(16, 185, 129, 0.35)',
+                    }}
+                  >
+                    <MapPin size={24} strokeWidth={2.5} />
+                    Planifier sur la carte
+                  </button>
+                  <button
+                    onClick={() => navigate("/trips/create")}
+                    className="inline-flex items-center gap-3 px-7 py-3 rounded-2xl font-semibold text-sm transition-all duration-300"
+                    style={{
+                      background: 'white',
+                      color: 'var(--lokadia-deep-blue)',
+                      boxShadow: '0 6px 20px rgba(15, 76, 129, 0.15)',
+                      border: '2px solid var(--lokadia-deep-blue)',
+                    }}
+                  >
+                    <Plus size={18} strokeWidth={2.5} />
+                    Créer via le formulaire
+                  </button>
+                </div>
               </motion.div>
             </motion.div>
           </motion.div>
         ) : (
           <>
-            {displayTrips.map((trip, index) => {
-              const status = getTripStatus(trip);
-              return (
-                <motion.div
-                  key={trip.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    duration: 0.3,
-                    delay: index * 0.08
+            {/* ⭐ HERO : Planificateur sur la carte (visible pour les 2 onglets,
+                permet de relancer un voyage depuis "Passés") */}
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="mb-2"
+              >
+                <button
+                  onClick={() => navigate("/trips/map-planner")}
+                  className="w-full rounded-3xl overflow-hidden transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] text-left relative"
+                  style={{
+                    background: 'linear-gradient(135deg, #0F4C81 0%, #10B981 60%, #059669 100%)',
+                    boxShadow: '0 16px 40px rgba(15, 76, 129, 0.30)',
+                    minHeight: 180,
                   }}
-                  className="relative"
                 >
-                  {/* Bouton de suppression */}
-                  <button
-                    onClick={(e) => handleDeleteTrip(trip.id, trip.destinationName, e)}
-                    className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
-                    style={{ 
-                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                      border: '2px solid rgba(239, 68, 68, 0.3)'
-                    }}
-                    title="Supprimer le voyage"
+                  {/* Décoration : grille de carte stylisée */}
+                  <svg
+                    className="absolute inset-0 w-full h-full opacity-20"
+                    viewBox="0 0 400 200"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
                   >
-                    <Trash2 size={18} style={{ color: '#EF4444' }} />
-                  </button>
+                    <defs>
+                      <pattern id="mapGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
+                      </pattern>
+                    </defs>
+                    <rect width="400" height="200" fill="url(#mapGrid)" />
+                    <path
+                      d="M 40 160 Q 100 100 180 110 T 360 50"
+                      stroke="white" strokeWidth="3" fill="none"
+                      strokeDasharray="6 4" strokeLinecap="round" opacity="0.6"
+                    />
+                    <circle cx="40"  cy="160" r="6" fill="white" />
+                    <circle cx="180" cy="110" r="6" fill="white" />
+                    <circle cx="360" cy="50"  r="6" fill="white" />
+                  </svg>
 
-                  <button
-                    onClick={() => navigate(`/trips/${trip.id}`)}
-                    className="block bg-white rounded-3xl p-6 border transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] w-full text-left"
-                    style={{ 
-                      borderColor: 'var(--lokadia-gray-200)',
-                      boxShadow: 'var(--shadow-md)',
-                    }}
+                  {/* Badge "NOUVEAU" */}
+                  <span
+                    className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider"
+                    style={{ background: '#FCD34D', color: '#78350F' }}
                   >
-                    <div className="flex items-start justify-between mb-4 pr-8">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <h3 
-                            className="text-xl font-bold"
-                            style={{ color: 'var(--lokadia-gray-900)' }}
-                          >
+                    NOUVEAU
+                  </span>
+
+                  <div className="relative p-6 flex items-center gap-5">
+                    <div
+                      className="rounded-2xl p-4 flex-shrink-0"
+                      style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)' }}
+                    >
+                      <MapPin size={36} strokeWidth={2.5} className="text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-extrabold text-white mb-1 leading-tight">
+                        {activeTab === 'past' ? 'Planifier un nouveau voyage' : 'Planifie ton voyage sur la carte'}
+                      </h3>
+                      <p className="text-sm text-white/90 mb-2.5 leading-snug">
+                        {activeTab === 'past'
+                          ? "Inspire-toi d'un voyage passé pour en créer un nouveau directement sur la carte."
+                          : 'Clique, recherche, choisis tes étapes et tes modes de transport — tout depuis une carte interactive.'}
+                      </p>
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/25 text-white text-xs font-bold backdrop-blur-sm">
+                        Commencer
+                        <ChevronRight size={14} strokeWidth={3} />
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              </motion.div>
+
+            {/* Grille de cards — 1 col mobile, 2 col md+, 3 col lg+ */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {displayTrips.map((trip, index) => {
+                const status = getTripStatus(trip);
+                const delayClass = `lk-delay-${Math.min((index % 6) + 1, 6)}`;
+                return (
+                  <div
+                    key={trip.id}
+                    className={`relative lk-fade-in-up ${delayClass}`}
+                  >
+                    {/* Bouton de suppression — plus discret en haut à droite */}
+                    <button
+                      onClick={(e) => handleDeleteTrip(trip.id, trip.destinationName, e)}
+                      className="lk-btn absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                      style={{
+                        backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                      }}
+                      title="Supprimer le voyage"
+                      data-touch="compact"
+                    >
+                      <Trash2 size={14} style={{ color: '#EF4444' }} strokeWidth={2.5} />
+                    </button>
+
+                    <button
+                      onClick={() => navigate(`/trips/${trip.id}`)}
+                      className="lk-card-hover block bg-white rounded-2xl p-4 border w-full text-left h-full"
+                      style={{
+                        borderColor: 'var(--lokadia-gray-200)',
+                        boxShadow: 'var(--shadow-sm)',
+                      }}
+                    >
+                      <div className="flex items-start gap-2 mb-2 pr-9">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base font-bold tracking-tight truncate" style={{ color: 'var(--lokadia-gray-900)' }}>
                             {trip.destinationName}
                           </h3>
-                          <span 
-                            className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full"
-                            style={{ 
-                              color: status.color,
-                              backgroundColor: status.bgColor
-                            }}
-                          >
-                            {status.icon}
-                            {status.label}
-                          </span>
-                        </div>
-                        <div 
-                          className="flex items-center gap-2 text-sm mb-3"
-                          style={{ color: 'var(--lokadia-gray-600)' }}
-                        >
-                          <Calendar size={16} />
-                          <span className="font-medium">{formatDateRange(trip.startDate, trip.endDate)}</span>
-                        </div>
-                      </div>
-                      <ChevronRight 
-                        size={24} 
-                        style={{ color: 'var(--lokadia-gray-400)' }}
-                        className="flex-shrink-0"
-                      />
-                    </div>
-
-                    {/* Étapes avec design amélioré */}
-                    {trip.stops.length > 0 && (
-                      <div className="flex items-center gap-2 mb-4 flex-wrap">
-                        <MapPin 
-                          size={16} 
-                          style={{ color: 'var(--lokadia-secondary)' }}
-                          className="flex-shrink-0"
-                        />
-                        {trip.stops.slice(0, 4).map((stop) => (
-                          <span
-                            key={stop.id}
-                            className="text-xs px-3 py-1.5 rounded-full font-medium"
-                            style={{ 
-                              backgroundColor: 'var(--lokadia-category-accommodation-bg)',
-                              color: 'var(--lokadia-category-accommodation)'
-                            }}
-                          >
-                            {stop.destinationName}
-                          </span>
-                        ))}
-                        {trip.stops.length > 4 && (
-                          <span 
-                            className="text-xs font-medium"
-                            style={{ color: 'var(--lokadia-gray-500)' }}
-                          >
-                            +{trip.stops.length - 4} autres
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Progression checklist élégante */}
-                    {activeTab === 'upcoming' && trip.checklistProgress.total > 0 && (
-                      <div className="flex items-center gap-3">
-                        <CheckCircle2 
-                          size={18} 
-                          style={{ color: 'var(--lokadia-success)' }}
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between text-sm mb-2">
-                            <span 
-                              className="font-medium"
-                              style={{ color: 'var(--lokadia-gray-700)' }}
-                            >
-                              Préparation
-                            </span>
-                            <span 
-                              className="font-semibold"
-                              style={{ color: 'var(--lokadia-success)' }}
-                            >
-                              {trip.checklistProgress.completed}/{trip.checklistProgress.total}
-                            </span>
+                          <div className="flex items-center gap-1.5 text-xs mt-1" style={{ color: 'var(--lokadia-gray-500)' }}>
+                            <Calendar size={12} />
+                            <span className="font-medium tabular-nums">{formatDateRange(trip.startDate, trip.endDate)}</span>
                           </div>
-                          <div 
-                            className="h-2.5 rounded-full overflow-hidden"
-                            style={{ backgroundColor: 'var(--lokadia-gray-200)' }}
-                          >
-                            <motion.div
-                              className="h-full rounded-full"
-                              style={{ background: 'var(--gradient-success)' }}
-                              initial={{ width: 0 }}
-                              animate={{ 
-                                width: `${(trip.checklistProgress.completed / trip.checklistProgress.total) * 100}%`
+                        </div>
+                      </div>
+
+                      {/* Status badge sous le titre */}
+                      <span
+                        className="lk-badge inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider"
+                        style={{
+                          color: status.color,
+                          backgroundColor: status.bgColor,
+                        }}
+                      >
+                        {status.icon}
+                        {status.label}
+                      </span>
+
+                      {/* Étapes — pastilles compactes */}
+                      {trip.stops.length > 0 && (
+                        <div className="flex items-center gap-1 mt-3 flex-wrap">
+                          <MapPin size={12} className="flex-shrink-0" style={{ color: 'var(--lokadia-secondary)' }} />
+                          {trip.stops.slice(0, 3).map((stop) => (
+                            <span
+                              key={stop.id}
+                              className="text-[10px] px-2 py-0.5 rounded-full font-semibold truncate max-w-[120px]"
+                              style={{
+                                backgroundColor: 'var(--lokadia-category-accommodation-bg)',
+                                color: 'var(--lokadia-category-accommodation)',
                               }}
-                              transition={{ duration: 0.6, delay: index * 0.1 }}
-                            />
+                            >
+                              {stop.destinationName}
+                            </span>
+                          ))}
+                          {trip.stops.length > 3 && (
+                            <span className="text-[10px] font-semibold" style={{ color: 'var(--lokadia-gray-500)' }}>
+                              +{trip.stops.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Progression checklist */}
+                      {activeTab === 'upcoming' && trip.checklistProgress.total > 0 && (
+                        <div className="flex items-center gap-2 mt-3">
+                          <CheckCircle2 size={14} style={{ color: 'var(--lokadia-success)' }} />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between text-[11px] mb-1">
+                              <span className="font-semibold" style={{ color: 'var(--lokadia-gray-600)' }}>
+                                Préparation
+                              </span>
+                              <span className="font-bold tabular-nums" style={{ color: 'var(--lokadia-success)' }}>
+                                {trip.checklistProgress.completed}/{trip.checklistProgress.total}
+                              </span>
+                            </div>
+                            <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--lokadia-gray-200)' }}>
+                              <motion.div
+                                className="h-full rounded-full"
+                                style={{ background: 'var(--gradient-success)' }}
+                                initial={{ width: 0 }}
+                                animate={{
+                                  width: `${(trip.checklistProgress.completed / trip.checklistProgress.total) * 100}%`,
+                                }}
+                                transition={{ duration: 0.6, delay: index * 0.05 }}
+                              />
+                            </div>
                           </div>
                         </div>
+                      )}
+
+                      {/* Footer chevron — discret */}
+                      <div className="flex justify-end mt-2">
+                        <ChevronRight
+                          size={14}
+                          className="transition-transform duration-200 group-hover:translate-x-0.5"
+                          style={{ color: 'var(--lokadia-gray-400)' }}
+                        />
                       </div>
-                    )}
-                  </button>
-                </motion.div>
-              );
-            })}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
             
             {/* Bouton pour ajouter un nouveau voyage */}
             {activeTab === 'upcoming' && (

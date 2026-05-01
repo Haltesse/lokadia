@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, MapPin, CheckCircle, Search, X } from "lucide-react";
 import { destinationsDatabase } from "../data/destinationData";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { HeroSlideshow } from "../components/HeroSlideshow";
 
 export function DestinationCountScreen() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentSlide, setCurrentSlide] = useState(0);
-  
+
   // Images pour le diaporama
   const heroImages = [
     "https://images.unsplash.com/photo-1488646953014-85cb44e25828?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080", // Destinations
@@ -17,15 +17,6 @@ export function DestinationCountScreen() {
     "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080", // Mountains
     "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080", // Travel road
   ];
-
-  // Auto-play du diaporama
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-    }, 5000); // Change toutes les 5 secondes
-
-    return () => clearInterval(interval);
-  }, [heroImages.length]);
   
   // Obtenir toutes les destinations
   const allDestinations = Object.values(destinationsDatabase);
@@ -49,56 +40,12 @@ export function DestinationCountScreen() {
 
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: "var(--lokadia-soft-white)" }}>
-      {/* Hero Header Section - Slideshow avec images de voyage */}
-      <div 
-        className="px-6 pt-8 pb-10 relative overflow-hidden"
+      {/* Hero Header Section - Slideshow swipeable + indicateurs story-style */}
+      <HeroSlideshow
+        images={heroImages}
+        className="px-6 pt-8 pb-10"
         style={{ height: '320px' }}
       >
-        {/* Slideshow Background */}
-        <div className="absolute inset-0">
-          <AnimatePresence>
-            {heroImages.map((image, index) => (
-              index === currentSlide && (
-                <motion.div
-                  key={currentSlide}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 1.2, ease: "easeInOut" }}
-                  className="absolute inset-0"
-                >
-                  <ImageWithFallback
-                    src={image}
-                    alt="Destination de voyage"
-                    className="w-full h-full object-cover"
-                  />
-                </motion.div>
-              )
-            ))}
-          </AnimatePresence>
-          
-          {/* Dark overlay pour lisibilité */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/70"></div>
-        </div>
-
-        {/* Indicateurs de slide */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
-          {heroImages.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className="transition-all"
-              style={{
-                width: currentSlide === index ? '20px' : '6px',
-                height: '6px',
-                borderRadius: '3px',
-                backgroundColor: currentSlide === index ? 'white' : 'rgba(255, 255, 255, 0.4)',
-              }}
-              aria-label={`Aller à la slide ${index + 1}`}
-            />
-          ))}
-        </div>
-
         <motion.div
           className="relative z-10"
           initial={{ opacity: 0, y: 20 }}
@@ -143,7 +90,7 @@ export function DestinationCountScreen() {
             )}
           </div>
         </motion.div>
-      </div>
+      </HeroSlideshow>
 
       {/* Liste des destinations */}
       <div className="px-6 py-6">
