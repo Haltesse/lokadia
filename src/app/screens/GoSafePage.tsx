@@ -1,454 +1,300 @@
-import { motion } from 'motion/react';
-import { useNavigate } from 'react-router';
+import { motion } from "motion/react";
+import { useNavigate } from "react-router";
 import {
-  Shield,
+  AlertTriangle,
   ArrowRight,
   CheckCircle2,
   Database,
-  Zap,
-  Globe,
   ExternalLink,
+  Globe,
   Heart,
-  AlertTriangle,
-} from 'lucide-react';
-import {
-  GOSAFE_METHODOLOGY,
-  SOURCE_HOMEPAGES,
-} from '../lib/officialSources';
+  Shield,
+  Zap,
+} from "lucide-react";
+import { GOSAFE_METHODOLOGY, SOURCE_HOMEPAGES } from "../lib/officialSources";
 
-/**
- * Page dédiée au GoSafe Score — explication transparente de la méthodologie
- * et des sources officielles utilisées. Tous les liens mènent aux vrais sites.
- */
 export default function GoSafePage() {
   const navigate = useNavigate();
 
-  // Source primaire (Numbeo) + sources complémentaires que l'utilisateur peut
-  // croiser à tout moment depuis la fiche d'une destination.
   const sources = [
     {
-      name: 'Numbeo',
-      full: 'Crime & Safety Index',
-      desc: '600 000+ contributeurs · 9 000+ villes · index de sécurité urbain de référence',
-      url: 'https://www.numbeo.com/crime/',
-      tag: 'Source primaire',
+      name: "Numbeo",
+      full: "Crime & Safety Index",
+      desc: "Index de sécurité urbain utilisé comme source primaire du score.",
+      url: "https://www.numbeo.com/crime/",
+      tag: "Source primaire",
       Icon: Database,
-      color: '#1E40AF',
-      bg: '#DBEAFE',
+      color: "#1E40AF",
+      bg: "#DBEAFE",
     },
     {
-      name: 'France Diplomatie',
-      full: 'MEAE · Conseils aux voyageurs',
-      desc: 'Recommandations officielles du Ministère français : sécurité, santé, formalités, zones à éviter',
+      name: "France Diplomatie",
+      full: "MEAE - Conseils aux voyageurs",
+      desc: "Sécurité, santé, formalités et zones à éviter.",
       url: SOURCE_HOMEPAGES.franceDiplomatie,
-      tag: 'Officiel',
+      tag: "Officiel",
       Icon: Shield,
-      color: '#92400E',
-      bg: '#FEF3C7',
+      color: "#92400E",
+      bg: "#FEF3C7",
     },
     {
-      name: 'OMS',
-      full: 'Organisation Mondiale de la Santé',
-      desc: 'Recommandations sanitaires, vaccins, alertes épidémies par pays',
+      name: "OMS",
+      full: "Organisation Mondiale de la Santé",
+      desc: "Recommandations sanitaires, vaccins et alertes épidémies.",
       url: SOURCE_HOMEPAGES.who,
-      tag: 'Officiel',
+      tag: "Officiel",
       Icon: Heart,
-      color: '#6D28D9',
-      bg: '#EDE9FE',
+      color: "#6D28D9",
+      bg: "#EDE9FE",
     },
     {
-      name: 'GDACS',
-      full: "Global Disaster Alert · Nations Unies",
-      desc: 'Alertes mondiales temps réel : séismes, cyclones, tsunamis, inondations',
+      name: "GDACS",
+      full: "Global Disaster Alert - Nations Unies",
+      desc: "Séismes, cyclones, tsunamis et inondations en temps réel.",
       url: SOURCE_HOMEPAGES.gdacs,
-      tag: 'Officiel',
+      tag: "Officiel",
       Icon: AlertTriangle,
-      color: '#991B1B',
-      bg: '#FEE2E2',
+      color: "#991B1B",
+      bg: "#FEE2E2",
     },
     {
-      name: 'OSAC',
-      full: 'US Department of State',
-      desc: 'Rapports de sécurité par pays produits par le Bureau de la Sécurité Diplomatique américaine',
+      name: "OSAC",
+      full: "US Department of State",
+      desc: "Rapports de sécurité par pays.",
       url: SOURCE_HOMEPAGES.osac,
-      tag: 'Officiel',
+      tag: "Officiel",
       Icon: Shield,
-      color: '#0F4C81',
-      bg: '#DBEAFE',
+      color: "#0F4C81",
+      bg: "#DBEAFE",
     },
     {
-      name: 'CDC Travel Health',
-      full: 'Centers for Disease Control · USA',
-      desc: 'Avis sanitaires par destination : vaccins, prévention, alertes en cours',
+      name: "CDC Travel Health",
+      full: "Centers for Disease Control",
+      desc: "Avis sanitaires par destination.",
       url: SOURCE_HOMEPAGES.cdc,
-      tag: 'Officiel',
+      tag: "Officiel",
       Icon: Heart,
-      color: '#047857',
-      bg: '#D1FAE5',
+      color: "#047857",
+      bg: "#D1FAE5",
+    },
+  ];
+
+  const steps = [
+    {
+      n: "1",
+      title: "Récupération du Crime Index Numbeo",
+      desc: "Lokadia s'appuie sur le Crime & Safety Index Numbeo pour obtenir une base de comparaison ville par ville.",
+      link: { label: "Méthodologie Numbeo", url: GOSAFE_METHODOLOGY.primarySource.methodology },
+    },
+    {
+      n: "2",
+      title: "Conversion en GoSafe Score",
+      desc: `Le résultat est présenté sur une échelle lisible ${GOSAFE_METHODOLOGY.scoreRange}, pensée pour être comprise en quelques secondes.`,
+    },
+    {
+      n: "3",
+      title: "Mise à jour automatique",
+      desc: `Les scores sont rafraîchis automatiquement toutes les ${GOSAFE_METHODOLOGY.refreshInterval}.`,
+    },
+    {
+      n: "4",
+      title: "Croisement avec les sources officielles",
+      desc: "La lecture du score reste accompagnée de liens directs vers les organismes officiels pour vérification.",
     },
   ];
 
   return (
-    <div className="bg-white">
-      {/* Hero */}
-      <section
-        className="py-14 md:py-24 relative overflow-hidden"
-        style={{ background: 'var(--gradient-primary)' }}
-      >
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-md mb-6"
-          >
-            <Shield className="h-4 w-4 text-white" />
-            <span className="text-xs font-semibold text-white tracking-wide">
-              MÉTHODOLOGIE TRANSPARENTE
-            </span>
-          </motion.div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 leading-tight">
-            GoSafe Score
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
-            Un indice de <strong>{GOSAFE_METHODOLOGY.scoreRange}</strong> mesurant
-            la sécurité d'une destination, calculé à partir du{' '}
-            <strong>Crime Index Numbeo</strong> et croisable avec les sources
-            officielles MAE / OMS / GDACS / OSAC.
-          </p>
-        </div>
-      </section>
-
-      {/* Sample scores */}
-      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 -mt-12 md:-mt-16 relative z-10">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          {[
-            { city: 'Tokyo', score: 95, color: '#10B981' },
-            { city: 'Lisbonne', score: 87, color: '#10B981' },
-            { city: 'Marrakech', score: 70, color: '#F59E0B' },
-            { city: 'Le Caire', score: 54, color: '#EF4444' },
-          ].map((s) => (
-            <div
-              key={s.city}
-              className="rounded-2xl p-5 bg-white"
-              style={{ boxShadow: 'var(--shadow-lg)' }}
-            >
-              <p
-                className="text-xs font-semibold uppercase tracking-wider mb-1"
-                style={{ color: 'var(--lokadia-gray-500)' }}
-              >
-                {s.city}
-              </p>
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-4xl font-bold" style={{ color: s.color }}>
-                  {s.score}
-                </span>
-                <span
-                  className="text-base"
-                  style={{ color: 'var(--lokadia-gray-400)' }}
-                >
-                  /100
-                </span>
-              </div>
-              <div className="h-1.5 rounded-full bg-gray-100 mt-2">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${s.score}%`, background: s.color }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Comment ça marche */}
-      <section className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-24">
-        <div className="text-center mb-10">
-          <h2
-            className="text-3xl md:text-4xl font-bold mb-3"
-            style={{ color: 'var(--lokadia-gray-900)' }}
-          >
-            Comment le score est calculé
-          </h2>
-          <p
-            className="text-base"
-            style={{ color: 'var(--lokadia-gray-600)' }}
-          >
-            Pas de boîte noire. Voici exactement d'où viennent les chiffres.
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          {[
-            {
-              n: '1',
-              title: 'Récupération du Crime Index Numbeo',
-              desc: (
-                <>
-                  Pour chaque ville, on interroge l'API Numbeo qui agrège les
-                  réponses de plus de 600 000 contributeurs (résidents et
-                  voyageurs) sur 9 000+ villes du monde. C'est l'index de
-                  sécurité urbaine le plus utilisé par les chercheurs et
-                  médias internationaux.
-                </>
-              ),
-              link: { label: 'Voir la méthodologie Numbeo', url: GOSAFE_METHODOLOGY.primarySource.methodology },
-            },
-            {
-              n: '2',
-              title: 'Conversion en GoSafe Score (0–100)',
-              desc: (
-                <>
-                  Le Safety Index Numbeo est arrondi sur une échelle 0–100. Un
-                  score élevé signifie que la sécurité perçue est bonne (faible
-                  criminalité, sentiment de sécurité de jour comme de nuit, peu
-                  d'agressions).
-                </>
-              ),
-            },
-            {
-              n: '3',
-              title: 'Mise à jour automatique',
-              desc: (
-                <>
-                  Les scores sont rafraîchis automatiquement toutes les{' '}
-                  <strong>{GOSAFE_METHODOLOGY.refreshInterval}</strong>. Quand
-                  vous ouvrez une destination, vous voyez la dernière valeur
-                  publiée par Numbeo.
-                </>
-              ),
-            },
-            {
-              n: '4',
-              title: 'Croisement avec les sources officielles',
-              desc: (
-                <>
-                  Sur chaque fiche destination, vous trouvez en plus du score
-                  des liens directs vers <strong>France Diplomatie</strong>,{' '}
-                  <strong>OMS</strong>, <strong>GDACS</strong>,{' '}
-                  <strong>OSAC</strong> et <strong>CDC</strong> pour vérifier
-                  vous-même les conseils officiels et alertes en cours.
-                </>
-              ),
-            },
-          ].map((step) => (
-            <div
-              key={step.n}
-              className="rounded-2xl p-5 md:p-6 bg-white border border-gray-200 flex gap-5"
-            >
-              <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-bold text-lg"
-                style={{ background: 'var(--gradient-primary)' }}
-              >
-                {step.n}
-              </div>
-              <div>
-                <h3
-                  className="text-lg font-bold mb-2"
-                  style={{ color: 'var(--lokadia-gray-900)' }}
-                >
-                  {step.title}
-                </h3>
-                <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: 'var(--lokadia-gray-600)' }}
-                >
-                  {step.desc}
-                </p>
-                {step.link && (
-                  <a
-                    href={step.link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-sm font-semibold text-blue-700 hover:underline"
-                  >
-                    {step.link.label} <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Échelle */}
-      <section className="bg-gray-50 py-16 md:py-20">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2
-              className="text-3xl md:text-4xl font-bold mb-3"
-              style={{ color: 'var(--lokadia-gray-900)' }}
-            >
-              Échelle de lecture
-            </h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            {GOSAFE_METHODOLOGY.thresholds.map((t) => (
-              <div
-                key={t.level}
-                className="rounded-2xl p-5 bg-white border border-gray-200 text-center"
-              >
-                <div
-                  className="inline-block px-3 py-1 rounded-full text-xs font-bold text-white mb-3"
-                  style={{ background: t.color }}
-                >
-                  {t.min}–{t.max}
-                </div>
-                <p
-                  className="text-lg font-bold mb-1"
-                  style={{ color: t.color }}
-                >
-                  {t.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Sources officielles cliquables */}
-      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-24">
-        <div className="text-center mb-10">
-          <h2
-            className="text-3xl md:text-4xl font-bold mb-3"
-            style={{ color: 'var(--lokadia-gray-900)' }}
-          >
-            6 sources officielles, vérifiables en un clic
-          </h2>
-          <p
-            className="text-base"
-            style={{ color: 'var(--lokadia-gray-600)' }}
-          >
-            Cliquez sur chaque source pour vérifier directement sur le site
-            officiel.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sources.map((s) => {
-            const Icon = s.Icon;
-            return (
-              <a
-                key={s.name}
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group rounded-2xl p-6 bg-white block transition-all hover:-translate-y-0.5"
-                style={{
-                  border: '1px solid var(--lokadia-gray-100)',
-                  boxShadow: 'var(--shadow-sm)',
-                }}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center"
-                    style={{ background: s.bg }}
-                  >
-                    <Icon className="h-6 w-6" style={{ color: s.color }} />
-                  </div>
-                  <span
-                    className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded"
-                    style={{ background: s.bg, color: s.color }}
-                  >
-                    {s.tag}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 mb-1">
-                  <h3
-                    className="text-xl font-bold"
-                    style={{ color: 'var(--lokadia-gray-900)' }}
-                  >
-                    {s.name}
-                  </h3>
-                  <ExternalLink className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <p
-                  className="text-xs mb-3 font-semibold uppercase tracking-wider"
-                  style={{ color: s.color }}
-                >
-                  {s.full}
-                </p>
-                <p
-                  className="text-sm"
-                  style={{ color: 'var(--lokadia-gray-600)' }}
-                >
-                  {s.desc}
-                </p>
-              </a>
-            );
-          })}
-        </div>
-
-        <p
-          className="text-xs text-center mt-8 italic"
-          style={{ color: 'var(--lokadia-gray-500)' }}
+    <main className="min-h-screen bg-white pb-16">
+      <section className="mx-auto grid max-w-7xl gap-6 px-5 pt-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-0">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative min-h-[520px] overflow-hidden rounded-[32px] p-8 text-white lg:p-10"
         >
-          Lokadia agrège ces sources publiques pour vous faire gagner du temps —
-          aucune donnée n'est inventée. Chaque lien ouvre la page officielle de
-          l'organisme.
-        </p>
-      </section>
+          <img
+            src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1600&q=85"
+            alt="Voyageur consultant une destination"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/82 via-slate-950/40 to-slate-950/12" />
+          <div className="relative z-10 flex min-h-[440px] flex-col justify-end">
+            <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-4 py-2 backdrop-blur-md">
+              <Shield className="h-4 w-4" />
+              <span className="text-xs font-black uppercase tracking-wide">GoSafe Score</span>
+            </div>
+            <h1 className="max-w-2xl text-5xl font-black leading-[1.04] tracking-tight">
+              La sécurité d'une destination, lisible avant de partir.
+            </h1>
+            <p className="mt-5 max-w-xl text-lg leading-8 text-white/90">
+              Un score clair, des seuils visibles et des sources officielles accessibles sans chercher dans plusieurs écrans.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <button
+                onClick={() => navigate("/destination-count")}
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-black"
+                style={{ color: "var(--lokadia-primary)" }}
+              >
+                Vérifier une destination <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => navigate("/alerts")}
+                className="inline-flex items-center gap-2 rounded-full bg-white/15 px-6 py-3 text-sm font-black text-white backdrop-blur"
+              >
+                Voir les alertes
+              </button>
+            </div>
+          </div>
+        </motion.div>
 
-      {/* Features */}
-      <section className="bg-gray-50 py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid gap-4">
+          <div className="rounded-[32px] bg-white p-6" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-lg)" }}>
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
+                  Lecture immédiate
+                </p>
+                <h2 className="mt-1 text-2xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                  Échelle GoSafe
+                </h2>
+              </div>
+              <div className="rounded-2xl px-4 py-3 text-right" style={{ background: "var(--lokadia-info-bg)" }}>
+                <p className="text-4xl font-black" style={{ color: "var(--lokadia-primary)" }}>
+                  0-100
+                </p>
+                <p className="text-xs font-bold" style={{ color: "var(--lokadia-gray-600)" }}>
+                  score
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              {GOSAFE_METHODOLOGY.thresholds.map((threshold) => (
+                <div key={threshold.level} className="rounded-2xl border p-4" style={{ borderColor: "var(--lokadia-gray-100)" }}>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-black" style={{ color: threshold.color }}>
+                      {threshold.label}
+                    </span>
+                    <span className="rounded-full px-3 py-1 text-xs font-black text-white" style={{ background: threshold.color }}>
+                      {threshold.min}-{threshold.max}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-gray-100">
+                    <div className="h-full rounded-full" style={{ width: `${threshold.max}%`, background: threshold.color }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
             {[
-              {
-                icon: Zap,
-                title: 'Temps réel',
-                desc: `Mise à jour toutes les ${GOSAFE_METHODOLOGY.refreshInterval} via l'API Numbeo.`,
-              },
-              {
-                icon: Globe,
-                title: 'Monde entier',
-                desc: '9 000+ villes couvertes par Numbeo + 190 fiches pays officielles.',
-              },
-              {
-                icon: CheckCircle2,
-                title: 'Sources vérifiables',
-                desc: 'Chaque score est doublé de liens cliquables vers les organismes officiels.',
-              },
-            ].map((f) => {
-              const Icon = f.icon;
+              { icon: Zap, title: "Temps réel", desc: GOSAFE_METHODOLOGY.refreshInterval },
+              { icon: Globe, title: "Monde", desc: "9 000+ villes" },
+              { icon: CheckCircle2, title: "Sources", desc: "Vérifiables" },
+            ].map((item) => {
+              const Icon = item.icon;
               return (
-                <div
-                  key={f.title}
-                  className="rounded-2xl p-6 bg-white"
-                  style={{ border: '1px solid var(--lokadia-gray-100)' }}
-                >
-                  <Icon
-                    className="h-8 w-8 mb-4"
-                    style={{ color: 'var(--lokadia-primary)' }}
-                  />
-                  <h3
-                    className="text-lg font-bold mb-2"
-                    style={{ color: 'var(--lokadia-gray-900)' }}
-                  >
-                    {f.title}
-                  </h3>
-                  <p
-                    className="text-sm"
-                    style={{ color: 'var(--lokadia-gray-600)' }}
-                  >
-                    {f.desc}
+                <div key={item.title} className="rounded-3xl bg-white p-5" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
+                  <Icon className="mb-4 h-6 w-6" style={{ color: "var(--lokadia-primary)" }} />
+                  <p className="font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                    {item.title}
+                  </p>
+                  <p className="mt-1 text-xs font-semibold" style={{ color: "var(--lokadia-gray-500)" }}>
+                    {item.desc}
                   </p>
                 </div>
               );
             })}
           </div>
+        </div>
+      </section>
 
-          <div className="text-center mt-10">
-            <button
-              onClick={() => navigate('/pro')}
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-semibold text-sm text-white"
-              style={{ background: 'var(--gradient-primary)' }}
-            >
-              Intégrer GoSafe dans notre organisation{' '}
-              <ArrowRight className="h-4 w-4" />
-            </button>
+      <section className="mx-auto mt-10 grid max-w-7xl gap-6 px-5 lg:grid-cols-[0.95fr_1.05fr] lg:px-0">
+        <div className="rounded-[32px] bg-white p-6 lg:p-8" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
+          <p className="text-xs font-black uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
+            Méthode
+          </p>
+          <h2 className="mt-2 text-3xl font-black tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+            Comment le score est calculé
+          </h2>
+          <div className="mt-6 space-y-4">
+            {steps.map((step) => (
+              <div key={step.n} className="flex gap-4 rounded-2xl border p-4" style={{ borderColor: "var(--lokadia-gray-100)" }}>
+                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl text-sm font-black text-white" style={{ background: "var(--gradient-primary)" }}>
+                  {step.n}
+                </div>
+                <div>
+                  <h3 className="font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                    {step.title}
+                  </h3>
+                  <p className="mt-1 text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
+                    {step.desc}
+                  </p>
+                  {step.link && (
+                    <a href={step.link.url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm font-black text-blue-700 hover:underline">
+                      {step.link.label} <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[32px] bg-white p-6 lg:p-8" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
+          <p className="text-xs font-black uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
+            Sources vérifiables
+          </p>
+          <h2 className="mt-2 text-3xl font-black tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+            Les organismes officiels restent visibles
+          </h2>
+          <div className="mt-6 grid gap-3 md:grid-cols-2">
+            {sources.map((source) => {
+              const Icon = source.Icon;
+              return (
+                <a
+                  key={source.name}
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                  style={{ borderColor: "var(--lokadia-gray-100)" }}
+                >
+                  <div className="mb-4 flex items-start justify-between">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: source.bg }}>
+                      <Icon className="h-5 w-5" style={{ color: source.color }} />
+                    </span>
+                    <ExternalLink className="h-4 w-4 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100" />
+                  </div>
+                  <h3 className="font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                    {source.name}
+                  </h3>
+                  <p className="mt-1 text-[11px] font-black uppercase tracking-wide" style={{ color: source.color }}>
+                    {source.full}
+                  </p>
+                  <p className="mt-2 text-sm leading-5" style={{ color: "var(--lokadia-gray-600)" }}>
+                    {source.desc}
+                  </p>
+                </a>
+              );
+            })}
           </div>
         </div>
       </section>
-    </div>
+
+      <section className="mx-auto mt-10 max-w-7xl px-5 lg:px-0">
+        <div className="flex flex-col gap-4 rounded-[32px] p-8 text-white lg:flex-row lg:items-center lg:justify-between" style={{ background: "var(--gradient-primary)" }}>
+          <div>
+            <h2 className="text-2xl font-black">GoSafe pour les organisations</h2>
+            <p className="mt-2 text-sm text-white/90">
+              La même donnée peut être intégrée dans un usage professionnel via Lokadia Pro.
+            </p>
+          </div>
+          <button onClick={() => navigate("/pro")} className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-black" style={{ color: "var(--lokadia-primary)" }}>
+            Découvrir Pro <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </section>
+    </main>
   );
 }

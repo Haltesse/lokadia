@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router";
 import { useState } from "react";
-import { Shield, Search, Menu, X, Globe, User as UserIcon, Map, Route as RouteIcon } from "lucide-react";
+import { Shield, Search, Menu, X, Globe, User as UserIcon, Route as RouteIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 
@@ -17,7 +17,6 @@ export function TopBar() {
 
   const navLinks = [
     { path: "/global-home", label: "Accueil" },
-    { path: "/map", label: "Carte" },
     { path: "/trips", label: "Voyages" },
     { path: "/alerts", label: "Alertes" },
     { path: "/gosafe", label: "GoSafe" },
@@ -92,18 +91,6 @@ export function TopBar() {
           {/* Right actions */}
           <div className="flex items-center gap-2">
             {/* CTA création voyage — driver de commission */}
-            <button
-              onClick={() => navigate("/map")}
-              className="hidden xl:inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition-all"
-              style={{
-                background: "var(--lokadia-info-bg)",
-                color: "var(--lokadia-primary)",
-              }}
-            >
-              <Map className="h-4 w-4" />
-              Carte locale
-            </button>
-
             <button
               onClick={() => navigate("/trips/create")}
               className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-all"
