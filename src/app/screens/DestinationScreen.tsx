@@ -187,7 +187,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--lokadia-soft-white)" }}>
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+      <div className="sticky top-0 z-40 border-b border-gray-100 bg-white/95 backdrop-blur-sm lg:hidden">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <button
             onClick={() => {
@@ -206,7 +206,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
       </div>
 
       {/* Header Image */}
-      <div className="relative h-64">
+      <div className="relative h-64 lg:mx-auto lg:mt-6 lg:h-[440px] lg:max-w-7xl lg:overflow-hidden lg:rounded-[32px]">
         <DestinationImage
           src={destination.image}
           alt={destination.name}
@@ -247,7 +247,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
       </div>
 
       {/* GoSafe Score Card */}
-      <div className="px-6 -mt-6 mb-8 relative z-10">
+      <div className="relative z-10 mb-8 px-6 -mt-6 lg:mx-auto lg:max-w-5xl">
         <div className="bg-white rounded-2xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -321,7 +321,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
       </div>
 
       {/* Comment ce score est-il calculé + sources officielles */}
-      <div className="px-6 mb-6">
+      <div className="mb-6 px-6 lg:mx-auto lg:max-w-5xl">
         <GoSafeScoreInfo
           cityName={destination.name}
           countryName={destination.country}
@@ -330,7 +330,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
       </div>
 
       {/* Tabs */}
-      <div className="relative mb-6">
+      <div className="relative mb-6 lg:hidden">
         <div 
           ref={scrollContainerRef}
           className="overflow-x-auto scrollbar-hide" 
@@ -394,16 +394,41 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
       </div>
 
       {/* Tab Content */}
-      <div className="px-6 pb-24">
-        {activeTab === "overview" && <OverviewTab destination={destination} />}
-        {activeTab === "weather" && <WeatherTab destination={destination} />}
-        {activeTab === "alerts" && <AlertsTab destination={destination} />}
-        {activeTab === "safety" && <SafetyTab destination={destination} />}
-        {activeTab === "health" && <HealthTab destination={destination} />}
-        {activeTab === "entry" && <EntryTab destination={destination} />}
-        {activeTab === "scams" && <ScamsTab destination={destination} />}
-        {activeTab === "emergency" && <EmergencyTab destination={destination} />}
-        {activeTab === "culture" && <CultureTab destination={destination} />}
+      <div className="px-6 pb-24 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6 lg:px-6">
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 rounded-3xl bg-white p-3 shadow-sm">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const selected = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as Tab)}
+                  className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold transition-colors"
+                  style={{
+                    backgroundColor: selected ? "var(--lokadia-blue)" : "transparent",
+                    color: selected ? "#fff" : "var(--lokadia-text-dark)",
+                  }}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        <div className="min-w-0">
+          {activeTab === "overview" && <OverviewTab destination={destination} />}
+          {activeTab === "weather" && <WeatherTab destination={destination} />}
+          {activeTab === "alerts" && <AlertsTab destination={destination} />}
+          {activeTab === "safety" && <SafetyTab destination={destination} />}
+          {activeTab === "health" && <HealthTab destination={destination} />}
+          {activeTab === "entry" && <EntryTab destination={destination} />}
+          {activeTab === "scams" && <ScamsTab destination={destination} />}
+          {activeTab === "emergency" && <EmergencyTab destination={destination} />}
+          {activeTab === "culture" && <CultureTab destination={destination} />}
+        </div>
       </div>
 
       {/* Floating Sources Button */}
@@ -466,7 +491,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
 // Tab Components
 function OverviewTab({ destination }: { destination: DestinationDetails }) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
       <div className="bg-white rounded-2xl p-6 shadow-sm">
         <h3 className="font-semibold mb-4 text-base" style={{ color: "var(--lokadia-text-dark)" }}>
           Informations essentielles
@@ -516,7 +541,7 @@ function WeatherTab({ destination }: { destination: DestinationDetails }) {
   const { weather, loading: weatherLoading, error: weatherError } = useWeather(destination.name);
   
   return (
-    <div>
+    <div className="lg:max-w-2xl">
       {weatherLoading ? (
         <WeatherCardSkeleton />
       ) : weatherError || !weather ? (
@@ -541,7 +566,7 @@ function AlertsTab({ destination }: { destination: DestinationDetails }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
       {destination.alerts.map((alert) => (
         <div key={alert.id} className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="flex items-start gap-3 mb-3">
@@ -594,7 +619,7 @@ function SafetyTab({ destination }: { destination: DestinationDetails }) {
   const { safetyData, loading: safetyLoading, error: safetyError, refresh } = useNumbeoSafety(destination.id);
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
       {/* Numbeo Safety Index Card */}
       {safetyData && (
         <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 shadow-sm border-2 border-blue-100">
@@ -695,7 +720,7 @@ function SafetyTab({ destination }: { destination: DestinationDetails }) {
 
 function HealthTab({ destination }: { destination: DestinationDetails }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
       <div className="bg-white rounded-2xl p-5 shadow-sm">
         <h3 className="font-semibold mb-3" style={{ color: "var(--lokadia-text-dark)" }}>
           Vaccins recommandés
@@ -742,7 +767,7 @@ function HealthTab({ destination }: { destination: DestinationDetails }) {
 
 function EntryTab({ destination }: { destination: DestinationDetails }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
       <div className="bg-white rounded-2xl p-5 shadow-sm">
         <h3 className="font-semibold mb-3" style={{ color: "var(--lokadia-text-dark)" }}>
           Conditions d'entrée
@@ -786,7 +811,7 @@ function ScamsTab({ destination }: { destination: DestinationDetails }) {
   const localCurrencyCode = currencyMatch ? currencyMatch[1] : undefined;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
       <div className="bg-white rounded-2xl p-5 shadow-sm">
         <h3 className="font-semibold mb-3" style={{ color: "var(--lokadia-text-dark)" }}>
           Arnaques courantes
@@ -836,7 +861,7 @@ function ScamsTab({ destination }: { destination: DestinationDetails }) {
 
 function EmergencyTab({ destination }: { destination: DestinationDetails }) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
       <div className="bg-white rounded-2xl p-6 shadow-sm">
         <h3 className="font-semibold mb-5 text-base" style={{ color: "var(--lokadia-text-dark)" }}>
           Numéros d'urgence
@@ -882,7 +907,7 @@ function EmergencyTab({ destination }: { destination: DestinationDetails }) {
 
 function CultureTab({ destination }: { destination: DestinationDetails }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
       <div className="bg-white rounded-2xl p-5 shadow-sm">
         <h3 className="font-semibold mb-3" style={{ color: "var(--lokadia-text-dark)" }}>
           Coutumes locales

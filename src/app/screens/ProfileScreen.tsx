@@ -57,7 +57,7 @@ export function ProfileScreen() {
   const context = useLanguageSafe();
   
   // Protection contre contexte non disponible
-  const t = context?.t || { profile: {} };
+  const t = (context?.t || { profile: {} }) as any;
   const language = context?.language || 'fr';
   const setLanguage = context?.setLanguage || (() => {});
   const translate = context?.translate || ((text: string) => text);
@@ -450,7 +450,7 @@ export function ProfileScreen() {
       )}
 
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+      <div className="sticky top-0 z-40 border-b border-gray-100 bg-white/95 backdrop-blur-sm lg:hidden">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <button
             onClick={() => navigate("/global-home")}
@@ -472,9 +472,9 @@ export function ProfileScreen() {
       </div>
 
       {/* Header Profil */}
-      <div className="px-6 pt-6 pb-4">
-        <div className="bg-white rounded-2xl p-6 shadow-md border-2 border-gray-200">
-          <div className="flex items-start gap-4 mb-4">
+      <div className="px-6 pt-6 pb-4 lg:mx-auto lg:max-w-7xl lg:px-6 lg:pt-8">
+        <div className="rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-md lg:rounded-[28px] lg:p-8">
+          <div className="mb-4 flex items-start gap-4 lg:items-center">
             <div className="relative">
               <ImageWithFallback
                 src={authUser?.photo || "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=200"}
@@ -524,7 +524,7 @@ export function ProfileScreen() {
           )}
 
           {/* Résumé rapide */}
-          <div className="mt-5 pt-5 border-t-2 border-gray-200">
+          <div className="mt-5 border-t-2 border-gray-200 pt-5">
             <h3 className="text-sm font-bold mb-4" style={{ color: "#1a1a1a" }}>
               {t.profile.quickSummary}
             </h3>
@@ -558,6 +558,7 @@ export function ProfileScreen() {
         </div>
       </div>
 
+      <div className="lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-2 lg:items-start lg:gap-6 lg:px-6">
       {/* Mes Voyages */}
       <Section title={t.profile.myTrips} icon={Plane}>
         <div className="space-y-3">
@@ -626,7 +627,7 @@ export function ProfileScreen() {
 
       {/* Mes Sélections */}
       <Section title={t.profile.mySelections} icon={Bookmark}>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
           <SelectionCard 
             icon={Heart} 
             label={t.profile.favorites} 
@@ -807,7 +808,7 @@ export function ProfileScreen() {
 
       {/* Confidentialité & Sécurité */}
       <Section title={t.profile.privacySecurity} icon={Shield}>
-        <div className="space-y-2">
+        <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-2 lg:space-y-0">
           <MenuButton 
             icon={Download} 
             label={t.profile.downloadMyData} 
@@ -839,7 +840,7 @@ export function ProfileScreen() {
 
       {/* Support & Aide */}
       <Section title={t.profile.supportHelp} icon={HelpCircle}>
-        <div className="space-y-2">
+        <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-2 lg:space-y-0">
           <MenuButton 
             icon={HelpCircle} 
             label={t.profile.faq} 
@@ -867,9 +868,10 @@ export function ProfileScreen() {
           />
         </div>
       </Section>
+      </div>
 
       {/* Section Déconnexion */}
-      <div className="px-6 pb-6 pt-4">
+      <div className="px-6 pb-6 pt-4 lg:mx-auto lg:max-w-7xl">
         <button
           onClick={async () => {
             console.log('🚪 Déconnexion initiée...');
@@ -1412,18 +1414,18 @@ function Section({
   children,
 }: {
   title: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   children: React.ReactNode;
 }) {
   return (
-    <div className="px-6 pb-6">
+    <div className="px-6 pb-6 lg:px-0">
       <div className="flex items-center gap-2 mb-3">
         <Icon className="h-5 w-5" style={{ color: "var(--lokadia-deep-blue)" }} />
         <h2 className="text-lg font-bold" style={{ color: "#1a1a1a" }}>
           {title}
         </h2>
       </div>
-      <div className="bg-white rounded-2xl p-4 shadow-md border-2 border-gray-200">{children}</div>
+      <div className="rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-md lg:min-h-[220px]">{children}</div>
     </div>
   );
 }
@@ -1439,7 +1441,8 @@ function TripCard({
   onDuplicate?: () => void;
   onDelete: () => void;
 }) {
-  const { t } = useLanguage();
+  const context = useLanguageSafe();
+  const profileLabels = ((context?.t as any)?.profile || {}) as any;
   const statusColors = {
     planned: "var(--lokadia-info)",
     active: "var(--lokadia-success-green)",
@@ -1448,9 +1451,9 @@ function TripCard({
   };
 
   const statusLabels = {
-    planned: t.profile.tripStatusUpcoming,
-    active: t.profile.tripStatusOngoing,
-    completed: t.profile.tripStatusCompleted,
+    planned: profileLabels.tripStatusUpcoming,
+    active: profileLabels.tripStatusOngoing,
+    completed: profileLabels.tripStatusCompleted,
     cancelled: "Annulé",
   };
 
@@ -1490,7 +1493,7 @@ function TripCard({
           className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95"
           style={{ backgroundColor: "var(--lokadia-deep-blue)", color: "white" }}
         >
-          {t.profile.open}
+          {profileLabels.open}
         </button>
         {onDuplicate && (
           <button
@@ -1498,7 +1501,7 @@ function TripCard({
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 border-2 border-gray-200"
             style={{ backgroundColor: "white", color: "var(--lokadia-deep-blue)" }}
           >
-            {t.profile.duplicate}
+            {profileLabels.duplicate}
           </button>
         )}
         <button
@@ -1519,7 +1522,7 @@ function SelectionCard({
   count,
   onClick,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   label: string;
   count: number;
   onClick: () => void;
@@ -1574,7 +1577,7 @@ function MenuButton({
   count,
   compact,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   label: string;
   onClick: () => void;
   danger?: boolean;

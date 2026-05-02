@@ -562,7 +562,7 @@ export default function TripMapPlannerScreen() {
     <div className="fixed inset-0 flex flex-col" style={{ background: '#F8FAFC' }}>
 
       {/* ══ HEADER VISUEL — photo paysage iconique en arrière-plan ══ */}
-      <div className="relative px-4 py-3 z-[1000] overflow-hidden text-white">
+      <div className="relative z-[1000] overflow-hidden px-4 py-3 text-white lg:px-8 lg:py-4">
         {/* Image paysage iconique (Santorin / Cinque Terre — couleur méditerranéenne, voyageuse) */}
         <div
           className="absolute inset-0 bg-cover bg-center pointer-events-none"
@@ -583,7 +583,7 @@ export default function TripMapPlannerScreen() {
           aria-hidden="true"
         />
 
-        <div className="relative flex items-center gap-3">
+        <div className="relative flex items-center gap-3 lg:mx-auto lg:max-w-7xl">
           <button
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md flex items-center justify-center transition-colors flex-shrink-0 shadow-lg"
@@ -592,7 +592,7 @@ export default function TripMapPlannerScreen() {
             <ArrowLeft size={20} />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="font-extrabold leading-tight text-base sm:text-lg drop-shadow-md">
+            <h1 className="text-base font-extrabold leading-tight drop-shadow-md sm:text-lg lg:text-2xl">
               Planifier sur la carte
             </h1>
             <p className="text-[11px] sm:text-xs text-white/95 leading-snug drop-shadow">
@@ -611,8 +611,8 @@ export default function TripMapPlannerScreen() {
       </div>
 
       {/* ══ SEARCH BAR ══ */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2 z-[999] relative">
-        <div className="relative">
+      <div className="relative z-[999] border-b border-gray-200 bg-white px-4 py-2 lg:px-8">
+        <div className="relative lg:mx-auto lg:max-w-4xl">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
@@ -679,8 +679,9 @@ export default function TripMapPlannerScreen() {
         })()}
       </div>
 
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
       {/* ══ CARTE ══ */}
-      <div className="flex-1 relative">
+      <div className="relative flex-1 lg:min-w-0">
         <MapContainer
           center={[departure.lat, departure.lon]}
           zoom={4}
@@ -854,7 +855,7 @@ export default function TripMapPlannerScreen() {
 
       {/* ══ PANNEAU INFÉRIEUR (drawer drag-to-resize) ══ */}
       <motion.div
-        className="bg-white border-t border-gray-200 z-[800] overflow-hidden flex flex-col"
+        className="z-[800] flex flex-col overflow-hidden border-t border-gray-200 bg-white lg:w-[420px] lg:shrink-0 lg:self-stretch lg:!h-auto lg:border-l lg:border-t-0"
         style={{
           boxShadow: '0 -4px 16px rgba(0,0,0,0.08)',
           height: heightMV,
@@ -865,16 +866,17 @@ export default function TripMapPlannerScreen() {
           onPanStart={handleDrawerPanStart}
           onPan={handleDrawerPan}
           onPanEnd={handleDrawerPanEnd}
-          className="px-4 pt-4 pb-3 flex items-center gap-3 border-b border-gray-100 flex-shrink-0 relative cursor-grab active:cursor-grabbing select-none"
+          className="relative flex shrink-0 cursor-grab select-none items-center gap-3 border-b border-gray-100 px-4 pt-4 pb-3 active:cursor-grabbing lg:cursor-default lg:pt-5"
           style={{ touchAction: 'none' }}
           data-touch="no-feedback"
         >
           {/* Barre de drag visible (plus grosse, type iOS) */}
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full absolute left-1/2 top-2 -translate-x-1/2 pointer-events-none" />
+          <div className="pointer-events-none absolute left-1/2 top-2 h-1.5 w-12 -translate-x-1/2 rounded-full bg-gray-300 lg:hidden" />
 
           <div className="flex-1 text-left mt-1 pointer-events-none">
             <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">
-              Glisse ↕ pour redimensionner
+              <span className="lg:hidden">Glisse ↕ pour redimensionner</span>
+              <span className="hidden lg:inline">Itinéraire de travail</span>
             </p>
             <p className="text-sm font-bold text-gray-900">
               {stops.length === 0
@@ -893,7 +895,7 @@ export default function TripMapPlannerScreen() {
         {/* Contenu (scrollable) — toujours monté, clippé par overflow-hidden du parent
             pour éviter tout saut visuel quand on baisse le drawer */}
         {true && (
-          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+          <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3 lg:px-5 lg:py-4">
 
             {/* ── Réglages compacts : départ + voyageurs sur la même ligne avec
                 EXACTEMENT le même style (icône inline + contenu), puis dates en dessous. ── */}
@@ -1135,6 +1137,7 @@ export default function TripMapPlannerScreen() {
           </div>
         )}
       </motion.div>
+      </div>
     </div>
   );
 }

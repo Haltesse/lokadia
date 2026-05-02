@@ -147,22 +147,48 @@ export function SearchScreen() {
     console.log("📍 Historique après navigate():", window.history.length);
   };
 
+  const regionCounts = topCountries.reduce((acc, country) => {
+    acc[country.region] = (acc[country.region] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--lokadia-soft-white)" }}>
       {/* Header with Search */}
-      <div className="sticky top-0 z-10 px-6 pt-12 pb-6 bg-white">
+      <div className="sticky top-0 z-10 px-6 pt-12 pb-6 bg-white lg:static lg:mx-auto lg:mt-6 lg:max-w-7xl lg:rounded-[32px] lg:border lg:px-8 lg:pt-8 lg:shadow-sm" style={{ borderColor: "var(--lokadia-gray-100)" }}>
         <button
           onClick={() => {
             console.log("🔙 Retour cliqué - Navigation vers la page précédente");
             navigate(-1);
           }}
-          className="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-transform active:scale-95 mb-4"
+          className="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-transform active:scale-95 mb-4 lg:hidden"
           style={{ borderColor: "var(--lokadia-deep-blue)" }}
         >
           <ArrowLeft className="h-5 w-5" style={{ color: "var(--lokadia-deep-blue)" }} />
         </button>
 
-        <div className="bg-white border-2 rounded-2xl p-4 flex items-center gap-3 shadow-md" style={{ borderColor: "#000000" }}>
+        <div className="hidden lg:flex items-start justify-between gap-8 mb-6">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wide mb-2" style={{ color: "var(--lokadia-primary)" }}>
+              Recherche
+            </p>
+            <h1 className="text-4xl font-black tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+              Trouver une destination
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
+              Parcourez les pays touristiques et accédez directement à la fiche destination correspondante.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/global-home")}
+            className="rounded-full px-5 py-3 text-sm font-bold"
+            style={{ background: "var(--lokadia-info-bg)", color: "var(--lokadia-primary)" }}
+          >
+            Accueil
+          </button>
+        </div>
+
+        <div className="bg-white border-2 rounded-2xl p-4 flex items-center gap-3 shadow-md lg:max-w-3xl" style={{ borderColor: "#000000" }}>
           <Search className="h-5 w-5 flex-shrink-0" style={{ color: "#000000" }} />
           <input
             type="text"
@@ -180,14 +206,35 @@ export function SearchScreen() {
       </div>
 
       {/* Countries List */}
-      <div className="px-6 py-4 space-y-3">
+      <div className="px-6 py-4 space-y-3 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6 lg:space-y-0 lg:px-0 lg:py-6">
+        <aside className="hidden lg:block">
+          <div className="sticky top-28 rounded-3xl bg-white p-5" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
+            <h2 className="text-sm font-black mb-4" style={{ color: "var(--lokadia-gray-900)" }}>
+              Répartition
+            </h2>
+            <div className="space-y-2">
+              {Object.entries(regionCounts).slice(0, 8).map(([region, count]) => (
+                <div key={region} className="flex items-center justify-between rounded-2xl px-3 py-2" style={{ background: "#F8FAFC" }}>
+                  <span className="text-sm font-bold" style={{ color: "var(--lokadia-gray-700)" }}>
+                    {region}
+                  </span>
+                  <span className="text-xs font-black" style={{ color: "var(--lokadia-primary)" }}>
+                    {count}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-3">
         {filteredCountries.map((country) => (
           <button
             key={country.id}
             onClick={() => handleCountryClick(country)}
-            className="w-full bg-white rounded-2xl p-4 shadow-sm transition-transform active:scale-98 text-left"
+            className="w-full bg-white rounded-2xl p-4 shadow-sm transition-all active:scale-98 text-left lg:min-h-[180px] lg:hover:-translate-y-0.5 lg:hover:shadow-lg"
           >
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4 lg:flex-col">
               <div className="text-4xl">{country.flag}</div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-lg mb-1" style={{ color: "var(--lokadia-text-dark)" }}>
@@ -220,6 +267,7 @@ export function SearchScreen() {
             </div>
           </button>
         ))}
+        </div>
 
         {filteredCountries.length === 0 && (
           <div className="text-center py-12">

@@ -107,7 +107,7 @@ export function AllDestinationsScreen() {
     >
       {/* ───────── HEADER plus compact + search bar premium ───────── */}
       <div
-        className="px-5 pt-6 pb-5 lk-fade-in-down"
+        className="px-5 pt-6 pb-5 lk-fade-in-down lg:mx-auto lg:mt-6 lg:max-w-7xl lg:rounded-[32px] lg:px-8 lg:py-8"
         style={{ background: 'var(--gradient-primary)' }}
       >
         <div className="max-w-7xl mx-auto">
@@ -119,7 +119,7 @@ export function AllDestinationsScreen() {
               <TrendingUp className="h-5 w-5 text-white" strokeWidth={2.5} />
             </div>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight leading-tight">
+              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight leading-tight lg:text-4xl lg:font-black">
                 Toutes les destinations
               </h1>
               <p className="text-white/85 text-xs md:text-sm tabular-nums">
@@ -129,7 +129,7 @@ export function AllDestinationsScreen() {
           </div>
 
           {/* Search Bar premium avec focus state animé */}
-          <div className="lk-search relative bg-white/95 rounded-2xl shadow-lg flex items-center pr-2">
+          <div className="lk-search relative bg-white/95 rounded-2xl shadow-lg flex items-center pr-2 lg:max-w-2xl">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5"
               style={{ color: 'var(--lokadia-gray-500)' }}
@@ -156,7 +156,7 @@ export function AllDestinationsScreen() {
       </div>
 
       {/* ───────── COUNTER avec transition douce sur changement ───────── */}
-      <div className="max-w-7xl mx-auto px-5 pt-4 pb-2 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-5 pt-4 pb-2 flex items-center justify-between lg:px-0 lg:pt-6">
         <p
           key={filteredDestinations.length}
           className="text-xs lk-fade-in tabular-nums"
@@ -171,9 +171,21 @@ export function AllDestinationsScreen() {
       </div>
 
       {/* ───────── GRILLE dense premium 2/3/4/5 cols ───────── */}
-      <div className="max-w-7xl mx-auto px-5 pb-6">
+      <div className="max-w-7xl mx-auto px-5 pb-6 lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-6 lg:px-0">
+        <aside className="hidden lg:block">
+          <div className="sticky top-28 rounded-3xl bg-white p-5" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
+            <TrendingUp className="h-6 w-6 mb-4" style={{ color: "var(--lokadia-primary)" }} />
+            <h2 className="text-xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+              Catalogue
+            </h2>
+            <p className="mt-2 text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
+              Une grille dense pour scanner rapidement les destinations, avec score GoSafe visible dès la liste.
+            </p>
+          </div>
+        </aside>
+
         {filteredDestinations.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
             {filteredDestinations.map((destination, index) => (
               <DestinationCard
                 key={destination.id}

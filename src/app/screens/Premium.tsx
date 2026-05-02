@@ -81,10 +81,10 @@ export function Premium() {
   ];
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: 'var(--lokadia-background)' }}>
+    <div className="min-h-screen pb-24 lg:pb-14" style={{ background: 'var(--lokadia-background)' }}>
       {/* Header avec dégradé premium */}
       <motion.div 
-        className="px-6 pt-14 pb-12 text-white relative overflow-hidden"
+        className="relative overflow-hidden px-6 pt-14 pb-12 text-white lg:mx-auto lg:mt-6 lg:max-w-7xl lg:rounded-[32px] lg:px-12 lg:py-16"
         style={{ 
           background: 'linear-gradient(135deg, #0F4C81 0%, #8B5CF6 50%, #F59E0B 100%)',
         }}
@@ -117,7 +117,7 @@ export function Premium() {
         </motion.div>
         
         <motion.h1 
-          className="text-4xl font-bold text-white text-center mb-3"
+          className="mb-3 text-center text-4xl font-bold text-white lg:text-5xl"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -126,7 +126,7 @@ export function Premium() {
         </motion.h1>
         
         <motion.p 
-          className="text-white/90 text-lg text-center max-w-md mx-auto"
+          className="mx-auto max-w-2xl text-center text-lg text-white/90 lg:text-xl"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -136,8 +136,8 @@ export function Premium() {
       </motion.div>
 
       {/* Plans avec animations */}
-      <div className="px-6 -mt-8 relative z-10 mb-8">
-        <div className="space-y-4">
+      <div className="relative z-10 mb-8 px-6 -mt-8 lg:mx-auto lg:max-w-7xl lg:px-6">
+        <div className="space-y-4 lg:grid lg:grid-cols-3 lg:items-stretch lg:gap-5 lg:space-y-0">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.id}
@@ -146,7 +146,7 @@ export function Premium() {
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
               <div
-                className={`bg-white rounded-3xl overflow-hidden transition-all duration-300 hover:scale-[1.02] ${
+                className={`h-full overflow-hidden rounded-3xl bg-white transition-all duration-300 hover:scale-[1.02] lg:flex lg:flex-col ${
                   plan.popular ? "ring-4" : ""
                 }`}
                 style={plan.popular ? { 
@@ -166,8 +166,8 @@ export function Premium() {
                   </div>
                 )}
 
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-5">
+                <div className="p-6 lg:flex lg:flex-1 lg:flex-col">
+                  <div className="mb-5 flex items-center justify-between lg:flex-1 lg:flex-col lg:items-start lg:justify-start lg:gap-6">
                     <div>
                       <h3 
                         className="font-bold text-2xl mb-1" 
@@ -187,7 +187,7 @@ export function Premium() {
                         </div>
                       )}
                     </div>
-                    <div className="text-right">
+                    <div className="text-right lg:text-left">
                       <div className="flex items-baseline gap-1">
                         <span 
                           className="text-4xl font-bold"
@@ -221,7 +221,7 @@ export function Premium() {
       </div>
 
       {/* Premium Features avec couleurs */}
-      <div className="px-6 mb-8">
+      <div className="mb-8 px-6 lg:mx-auto lg:max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -237,7 +237,7 @@ export function Premium() {
             </h2>
           </div>
 
-          <div className="bg-white rounded-3xl p-6 space-y-5" style={{ boxShadow: 'var(--shadow-xl)' }}>
+          <div className="space-y-5 rounded-3xl bg-white p-6 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0" style={{ boxShadow: 'var(--shadow-xl)' }}>
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
@@ -276,7 +276,7 @@ export function Premium() {
       </div>
 
       {/* Free Features Comparison */}
-      <div className="px-6 mb-8">
+      <div className="mb-8 px-6 lg:mx-auto lg:max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -290,10 +290,10 @@ export function Premium() {
           </h2>
 
           <div 
-            className="bg-white rounded-3xl p-6" 
+            className="rounded-3xl bg-white p-6 lg:grid lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center lg:gap-8" 
             style={{ boxShadow: 'var(--shadow-lg)' }}
           >
-            <div className="space-y-4">
+            <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
               {freeFeatures.map((feature, index) => (
                 <motion.div 
                   key={index} 
@@ -321,7 +321,7 @@ export function Premium() {
               ))}
             </div>
 
-            <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--lokadia-gray-200)' }}>
+            <div className="mt-6 pt-6 lg:mt-0 lg:border-l lg:pl-8 lg:pt-0" style={{ borderTop: '1px solid var(--lokadia-gray-200)' }}>
               <motion.button
                 className="w-full py-4 rounded-2xl font-bold text-base border-2 transition-all"
                 style={{
@@ -339,7 +339,7 @@ export function Premium() {
       </div>
 
       {/* Trust Badge avec gradient */}
-      <div className="px-6 mb-8">
+      <div className="mb-8 px-6 lg:mx-auto lg:max-w-7xl">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}

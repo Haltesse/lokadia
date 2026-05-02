@@ -164,7 +164,7 @@ export function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden max-w-[430px] mx-auto">
+    <div className="relative mx-auto min-h-screen max-w-[430px] overflow-hidden lg:max-w-none">
       {/* Background Image avec parallax subtil */}
       <motion.div 
         className="absolute inset-0"
@@ -226,10 +226,10 @@ export function LoginScreen() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex flex-col px-5">
+      <div className="relative z-10 flex min-h-screen flex-col px-5 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center lg:gap-16 lg:px-8">
         {/* Language Selector - Top Right */}
         <motion.div 
-          className="absolute top-8 right-5 z-20"
+          className="absolute right-5 top-8 z-20 lg:right-8"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
@@ -245,7 +245,7 @@ export function LoginScreen() {
                 setViewMode("welcome");
                 resetForm();
               }}
-              className="absolute top-8 left-5 w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-95 z-20"
+              className="absolute left-5 top-8 z-20 flex h-10 w-10 items-center justify-center rounded-full transition-transform active:scale-95 lg:left-8"
               style={{
                 backgroundColor: "rgba(255, 255, 255, 0.2)",
                 backdropFilter: "blur(10px)",
@@ -264,14 +264,14 @@ export function LoginScreen() {
 
         {/* Hero Section - Logo et Tagline */}
         <motion.div 
-          className="pt-16 pb-8"
+          className="pt-16 pb-8 lg:pt-0 lg:pb-0"
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           {/* Logo/Icon avec effet glow */}
           <motion.div 
-            className="flex justify-center mb-4"
+            className="mb-4 flex justify-center lg:justify-start"
             animate={{ 
               scale: [1, 1.05, 1],
             }}
@@ -294,7 +294,7 @@ export function LoginScreen() {
 
           {/* Brand Name */}
           <motion.h1 
-            className="text-center text-4xl font-bold text-white mb-2"
+            className="mb-2 text-center text-4xl font-bold text-white lg:text-left lg:text-6xl"
             style={{
               textShadow: "0 4px 20px rgba(0, 0, 0, 0.3), 0 0 40px rgba(6, 182, 212, 0.2)",
               letterSpacing: "0.02em",
@@ -308,7 +308,7 @@ export function LoginScreen() {
 
           {/* Tagline avec icônes */}
           <motion.div 
-            className="flex items-center justify-center gap-2 text-white/90"
+            className="flex items-center justify-center gap-2 text-white/90 lg:justify-start"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
@@ -320,7 +320,7 @@ export function LoginScreen() {
         </motion.div>
 
         {/* Forms Container - Spacer pour pousser vers le bas */}
-        <div className="flex-1 flex items-end pb-6">
+        <div className="flex flex-1 items-end pb-6 lg:items-center lg:pb-0">
           <div className="w-full">
             {/* Welcome Mode */}
             <AnimatePresence mode="wait">
@@ -803,7 +803,7 @@ export function LoginScreen() {
 
         {/* Terms & Conditions */}
         <motion.p 
-          className="text-white/60 text-xs text-center mt-4 mb-4 px-4"
+          className="mt-4 mb-4 px-4 text-center text-xs text-white/60 lg:absolute lg:bottom-6 lg:left-1/2 lg:mb-0 lg:mt-0 lg:w-full lg:-translate-x-1/2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}

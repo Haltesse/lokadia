@@ -186,7 +186,7 @@ export function ChecklistScreen() {
   };
 
   const completedCount = items.filter((item) => item.isDone).length;
-  const completionPercentage = Math.round((completedCount / items.length) * 100);
+  const completionPercentage = items.length > 0 ? Math.round((completedCount / items.length) * 100) : 0;
 
   const groupedItems = items.reduce((acc, item) => {
     if (!acc[item.category]) {
@@ -196,18 +196,29 @@ export function ChecklistScreen() {
     return acc;
   }, {} as Record<string, ChecklistItem[]>);
 
+  const categorySummaries = categories
+    .map((category) => {
+      const categoryItems = groupedItems[category.name] || [];
+      return {
+        ...category,
+        total: categoryItems.length,
+        completed: categoryItems.filter((item) => item.isDone).length,
+      };
+    })
+    .filter((category) => category.total > 0);
+
   return (
-    <div className="min-h-screen" style={{ background: 'var(--lokadia-background)' }}>
+    <div className="min-h-screen lg:pb-10" style={{ background: 'var(--lokadia-background)' }}>
       {/* Header */}
       <div
-        className="px-6 pt-12 pb-8"
+        className="px-6 pt-12 pb-8 lg:mx-auto lg:mt-6 lg:max-w-7xl lg:rounded-[32px] lg:px-10 lg:py-10"
         style={{
           background: 'var(--gradient-primary)',
         }}
       >
         <motion.button
           onClick={handleBack}
-          className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mb-6"
+          className="mb-6 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-md lg:hidden"
           whileTap={{ scale: 0.95 }}
           style={{ boxShadow: 'var(--shadow-sm)' }}
         >
@@ -215,7 +226,7 @@ export function ChecklistScreen() {
         </motion.button>
 
         <motion.h1 
-          className="text-3xl font-bold text-white mb-3"
+          className="mb-3 text-3xl font-bold text-white lg:text-5xl"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -255,7 +266,7 @@ export function ChecklistScreen() {
       </div>
 
       {/* Actions Bar */}
-      <div className="px-6 py-5 bg-white flex gap-3" style={{ boxShadow: 'var(--shadow-md)' }}>
+      <div className="flex gap-3 bg-white px-6 py-5 lg:mx-auto lg:mt-6 lg:max-w-7xl lg:rounded-3xl" style={{ boxShadow: 'var(--shadow-md)' }}>
         <motion.button
           onClick={() => setShowAddItem(true)}
           className="flex-1 py-4 rounded-2xl font-bold text-base text-white flex items-center justify-center gap-2"
@@ -384,7 +395,46 @@ export function ChecklistScreen() {
       </AnimatePresence>
 
       {/* Checklist by Category */}
-      <div className="px-6 py-6 space-y-4">
+      <div className="px-6 py-6 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start lg:gap-6">
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 rounded-3xl bg-white p-5" style={{ boxShadow: 'var(--shadow-sm)' }}>
+            <p className="mb-1 text-xs font-bold uppercase" style={{ color: 'var(--lokadia-gray-500)' }}>
+              Préparation
+            </p>
+            <h2 className="mb-4 text-xl font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>
+              {completionPercentage}% complété
+            </h2>
+            <div className="mb-5 h-3 overflow-hidden rounded-full" style={{ backgroundColor: 'var(--lokadia-gray-100)' }}>
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${completionPercentage}%`,
+                  background: 'linear-gradient(90deg, var(--lokadia-warning) 0%, var(--lokadia-secondary) 100%)',
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              {categorySummaries.map((category) => {
+                const CategoryIcon = category.icon;
+                return (
+                  <div key={category.name} className="flex items-center justify-between rounded-2xl p-3" style={{ backgroundColor: 'var(--lokadia-soft-white)' }}>
+                    <div className="flex items-center gap-3">
+                      <CategoryIcon className="h-4 w-4" style={{ color: category.color }} />
+                      <span className="text-sm font-semibold" style={{ color: 'var(--lokadia-gray-800)' }}>
+                        {category.name}
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold" style={{ color: 'var(--lokadia-gray-600)' }}>
+                      {category.completed}/{category.total}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </aside>
+
+        <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
         {categories.map((category, catIndex) => {
           const categoryItems = groupedItems[category.name] || [];
           if (categoryItems.length === 0) return null;
@@ -395,7 +445,7 @@ export function ChecklistScreen() {
           return (
             <motion.div 
               key={category.name} 
-              className="bg-white rounded-3xl p-5"
+              className="rounded-3xl bg-white p-5 lg:h-fit"
               style={{ boxShadow: 'var(--shadow-lg)' }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -466,10 +516,11 @@ export function ChecklistScreen() {
             </motion.div>
           );
         })}
+        </div>
       </div>
 
       {/* Bottom Actions */}
-      <div className="px-6 pb-8 space-y-3">
+      <div className="space-y-3 px-6 pb-8 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-3 lg:gap-3 lg:space-y-0">
         <motion.button
           onClick={() => setShowSaveTripModal(true)}
           className="w-full py-4 rounded-2xl font-semibold text-white flex items-center justify-center gap-2"

@@ -93,22 +93,22 @@ export function TripCreateScreen() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "var(--lokadia-soft-white)" }}>
+    <div className="min-h-screen pb-10" style={{ backgroundColor: "var(--lokadia-soft-white)" }}>
       {/* Header */}
       <div
-        className="px-6 pt-12 pb-6"
+        className="px-6 pt-12 pb-6 lg:mx-auto lg:mt-6 lg:max-w-7xl lg:rounded-[32px] lg:px-10 lg:py-10"
         style={{
           background: "linear-gradient(135deg, var(--lokadia-deep-blue) 0%, var(--lokadia-blue) 100%)",
         }}
       >
         <button
           onClick={handleBack}
-          className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center transition-transform active:scale-95 mb-4"
+          className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-transform active:scale-95 lg:hidden"
         >
           <ArrowLeft className="h-5 w-5 text-white" />
         </button>
 
-        <h1 className="text-2xl font-bold text-white mb-2">Créer un voyage</h1>
+        <h1 className="mb-2 text-2xl font-bold text-white lg:text-4xl">Créer un voyage</h1>
         {destination && (
           <div className="flex items-center gap-2 text-white/90">
             <MapPin className="h-5 w-5" />
@@ -120,7 +120,8 @@ export function TripCreateScreen() {
       </div>
 
       {/* Form */}
-      <div className="px-6 py-6 space-y-6">
+      <div className="space-y-6 px-6 py-6 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-6 lg:space-y-0">
+        <div className="space-y-6">
         {/* Destination Selection */}
         {!showDestinationPicker && destination && (
           <div className="bg-white rounded-2xl p-5 shadow-sm">
@@ -168,7 +169,7 @@ export function TripCreateScreen() {
                 />
               </div>
 
-              <div className="max-h-60 overflow-y-auto space-y-2">
+              <div className="max-h-60 space-y-2 overflow-y-auto lg:grid lg:max-h-[360px] lg:grid-cols-2 lg:gap-2 lg:space-y-0">
                 {filteredDestinations.map((dest) => (
                   <button
                     key={dest.id}
@@ -198,7 +199,7 @@ export function TripCreateScreen() {
             Dates du voyage
           </h3>
 
-          <div className="space-y-4">
+          <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: "var(--lokadia-text-dark)" }}>
                 Date de départ
@@ -285,6 +286,52 @@ export function TripCreateScreen() {
           />
         </div>
 
+        </div>
+
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 rounded-3xl bg-white p-6 shadow-sm">
+            <div className="mb-5 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ backgroundColor: "rgba(30, 90, 142, 0.1)" }}>
+                <Briefcase className="h-5 w-5" style={{ color: "var(--lokadia-blue)" }} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold" style={{ color: "var(--lokadia-text-light)" }}>
+                  Résumé
+                </p>
+                <h2 className="text-lg font-bold" style={{ color: "var(--lokadia-text-dark)" }}>
+                  Nouveau voyage
+                </h2>
+              </div>
+            </div>
+
+            <div className="space-y-4 text-sm">
+              <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--lokadia-soft-white)" }}>
+                <p className="mb-1 font-semibold" style={{ color: "var(--lokadia-text-light)" }}>Destination</p>
+                <p className="font-bold" style={{ color: "var(--lokadia-text-dark)" }}>
+                  {destination ? `${destination.name}, ${destination.country}` : "A choisir"}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--lokadia-soft-white)" }}>
+                  <p className="mb-1 font-semibold" style={{ color: "var(--lokadia-text-light)" }}>Départ</p>
+                  <p className="font-bold" style={{ color: "var(--lokadia-text-dark)" }}>{startDate || "--"}</p>
+                </div>
+                <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--lokadia-soft-white)" }}>
+                  <p className="mb-1 font-semibold" style={{ color: "var(--lokadia-text-light)" }}>Retour</p>
+                  <p className="font-bold" style={{ color: "var(--lokadia-text-dark)" }}>{endDate || "--"}</p>
+                </div>
+              </div>
+              <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--lokadia-soft-white)" }}>
+                <p className="mb-1 font-semibold" style={{ color: "var(--lokadia-text-light)" }}>Voyageurs</p>
+                <p className="font-bold" style={{ color: "var(--lokadia-text-dark)" }}>
+                  {travelers} personne{travelers > 1 ? "s" : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <div className="lg:col-start-1">
         {/* Submit Button */}
         <button
           onClick={handleSubmit}
@@ -299,6 +346,7 @@ export function TripCreateScreen() {
           Vous pourrez ensuite accéder à votre checklist et préparer votre départ
         </p>
       </div>
+    </div>
     </div>
   );
 }

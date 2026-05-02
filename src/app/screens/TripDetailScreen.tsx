@@ -97,28 +97,35 @@ export default function TripDetailScreen() {
     });
   };
 
+  const tabOptions: Array<{ id: TabType; label: string }> = [
+    { id: 'overview', label: 'Aperçu' },
+    { id: 'preparation', label: 'Avant le départ' },
+    { id: 'location', label: 'Pendant' },
+    { id: 'itinerary', label: 'Itinéraire / Carte' },
+  ];
+
   return (
-    <div className="min-h-screen pb-24" style={{ background: 'var(--lokadia-background)' }}>
+    <div className="min-h-screen pb-24 lg:pb-12" style={{ background: 'var(--lokadia-background)' }}>
       {/* Header */}
       <div 
-        className="text-white px-6 py-8"
+        className="px-6 py-8 text-white lg:mx-auto lg:mt-6 lg:max-w-7xl lg:rounded-[32px] lg:px-10 lg:py-10"
         style={{ background: 'var(--gradient-primary)' }}
       >
         <button
           onClick={() => navigate('/trips')}
-          className="flex items-center gap-2 mb-6 text-white/90 hover:text-white font-medium text-base"
+          className="mb-6 flex items-center gap-2 text-base font-medium text-white/90 hover:text-white lg:hidden"
         >
           <ArrowLeft size={22} />
           <span>Retour</span>
         </button>
 
-        <h1 className="text-3xl font-bold mb-3">{trip.destinationName}</h1>
+        <h1 className="mb-3 text-3xl font-bold lg:text-5xl">{trip.destinationName}</h1>
         <p className="text-white/90 text-lg mb-6">
           {formatDate(trip.startDate)} → {formatDate(trip.endDate)}
         </p>
 
         {/* Action buttons */}
-        <div className="flex gap-3">
+        <div className="flex gap-3 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">
           <button
             onClick={() => navigate(`/trips/${trip.id}/edit`)}
             className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-5 py-3 rounded-full text-base font-semibold transition-colors backdrop-blur-sm"
@@ -147,7 +154,7 @@ export default function TripDetailScreen() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white border-b px-2 flex gap-2 overflow-x-auto" style={{ borderColor: 'var(--lokadia-gray-200)' }}>
+      <div className="flex gap-2 overflow-x-auto border-b bg-white px-2 lg:hidden" style={{ borderColor: 'var(--lokadia-gray-200)' }}>
         <button
           onClick={() => setActiveTab('overview')}
           className={`px-5 py-4 font-semibold text-base whitespace-nowrap relative transition-colors ${
@@ -219,17 +226,51 @@ export default function TripDetailScreen() {
       </div>
 
       {/* Tab Content */}
-      <div className="px-6 py-6">
-        {activeTab === 'overview' && <TripOverviewTab dashboard={dashboard} trip={trip} />}
-        {activeTab === 'preparation' && <TripPreparationTab dashboard={dashboard} />}
-        {activeTab === 'location' && <TripOnLocationTab dashboard={dashboard} trip={trip} />}
-        {activeTab === 'itinerary' && (
-          <TripItineraryMapTab
-            trip={trip}
-            stops={dashboard.stops}
-            segments={dashboard.segments}
-          />
-        )}
+      <div className="px-6 py-6 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6 lg:px-6">
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 space-y-4">
+            <div className="rounded-3xl bg-white p-3" style={{ boxShadow: 'var(--shadow-sm)' }}>
+              {tabOptions.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className="w-full rounded-2xl px-4 py-3 text-left text-sm font-bold transition-colors"
+                  style={{
+                    backgroundColor: activeTab === tab.id ? 'var(--lokadia-primary)' : 'transparent',
+                    color: activeTab === tab.id ? '#fff' : 'var(--lokadia-gray-700)',
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="rounded-3xl bg-white p-5" style={{ boxShadow: 'var(--shadow-sm)' }}>
+              <p className="mb-1 text-xs font-bold uppercase" style={{ color: 'var(--lokadia-gray-500)' }}>
+                Voyage
+              </p>
+              <h2 className="mb-3 text-lg font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>
+                {trip.destinationName}
+              </h2>
+              <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
+                {formatDate(trip.startDate)} → {formatDate(trip.endDate)}
+              </p>
+            </div>
+          </div>
+        </aside>
+
+        <div className="min-w-0">
+          {activeTab === 'overview' && <TripOverviewTab dashboard={dashboard} trip={trip} />}
+          {activeTab === 'preparation' && <TripPreparationTab dashboard={dashboard} />}
+          {activeTab === 'location' && <TripOnLocationTab dashboard={dashboard} trip={trip} />}
+          {activeTab === 'itinerary' && (
+            <TripItineraryMapTab
+              trip={trip}
+              stops={dashboard.stops}
+              segments={dashboard.segments}
+            />
+          )}
+        </div>
       </div>
 
       <BottomNav />

@@ -278,6 +278,14 @@ export default function TripWizardScreen() {
     return true;
   };
 
+  const wizardSteps: Array<{ id: Step; label: string }> = [
+    { id: 1, label: 'Destination' },
+    { id: 2, label: 'Dates & voyageurs' },
+    { id: 3, label: 'Profil' },
+    { id: 4, label: 'Étapes' },
+    { id: 5, label: 'Récapitulatif & offres' },
+  ];
+
   // Afficher un loader pendant le chargement des données en mode édition
   if (loading) {
     return (
@@ -315,7 +323,7 @@ export default function TripWizardScreen() {
     >
       {/* Header avec dégradé premium */}
       <motion.div 
-        className="text-white px-6 py-8"
+        className="px-6 py-8 text-white lg:mx-auto lg:mt-6 lg:max-w-7xl lg:rounded-[32px] lg:px-10 lg:py-10"
         style={{ 
           background: 'var(--gradient-primary)',
           borderBottomLeftRadius: '2rem',
@@ -327,16 +335,16 @@ export default function TripWizardScreen() {
       >
         <button
           onClick={() => navigate('/trips')}
-          className="flex items-center gap-2 mb-4 text-white/80 hover:text-white transition-colors"
+          className="mb-4 flex items-center gap-2 text-white/80 transition-colors hover:text-white lg:hidden"
         >
           <ArrowLeft size={20} />
           <span className="font-medium">Retour</span>
         </button>
-        <h1 className="text-3xl font-bold mb-2">
+        <h1 className="mb-2 text-3xl font-bold lg:text-5xl">
           {isEditMode ? 'Modifier mon voyage' : 'Créer mon voyage'}
         </h1>
         <p className="text-white/90 text-base mb-4">
-          {['Destination', 'Dates & voyageurs', 'Profil', 'Étapes', 'Récapitulatif & offres'][currentStep - 1]}
+          {wizardSteps[currentStep - 1].label}
           {' · '}
           <span className="text-white/70">Étape {currentStep} sur 5</span>
         </p>
@@ -374,7 +382,39 @@ export default function TripWizardScreen() {
         </div>
       </motion.div>
 
-      <div className="px-6 py-6">
+      <div className="px-6 py-6 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start lg:gap-6">
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 rounded-3xl bg-white p-3" style={{ boxShadow: 'var(--shadow-sm)' }}>
+            {wizardSteps.map((step) => {
+              const active = step.id === currentStep;
+              const done = step.id < currentStep;
+              return (
+                <button
+                  key={step.id}
+                  onClick={() => setCurrentStep(step.id)}
+                  className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors"
+                  style={{
+                    backgroundColor: active ? 'var(--lokadia-primary)' : done ? 'var(--lokadia-category-accommodation-bg)' : 'transparent',
+                    color: active ? '#fff' : 'var(--lokadia-gray-800)',
+                  }}
+                >
+                  <span
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
+                    style={{
+                      backgroundColor: active ? 'rgba(255,255,255,0.22)' : done ? 'var(--lokadia-primary)' : 'var(--lokadia-gray-100)',
+                      color: active || done ? '#fff' : 'var(--lokadia-gray-600)',
+                    }}
+                  >
+                    {done ? <Check size={14} /> : step.id}
+                  </span>
+                  <span className="text-sm font-bold">{step.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        <div className="min-w-0">
         {/* Étape 1: Destination */}
         {currentStep === 1 && (
           <motion.div 
@@ -1435,6 +1475,7 @@ export default function TripWizardScreen() {
               )}
             </motion.button>
           )}
+        </div>
         </div>
       </div>
 

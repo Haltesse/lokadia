@@ -43,7 +43,7 @@ export function DestinationCountScreen() {
       {/* Hero Header Section - Slideshow swipeable + indicateurs story-style */}
       <HeroSlideshow
         images={heroImages}
-        className="px-6 pt-8 pb-10"
+        className="px-6 pt-8 pb-10 lg:mx-auto lg:mt-6 lg:max-w-7xl lg:rounded-[32px] lg:px-10"
         style={{ height: '320px' }}
       >
         <motion.div
@@ -57,12 +57,12 @@ export function DestinationCountScreen() {
               e.preventDefault();
               navigate("/global-home");
             }}
-            className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center transition-transform active:scale-95 mb-8"
+            className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center transition-transform active:scale-95 mb-8 lg:hidden"
           >
             <ArrowLeft className="h-5 w-5 text-white" />
           </button>
 
-          <h1 className="text-3xl font-bold text-white mb-3">
+          <h1 className="text-3xl font-bold text-white mb-3 lg:text-5xl lg:font-black">
             Destinations disponibles
           </h1>
           <p className="text-white/90 text-lg mb-6">
@@ -70,7 +70,7 @@ export function DestinationCountScreen() {
           </p>
 
           {/* Barre de recherche */}
-          <div className="bg-white rounded-2xl p-4 flex items-center gap-3 shadow-lg">
+          <div className="bg-white rounded-2xl p-4 flex items-center gap-3 shadow-lg lg:max-w-2xl">
             <Search className="h-5 w-5 flex-shrink-0" style={{ color: "var(--lokadia-deep-blue)" }} />
             <input
               type="text"
@@ -93,7 +93,23 @@ export function DestinationCountScreen() {
       </HeroSlideshow>
 
       {/* Liste des destinations */}
-      <div className="px-6 py-6">
+      <div className="px-6 py-6 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-6 lg:px-0">
+        <aside className="hidden lg:block">
+          <div className="sticky top-28 rounded-3xl bg-white p-5" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
+            <CheckCircle className="h-7 w-7 mb-4" style={{ color: "var(--lokadia-primary)" }} />
+            <h2 className="text-2xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+              {totalCount}
+            </h2>
+            <p className="text-sm font-semibold mb-4" style={{ color: "var(--lokadia-gray-600)" }}>
+              fiches détaillées
+            </p>
+            <p className="text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
+              Score GoSafe, alertes, zones à risque, santé, visa, arnaques, prix indicatifs, urgences et coutumes locales.
+            </p>
+          </div>
+        </aside>
+
+        <div>
         {searchQuery !== "" && (
           <div className="mb-4">
             <p className="text-sm font-medium" style={{ color: "var(--lokadia-text-dark)" }}>
@@ -119,7 +135,7 @@ export function DestinationCountScreen() {
         )}
 
         {sortedDestinations.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-3">
             {sortedDestinations.map((dest) => (
               <div
                 key={dest.id}
@@ -127,7 +143,7 @@ export function DestinationCountScreen() {
                   console.log("🔍 Navigation vers destination:", dest.id);
                   navigate(`/destination/${dest.id}`);
                 }}
-                className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] transform transition-transform"
+                className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] transform transition-transform lg:min-h-[112px] lg:rounded-2xl lg:flex-col lg:items-start lg:gap-4"
               >
                 <div className="flex items-center gap-3">
                   <MapPin className="h-5 w-5" style={{ color: "var(--lokadia-blue)" }} />
@@ -173,6 +189,7 @@ export function DestinationCountScreen() {
             </p>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
