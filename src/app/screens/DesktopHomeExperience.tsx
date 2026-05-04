@@ -1,10 +1,9 @@
 import { motion } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Bell,
   CalendarDays,
-  ChevronLeft,
   ChevronRight,
   MapPin,
   Plane,
@@ -148,22 +147,28 @@ export function DesktopHomeExperience() {
   const navigate = useNavigate();
   const destinationsRailRef = useRef<HTMLDivElement>(null);
   const [activeDestinationIndex, setActiveDestinationIndex] = useState(0);
+  const [isDestinationsPaused, setIsDestinationsPaused] = useState(false);
   const visiblePartners = BOOKING_PARTNERS.slice(0, 5);
 
-  const slideDestinations = (direction: "left" | "right") => {
-    const rail = destinationsRailRef.current;
-    if (!rail) return;
-    const nextIndex =
-      direction === "left"
-        ? Math.max(0, activeDestinationIndex - 1)
-        : Math.min(destinations.length - 1, activeDestinationIndex + 1);
+  useEffect(() => {
+    if (isDestinationsPaused) return;
 
-    setActiveDestinationIndex(nextIndex);
-    rail.scrollTo({
-      left: nextIndex * DESTINATION_CARD_STEP,
-      behavior: "smooth",
-    });
-  };
+    const interval = window.setInterval(() => {
+      const rail = destinationsRailRef.current;
+      if (!rail) return;
+
+      setActiveDestinationIndex((currentIndex) => {
+        const nextIndex = currentIndex >= destinations.length - 1 ? 0 : currentIndex + 1;
+        rail.scrollTo({
+          left: nextIndex * DESTINATION_CARD_STEP,
+          behavior: "smooth",
+        });
+        return nextIndex;
+      });
+    }, 3600);
+
+    return () => window.clearInterval(interval);
+  }, [isDestinationsPaused]);
 
   const handleDestinationsScroll = () => {
     const rail = destinationsRailRef.current;
@@ -316,23 +321,15 @@ export function DesktopHomeExperience() {
           </div>
         </div>
 
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => slideDestinations("left")}
-            aria-label="Voir les destinations précédentes"
-            className="absolute left-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white text-sm font-bold shadow-xl transition-all hover:-translate-y-[54%] hover:shadow-2xl disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ color: "var(--lokadia-primary)" }}
-            disabled={activeDestinationIndex === 0}
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-
+        <div
+          className="relative"
+          onMouseEnter={() => setIsDestinationsPaused(true)}
+          onMouseLeave={() => setIsDestinationsPaused(false)}
+        >
           <div
             ref={destinationsRailRef}
             onScroll={handleDestinationsScroll}
-            className="flex snap-x gap-5 overflow-x-auto scroll-smooth rounded-[28px] border bg-white/55 p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            style={{ borderColor: "var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}
+            className="flex snap-x gap-5 overflow-x-auto scroll-smooth py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             aria-label="Carousel destinations du moment"
           >
             {destinations.map((destination) => (
@@ -343,34 +340,13 @@ export function DesktopHomeExperience() {
               />
             ))}
           </div>
-
-          <button
-            type="button"
-            onClick={() => slideDestinations("right")}
-            aria-label="Voir les destinations suivantes"
-            className="absolute right-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white text-sm font-bold shadow-xl transition-all hover:-translate-y-[54%] hover:shadow-2xl disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ color: "var(--lokadia-primary)" }}
-            disabled={activeDestinationIndex >= destinations.length - 1}
-          >
-            <ChevronRight className="h-6 w-6" />
-          </button>
-
-          <div className="pointer-events-none absolute inset-y-4 left-4 w-16 rounded-l-[22px] bg-gradient-to-r from-white/80 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-4 right-4 w-20 rounded-r-[22px] bg-gradient-to-l from-white/85 to-transparent" />
         </div>
 
         <div className="mt-4 flex items-center justify-center gap-2">
           {destinations.map((destination, index) => (
-            <button
+            <span
               key={destination.id}
-              type="button"
-              onClick={() => {
-                const rail = destinationsRailRef.current;
-                if (!rail) return;
-                setActiveDestinationIndex(index);
-                rail.scrollTo({ left: index * DESTINATION_CARD_STEP, behavior: "smooth" });
-              }}
-              aria-label={`Afficher ${destination.city}`}
+              aria-hidden="true"
               className="h-2.5 rounded-full transition-all"
               style={{
                 width: activeDestinationIndex === index ? 28 : 10,
