@@ -157,33 +157,23 @@ function DesktopDestinationFeature({
 
       <motion.div
         key={`${destination.id}-content`}
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.86, ease: [0.22, 1, 0.36, 1], delay: 0.18 }}
+        transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10 flex h-full flex-col justify-between p-9"
         style={{ zIndex: 4 }}
       >
         <div className="flex items-start justify-between gap-6">
-          <motion.div
-            key={`${destination.id}-tag`}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1], delay: 0.24 }}
-            className="flex items-center gap-2 rounded-full bg-white/18 px-4 py-2 text-xs font-black uppercase tracking-wide text-white backdrop-blur-md"
-          >
+          <div className="flex items-center gap-2 rounded-full bg-white/18 px-4 py-2 text-xs font-black uppercase tracking-wide text-white backdrop-blur-md">
             <Star className="h-4 w-4 fill-white" />
             {destination.tag}
-          </motion.div>
-          <motion.div
-            key={`${destination.id}-score`}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1], delay: 0.28 }}
+          </div>
+          <div
             className="rounded-full px-4 py-2 text-sm font-black text-white shadow-lg"
             style={{ background: scoreBackground }}
           >
             GoSafe {loading && score === null ? "..." : score !== null ? `${score}/100` : "--"}
-          </motion.div>
+          </div>
         </div>
 
         <div className="max-w-2xl">
