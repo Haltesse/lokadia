@@ -199,6 +199,28 @@ function FitBoundsOnUpdate({
   return null;
 }
 
+function FocusDepartureOnChange({
+  departure,
+}: {
+  departure: { id: string; lat: number; lon: number };
+}) {
+  const map = useMap();
+  const previousDepartureIdRef = useRef(departure.id);
+
+  useEffect(() => {
+    if (previousDepartureIdRef.current === departure.id) return;
+    previousDepartureIdRef.current = departure.id;
+
+    map.closePopup();
+    map.flyTo([departure.lat, departure.lon], Math.max(map.getZoom(), 8), {
+      duration: 0.85,
+      easeLinearity: 0.25,
+    });
+  }, [departure.id, departure.lat, departure.lon, map]);
+
+  return null;
+}
+
 // Capture des clics sur la carte
 function MapClickHandler({ onClick }: { onClick: (lat: number, lon: number) => void }) {
   useMapEvents({
@@ -694,6 +716,7 @@ export default function TripMapPlannerScreen() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <FitBoundsOnUpdate points={points} enabled={autoFit} />
+          <FocusDepartureOnChange departure={departure} />
           <MapClickHandler onClick={handleMapClick} />
 
           {/* Polylines */}
