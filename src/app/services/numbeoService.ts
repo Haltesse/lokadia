@@ -150,7 +150,6 @@ const FRENCH_TO_ENGLISH_COUNTRY: Record<string, string> = {
   "États-Unis": "United States", "Canada": "Canada", "Mexique": "Mexico",
   "Brésil": "Brazil", "Argentine": "Argentina", "Chili": "Chile",
   "Colombie": "Colombia", "Pérou": "Peru",
-  "Pays-Bas": "Netherlands",
 };
 
 // Cache pour éviter trop d'appels API
