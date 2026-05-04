@@ -3,9 +3,9 @@ import { useNavigate } from "react-router";
 import { ArrowLeft, MapPin, CheckCircle, Search, Shield, X } from "lucide-react";
 import { destinationsDatabase, type DestinationDetails } from "../data/destinationData";
 import { motion } from "motion/react";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { HeroSlideshow } from "../components/HeroSlideshow";
 import { useGoSafeScore } from "../hooks/useGoSafeScore";
+import { DestinationImage } from "../components/DestinationImage";
 
 interface DestinationListItemProps {
   dest: DestinationDetails;
@@ -35,28 +35,42 @@ function DestinationListItem({ dest, onClick }: DestinationListItemProps) {
     <button
       type="button"
       onClick={onClick}
-      className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] transform transition-transform text-left lg:min-h-[112px] lg:rounded-2xl lg:flex-col lg:items-start lg:gap-4"
+      className="group flex w-full items-stretch gap-3 overflow-hidden rounded-xl bg-white p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] lg:block lg:rounded-2xl lg:p-0"
     >
-      <div className="flex items-center gap-3">
-        <MapPin className="h-5 w-5" style={{ color: "var(--lokadia-blue)" }} />
-        <div>
-          <div className="font-medium" style={{ color: "var(--lokadia-text-dark)" }}>
-            {dest.name}
-          </div>
-          <div className="text-sm" style={{ color: "var(--lokadia-text-light)" }}>
-            {dest.country}
+      <div className="relative h-20 w-24 flex-shrink-0 overflow-hidden rounded-xl lg:h-32 lg:w-full lg:rounded-none">
+        <DestinationImage
+          src={dest.image}
+          alt={`${dest.name}, ${dest.country}`}
+          cityName={dest.name}
+          countryName={dest.country}
+          preferWikipedia
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+      </div>
+
+      <div className="flex min-w-0 flex-1 items-center justify-between gap-3 lg:p-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <MapPin className="h-5 w-5 flex-shrink-0" style={{ color: "var(--lokadia-blue)" }} />
+          <div className="min-w-0">
+            <div className="truncate font-medium" style={{ color: "var(--lokadia-text-dark)" }}>
+              {dest.name}
+            </div>
+            <div className="truncate text-sm" style={{ color: "var(--lokadia-text-light)" }}>
+              {dest.country}
+            </div>
           </div>
         </div>
-      </div>
-      <div
-        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold tabular-nums"
-        style={{
-          backgroundColor: scoreBackground,
-          color: scoreColor,
-        }}
-      >
-        <Shield className="h-3.5 w-3.5" />
-        {loading && score === null ? "..." : score !== null ? `${score}/100` : "--"}
+        <div
+          className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold tabular-nums"
+          style={{
+            backgroundColor: scoreBackground,
+            color: scoreColor,
+          }}
+        >
+          <Shield className="h-3.5 w-3.5" />
+          {loading && score === null ? "..." : score !== null ? `${score}/100` : "--"}
+        </div>
       </div>
     </button>
   );
