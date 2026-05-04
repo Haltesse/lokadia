@@ -178,11 +178,11 @@ function DesktopDestinationFeature({
           <h3 className="text-6xl font-black leading-none tracking-tight text-white">
             {destination.city}
           </h3>
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-950/34 px-4 py-2 text-lg font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)] ring-1 ring-white/14">
+          <div className="mt-5 flex items-center gap-2 text-xl font-semibold text-white/92 drop-shadow-[0_3px_12px_rgba(15,23,42,0.45)]">
             <MapPin className="h-5 w-5" />
             {destination.country}
           </div>
-          <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-slate-950/38 px-5 py-3 text-sm font-black text-white shadow-[0_18px_42px_rgba(15,23,42,0.22)] ring-1 ring-white/18 transition-transform group-hover:translate-x-1">
+          <div className="mt-7 inline-flex items-center gap-2 rounded-full bg-slate-950/38 px-5 py-3 text-sm font-black text-white shadow-[0_18px_42px_rgba(15,23,42,0.22)] ring-1 ring-white/18 transition-transform group-hover:translate-x-1">
             Découvrir la destination <ChevronRight className="h-4 w-4" />
           </div>
         </div>
