@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import {
@@ -119,43 +119,71 @@ function DesktopDestinationFeature({
     <button
       type="button"
       onClick={onClick}
-      className="group relative block h-[430px] w-full overflow-hidden rounded-[32px] text-left shadow-[0_24px_70px_rgba(15,23,42,0.18)] transition-all hover:-translate-y-1 hover:shadow-[0_34px_90px_rgba(15,23,42,0.24)]"
+      className="group relative block h-[430px] w-full overflow-hidden rounded-[32px] bg-slate-950 text-left shadow-[0_24px_70px_rgba(15,23,42,0.18)] transition-all hover:-translate-y-1 hover:shadow-[0_34px_90px_rgba(15,23,42,0.24)]"
     >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={destination.id}
-          initial={{ opacity: 0, scale: 1.035 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.985 }}
-          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute inset-0"
-        >
-          <ImageWithFallback
-            src={destination.image}
-            alt={`${destination.city}, ${destination.country}`}
-            className="h-full w-full object-cover"
-          />
-        </motion.div>
-      </AnimatePresence>
+      {destinations.map((slide, index) => {
+        const isActive = index === slideIndex;
+        return (
+          <motion.div
+            key={slide.id}
+            initial={false}
+            animate={{
+              opacity: isActive ? 1 : 0,
+              scale: isActive ? 1 : 1.035,
+            }}
+            transition={{ duration: 1.25, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-0"
+            style={{ zIndex: isActive ? 2 : 1 }}
+          >
+            <ImageWithFallback
+              src={slide.image}
+              alt={`${slide.city}, ${slide.country}`}
+              className="h-full w-full object-cover"
+            />
+          </motion.div>
+        );
+      })}
 
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/78 via-slate-950/34 to-slate-950/8" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/36 via-transparent to-black/16" />
+      <motion.div
+        aria-hidden="true"
+        className="absolute inset-0"
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.25, ease: [0.22, 1, 0.36, 1] }}
+        style={{ zIndex: 3 }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/78 via-slate-950/34 to-slate-950/8" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/36 via-transparent to-black/16" />
+      </motion.div>
 
       <motion.div
         key={`${destination.id}-content`}
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1], delay: 0.12 }}
+        transition={{ duration: 0.86, ease: [0.22, 1, 0.36, 1], delay: 0.18 }}
         className="relative z-10 flex h-full flex-col justify-between p-9"
+        style={{ zIndex: 4 }}
       >
         <div className="flex items-start justify-between gap-6">
-          <div className="flex items-center gap-2 rounded-full bg-white/18 px-4 py-2 text-xs font-black uppercase tracking-wide text-white backdrop-blur-md">
+          <motion.div
+            key={`${destination.id}-tag`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1], delay: 0.24 }}
+            className="flex items-center gap-2 rounded-full bg-white/18 px-4 py-2 text-xs font-black uppercase tracking-wide text-white backdrop-blur-md"
+          >
             <Star className="h-4 w-4 fill-white" />
             {destination.tag}
-          </div>
-          <div className="rounded-full px-4 py-2 text-sm font-black text-white shadow-lg" style={{ background: scoreBackground }}>
+          </motion.div>
+          <motion.div
+            key={`${destination.id}-score`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1], delay: 0.28 }}
+            className="rounded-full px-4 py-2 text-sm font-black text-white shadow-lg"
+            style={{ background: scoreBackground }}
+          >
             GoSafe {loading && score === null ? "..." : score !== null ? `${score}/100` : "--"}
-          </div>
+          </motion.div>
         </div>
 
         <div className="max-w-2xl">
