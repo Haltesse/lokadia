@@ -1,5 +1,5 @@
-import { motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Bell,
@@ -94,14 +94,16 @@ const destinations = [
   },
 ];
 
-const DESTINATION_CARD_STEP = 340;
-
-function DesktopDestinationCard({
+function DesktopDestinationFeature({
   destination,
   onClick,
+  slideIndex,
+  totalSlides,
 }: {
   destination: (typeof destinations)[number];
   onClick: () => void;
+  slideIndex: number;
+  totalSlides: number;
 }) {
   const { score, loading } = useGoSafeScore(destination.id);
   const scoreBackground =
@@ -117,66 +119,83 @@ function DesktopDestinationCard({
     <button
       type="button"
       onClick={onClick}
-      className="group relative min-h-[320px] w-[300px] flex-shrink-0 snap-start overflow-hidden rounded-2xl text-left transition-all hover:-translate-y-1 hover:shadow-2xl xl:w-[320px]"
+      className="group relative block h-[430px] w-full overflow-hidden rounded-[32px] text-left shadow-[0_24px_70px_rgba(15,23,42,0.18)] transition-all hover:-translate-y-1 hover:shadow-[0_34px_90px_rgba(15,23,42,0.24)]"
     >
-      <ImageWithFallback
-        src={destination.image}
-        alt={`${destination.city}, ${destination.country}`}
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/22 to-transparent" />
-      <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-white/20 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
-        <Star className="h-3.5 w-3.5 fill-white" />
-        {destination.tag}
-      </div>
-      <div className="absolute right-4 top-4 rounded-full px-3 py-1.5 text-xs font-black text-white" style={{ background: scoreBackground }}>
-        {loading && score === null ? "..." : score !== null ? `${score}/100` : "--"}
-      </div>
-      <div className="absolute bottom-0 left-0 right-0 p-5">
-        <h3 className="text-2xl font-black text-white">{destination.city}</h3>
-        <div className="mt-1 flex items-center gap-1.5 text-sm font-medium text-white/85">
-          <MapPin className="h-4 w-4" />
-          {destination.country}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={destination.id}
+          initial={{ opacity: 0, scale: 1.035 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.985 }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute inset-0"
+        >
+          <ImageWithFallback
+            src={destination.image}
+            alt={`${destination.city}, ${destination.country}`}
+            className="h-full w-full object-cover"
+          />
+        </motion.div>
+      </AnimatePresence>
+
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/78 via-slate-950/34 to-slate-950/8" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/36 via-transparent to-black/16" />
+
+      <motion.div
+        key={`${destination.id}-content`}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1], delay: 0.12 }}
+        className="relative z-10 flex h-full flex-col justify-between p-9"
+      >
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex items-center gap-2 rounded-full bg-white/18 px-4 py-2 text-xs font-black uppercase tracking-wide text-white backdrop-blur-md">
+            <Star className="h-4 w-4 fill-white" />
+            {destination.tag}
+          </div>
+          <div className="rounded-full px-4 py-2 text-sm font-black text-white shadow-lg" style={{ background: scoreBackground }}>
+            GoSafe {loading && score === null ? "..." : score !== null ? `${score}/100` : "--"}
+          </div>
         </div>
-      </div>
+
+        <div className="max-w-2xl">
+          <p className="mb-3 text-sm font-black uppercase tracking-wide text-white/75">
+            Destination {slideIndex + 1}/{totalSlides}
+          </p>
+          <h3 className="text-6xl font-black leading-none tracking-tight text-white">
+            {destination.city}
+          </h3>
+          <div className="mt-4 flex items-center gap-2 text-lg font-semibold text-white/88">
+            <MapPin className="h-5 w-5" />
+            {destination.country}
+          </div>
+          <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-white/18 px-5 py-3 text-sm font-black text-white shadow-xl backdrop-blur-md transition-transform group-hover:translate-x-1">
+            Découvrir la destination <ChevronRight className="h-4 w-4" />
+          </div>
+        </div>
+      </motion.div>
     </button>
   );
 }
 
 export function DesktopHomeExperience() {
   const navigate = useNavigate();
-  const destinationsRailRef = useRef<HTMLDivElement>(null);
   const [activeDestinationIndex, setActiveDestinationIndex] = useState(0);
   const [isDestinationsPaused, setIsDestinationsPaused] = useState(false);
+  const activeDestination = destinations[activeDestinationIndex];
   const visiblePartners = BOOKING_PARTNERS.slice(0, 5);
 
   useEffect(() => {
     if (isDestinationsPaused) return;
 
     const interval = window.setInterval(() => {
-      const rail = destinationsRailRef.current;
-      if (!rail) return;
-
       setActiveDestinationIndex((currentIndex) => {
-        const nextIndex = currentIndex >= destinations.length - 1 ? 0 : currentIndex + 1;
-        rail.scrollTo({
-          left: nextIndex * DESTINATION_CARD_STEP,
-          behavior: "smooth",
-        });
-        return nextIndex;
+        return currentIndex >= destinations.length - 1 ? 0 : currentIndex + 1;
       });
-    }, 3600);
+    }, 4300);
 
     return () => window.clearInterval(interval);
   }, [isDestinationsPaused]);
-
-  const handleDestinationsScroll = () => {
-    const rail = destinationsRailRef.current;
-    if (!rail) return;
-    setActiveDestinationIndex(
-      Math.min(destinations.length - 1, Math.round(rail.scrollLeft / DESTINATION_CARD_STEP))
-    );
-  };
 
   const quickActions = [
     {
@@ -326,20 +345,12 @@ export function DesktopHomeExperience() {
           onMouseEnter={() => setIsDestinationsPaused(true)}
           onMouseLeave={() => setIsDestinationsPaused(false)}
         >
-          <div
-            ref={destinationsRailRef}
-            onScroll={handleDestinationsScroll}
-            className="flex snap-x gap-5 overflow-x-auto scroll-smooth py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            aria-label="Carousel destinations du moment"
-          >
-            {destinations.map((destination) => (
-              <DesktopDestinationCard
-                key={destination.id}
-                destination={destination}
-                onClick={() => navigate(`/destination/${destination.id}`)}
-              />
-            ))}
-          </div>
+          <DesktopDestinationFeature
+            destination={activeDestination}
+            slideIndex={activeDestinationIndex}
+            totalSlides={destinations.length}
+            onClick={() => navigate(`/destination/${activeDestination.id}`)}
+          />
         </div>
 
         <div className="mt-4 flex items-center justify-center gap-2">
