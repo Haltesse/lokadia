@@ -178,7 +178,10 @@ function DesktopDestinationFeature({
           <h3 className="text-6xl font-black leading-none tracking-tight text-white">
             {destination.city}
           </h3>
-          <div className="mt-5 flex items-center gap-2 text-xl font-semibold text-white/92 drop-shadow-[0_3px_12px_rgba(15,23,42,0.45)]">
+          <div
+            className="mt-5 flex items-center gap-2 text-xl font-semibold text-white drop-shadow-[0_3px_12px_rgba(15,23,42,0.45)]"
+            style={{ color: "rgba(255, 255, 255, 0.92)" }}
+          >
             <MapPin className="h-5 w-5" />
             {destination.country}
           </div>
