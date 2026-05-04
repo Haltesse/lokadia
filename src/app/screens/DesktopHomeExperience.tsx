@@ -98,12 +98,10 @@ function DesktopDestinationFeature({
   destination,
   onClick,
   slideIndex,
-  totalSlides,
 }: {
   destination: (typeof destinations)[number];
   onClick: () => void;
   slideIndex: number;
-  totalSlides: number;
 }) {
   const { score, loading } = useGoSafeScore(destination.id);
   const scoreBackground =
@@ -177,13 +175,10 @@ function DesktopDestinationFeature({
         </div>
 
         <div className="max-w-2xl">
-          <p className="mb-3 text-sm font-black uppercase tracking-wide text-white/75">
-            Destination {slideIndex + 1}/{totalSlides}
-          </p>
           <h3 className="text-6xl font-black leading-none tracking-tight text-white">
             {destination.city}
           </h3>
-          <div className="mt-4 flex items-center gap-2 text-lg font-semibold text-white/88">
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-950/34 px-4 py-2 text-lg font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)] ring-1 ring-white/14">
             <MapPin className="h-5 w-5" />
             {destination.country}
           </div>
@@ -366,7 +361,6 @@ export function DesktopHomeExperience() {
           <DesktopDestinationFeature
             destination={activeDestination}
             slideIndex={activeDestinationIndex}
-            totalSlides={destinations.length}
             onClick={() => navigate(`/destination/${activeDestination.id}`)}
           />
         </div>
