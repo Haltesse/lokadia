@@ -164,7 +164,7 @@ function DesktopDestinationFeature({
         style={{ zIndex: 4 }}
       >
         <div className="flex items-start justify-between gap-6">
-          <div className="flex items-center gap-2 rounded-full bg-white/18 px-4 py-2 text-xs font-black uppercase tracking-wide text-white backdrop-blur-md">
+          <div className="flex items-center gap-2 rounded-full bg-slate-950/38 px-4 py-2 text-xs font-black uppercase tracking-wide text-white shadow-[0_12px_32px_rgba(15,23,42,0.18)] ring-1 ring-white/18">
             <Star className="h-4 w-4 fill-white" />
             {destination.tag}
           </div>
@@ -187,7 +187,7 @@ function DesktopDestinationFeature({
             <MapPin className="h-5 w-5" />
             {destination.country}
           </div>
-          <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-white/18 px-5 py-3 text-sm font-black text-white shadow-xl backdrop-blur-md transition-transform group-hover:translate-x-1">
+          <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-slate-950/38 px-5 py-3 text-sm font-black text-white shadow-[0_18px_42px_rgba(15,23,42,0.22)] ring-1 ring-white/18 transition-transform group-hover:translate-x-1">
             Découvrir la destination <ChevronRight className="h-4 w-4" />
           </div>
         </div>
