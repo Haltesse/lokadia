@@ -575,7 +575,7 @@ export const moreDetailedDestinations3: Record<string, DestinationDetails> = {
     id: "dublin-ireland",
     name: "Dublin",
     country: "Irlande",
-    image: "https://images.unsplash.com/photo-1549770836-6322922a683d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Dublin_-_aerial_-_2025-07-07_01.jpg/1280px-Dublin_-_aerial_-_2025-07-07_01.jpg",
     goSafeScore: 82,
     safetyLevel: "safe",
     lastUpdate: "Il y a 1 heure",
