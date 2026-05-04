@@ -130,6 +130,29 @@ const CITY_NAME_MAPPING: Record<string, { city: string; country: string }> = {
   "riyadh-saudi-arabia": { city: "Riyadh", country: "Saudi Arabia" },
 };
 
+// ─── Traduction pays français → anglais (pour auto-mapping des nouvelles destinations) ──
+const FRENCH_TO_ENGLISH_COUNTRY: Record<string, string> = {
+  "France": "France", "Allemagne": "Germany", "Espagne": "Spain", "Italie": "Italy",
+  "Royaume-Uni": "United Kingdom", "Portugal": "Portugal", "Pays-Bas": "Netherlands",
+  "Belgique": "Belgium", "Suisse": "Switzerland", "Autriche": "Austria",
+  "Grèce": "Greece", "Turquie": "Turkey", "Suède": "Sweden", "Norvège": "Norway",
+  "Danemark": "Denmark", "Finlande": "Finland", "Islande": "Iceland", "Irlande": "Ireland",
+  "Pologne": "Poland", "République tchèque": "Czech Republic", "Russie": "Russia",
+  "Maroc": "Morocco", "Égypte": "Egypt", "Afrique du Sud": "South Africa",
+  "Kenya": "Kenya", "Tunisie": "Tunisia", "Nigéria": "Nigeria",
+  "Émirats arabes unis": "United Arab Emirates", "Qatar": "Qatar",
+  "Arabie saoudite": "Saudi Arabia", "Israël": "Israel",
+  "Japon": "Japan", "Chine": "China", "Corée du Sud": "South Korea",
+  "Thaïlande": "Thailand", "Singapour": "Singapore", "Malaisie": "Malaysia",
+  "Indonésie": "Indonesia", "Vietnam": "Vietnam", "Philippines": "Philippines",
+  "Taïwan": "Taiwan", "Inde": "India", "Hong Kong": "Hong Kong",
+  "Australie": "Australia", "Nouvelle-Zélande": "New Zealand",
+  "États-Unis": "United States", "Canada": "Canada", "Mexique": "Mexico",
+  "Brésil": "Brazil", "Argentine": "Argentina", "Chili": "Chile",
+  "Colombie": "Colombia", "Pérou": "Peru",
+  "Pays-Bas": "Netherlands",
+};
+
 // Cache pour éviter trop d'appels API
 const cache = new Map<string, { data: NumbeoSafetyData; timestamp: number }>();
 const CACHE_DURATION = 60 * 60 * 1000; // 1 heure
@@ -157,9 +180,26 @@ export async function fetchNumbeoSafety(destinationId: string): Promise<NumbeoSa
     return cached.data;
   }
 
-  const cityData = CITY_NAME_MAPPING[destinationId];
+  let cityData = CITY_NAME_MAPPING[destinationId];
+
+  // Auto-mapping : si la destination n'est pas dans le mapping explicite,
+  // on tente de la résoudre depuis la base de données (couvre les nouvelles destinations)
   if (!cityData) {
-    throw new Error(`Ville non supportée: ${destinationId}`);
+    try {
+      const { getDestinationData } = await import('../data/destinationData');
+      const dest = getDestinationData(destinationId);
+      if (dest) {
+        const englishCountry = FRENCH_TO_ENGLISH_COUNTRY[dest.country] ?? dest.country;
+        cityData = { city: dest.name, country: englishCountry };
+        console.log(`🗺️ Auto-mapping pour ${destinationId}: ${dest.name}, ${englishCountry}`);
+      }
+    } catch {
+      // Ignore les erreurs d'import circulaire
+    }
+  }
+
+  if (!cityData) {
+    throw new Error(`Ville non supportée par Numbeo: ${destinationId}`);
   }
 
   try {
@@ -191,7 +231,11 @@ export async function fetchNumbeoSafety(destinationId: string): Promise<NumbeoSa
     console.log("📦 Données JSON reçues:", data);
 
     // Transformer les données Numbeo en format interne
-    const safetyIndex = data.safety_index ?? data.safety_scale ?? 50;
+    const safetyIndex = data.safety_index ?? data.safety_scale;
+    if (typeof safetyIndex !== 'number') {
+      throw new Error(`Score Numbeo absent pour ${cityData.city}`);
+    }
+
     const crimeIndex = data.crime_index ?? (100 - safetyIndex);
 
     console.log('📊 Données brutes Numbeo:', {

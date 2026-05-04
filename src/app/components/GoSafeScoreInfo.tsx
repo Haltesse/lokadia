@@ -57,7 +57,7 @@ export function GoSafeScoreInfo({ cityName, countryName, score }: Props) {
   const sources = getOfficialSources(cityName, countryName);
 
   // Trouver dans quel seuil se situe le score
-  const currentThreshold = score
+  const currentThreshold = score !== null
     ? GOSAFE_METHODOLOGY.thresholds.find(
         (t) => score >= t.min && score <= t.max,
       )

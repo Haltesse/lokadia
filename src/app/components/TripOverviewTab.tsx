@@ -62,6 +62,21 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
     return 'bg-blue-100 border-blue-300 text-blue-800';
   };
 
+  const goSafeScoreColor =
+    liveGoSafeScore === null
+      ? 'text-gray-500'
+      : liveGoSafeScore >= 70
+      ? 'text-green-600'
+      : liveGoSafeScore >= 50
+      ? 'text-orange-500'
+      : 'text-red-500';
+  const goSafeScoreText =
+    scoreLoading && liveGoSafeScore === null
+      ? '...'
+      : liveGoSafeScore !== null
+      ? `${liveGoSafeScore}/100`
+      : 'Indisponible';
+
   return (
     <div className="space-y-6">
       {/* Actions prioritaires */}
@@ -223,8 +238,8 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Score GoSafe</span>
-              <span className={`font-bold ${(liveGoSafeScore || destination.goSafeScore) >= 70 ? 'text-green-600' : (liveGoSafeScore || destination.goSafeScore) >= 50 ? 'text-orange-500' : 'text-red-500'}`}>
-                {scoreLoading ? '...' : (liveGoSafeScore || destination.goSafeScore)}/100
+              <span className={`font-bold ${goSafeScoreColor}`}>
+                {goSafeScoreText}
               </span>
             </div>
           </div>

@@ -13,6 +13,82 @@ import { useLanguageSafe } from "../context/LanguageContext";
 import { PartnerBookingSection } from "../components/PartnerBookingSection";
 import { HeroSlideshow } from "../components/HeroSlideshow";
 import { DesktopHomeExperience } from "./DesktopHomeExperience";
+import { useGoSafeScore } from "../hooks/useGoSafeScore";
+
+interface PopularDestination {
+  id: string;
+  city: string;
+  country: string;
+  tag: string;
+  image: string;
+}
+
+function PopularDestinationCard({
+  dest,
+  index,
+  onClick,
+}: {
+  dest: PopularDestination;
+  index: number;
+  onClick: () => void;
+}) {
+  const { score, loading } = useGoSafeScore(dest.id);
+  const scoreBackground =
+    score === null
+      ? "rgba(107, 114, 128, 0.92)"
+      : score >= 80
+      ? "rgba(16, 185, 129, 0.92)"
+      : score >= 70
+      ? "rgba(245, 158, 11, 0.92)"
+      : "rgba(239, 68, 68, 0.92)";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`lk-card-hover-lift relative rounded-2xl overflow-hidden text-left bg-gray-200 lk-fade-in-up lk-delay-${Math.min(index + 1, 6)}`}
+      style={{
+        height: index === 0 || index === 3 ? '180px' : '140px',
+        boxShadow: 'var(--shadow-md)'
+      }}
+    >
+      <ImageWithFallback
+        src={dest.image}
+        alt={dest.city}
+        className="lk-img-zoom absolute inset-0 w-full h-full object-cover"
+      />
+      <div className="lk-overlay-fade absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+      <div className="absolute top-2 left-2">
+        <span
+          className="text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-md tracking-wide"
+          style={{ background: 'rgba(255,255,255,0.22)' }}
+        >
+          {dest.tag}
+        </span>
+      </div>
+
+      <div className="absolute top-2 right-2">
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center backdrop-blur-md shadow-md"
+          style={{ background: scoreBackground }}
+        >
+          <span className="text-white text-[10px] font-extrabold tabular-nums">
+            {loading && score === null ? "..." : score ?? "--"}
+          </span>
+        </div>
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 p-2.5">
+        <p className="text-white font-bold text-sm leading-tight tracking-tight drop-shadow">{dest.city}</p>
+        <div className="flex items-center gap-1 mt-0.5">
+          <MapPin className="h-3 w-3 text-white/70" />
+          <p className="text-white/85 text-[11px] truncate">{dest.country}</p>
+        </div>
+      </div>
+    </button>
+  );
+}
 
 export function GlobalHome() {
   const navigate = useNavigate();
@@ -104,42 +180,36 @@ export function GlobalHome() {
       id: "paris-france",
       city: "Paris",
       country: "France",
-      safetyScore: 85,
       image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     },
     {
       id: "tokyo-japan",
       city: "Tokyo",
       country: "Japon",
-      safetyScore: 95,
       image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     },
     {
       id: "dubai-uae",
       city: "Dubaï",
       country: "Émirats Arabes Unis",
-      safetyScore: 90,
       image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     },
     {
       id: "barcelona-spain",
       city: "Barcelone",
       country: "Espagne",
-      safetyScore: 78,
       image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     },
     {
       id: "new-york-usa",
       city: "New York",
       country: "États-Unis",
-      safetyScore: 82,
       image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     },
     {
       id: "london-uk",
       city: "Londres",
       country: "Royaume-Uni",
-      safetyScore: 85,
       image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     },
   ];
@@ -150,7 +220,6 @@ export function GlobalHome() {
       city: "Rome",
       country: "Italie",
       tag: "Culture",
-      safetyScore: 80,
       image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=600&q=80",
     },
     {
@@ -158,7 +227,6 @@ export function GlobalHome() {
       city: "Bali",
       country: "Indonésie",
       tag: "Nature",
-      safetyScore: 74,
       image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80",
     },
     {
@@ -166,7 +234,6 @@ export function GlobalHome() {
       city: "Santorin",
       country: "Grèce",
       tag: "Romantique",
-      safetyScore: 86,
       image: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600&q=80",
     },
     {
@@ -174,7 +241,6 @@ export function GlobalHome() {
       city: "Marrakech",
       country: "Maroc",
       tag: "Découverte",
-      safetyScore: 70,
       image: "https://images.unsplash.com/photo-1577147443647-81856d5e4a5c?w=600&q=80",
     },
     {
@@ -182,7 +248,6 @@ export function GlobalHome() {
       city: "Amsterdam",
       country: "Pays-Bas",
       tag: "Tendance",
-      safetyScore: 83,
       image: "https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=600&q=80",
     },
     {
@@ -190,7 +255,6 @@ export function GlobalHome() {
       city: "Bangkok",
       country: "Thaïlande",
       tag: "Aventure",
-      safetyScore: 72,
       image: "https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=600&q=80",
     },
   ];
@@ -325,58 +389,12 @@ export function GlobalHome() {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {popularDestinations.map((dest, index) => (
-            <button
+            <PopularDestinationCard
               key={dest.id}
+              dest={dest}
+              index={index}
               onClick={() => navigate(`/destination/${dest.id}`)}
-              className={`lk-card-hover-lift relative rounded-2xl overflow-hidden text-left bg-gray-200 lk-fade-in-up lk-delay-${Math.min(index + 1, 6)}`}
-              style={{
-                height: index === 0 || index === 3 ? '180px' : '140px',
-                boxShadow: 'var(--shadow-md)'
-              }}
-            >
-              <ImageWithFallback
-                src={dest.image}
-                alt={dest.city}
-                className="lk-img-zoom absolute inset-0 w-full h-full object-cover"
-              />
-              {/* Gradient overlay */}
-              <div className="lk-overlay-fade absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-
-              {/* Tag */}
-              <div className="absolute top-2 left-2">
-                <span
-                  className="text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-md tracking-wide"
-                  style={{ background: 'rgba(255,255,255,0.22)' }}
-                >
-                  {dest.tag}
-                </span>
-              </div>
-
-              {/* Safety score */}
-              <div className="absolute top-2 right-2">
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center backdrop-blur-md shadow-md"
-                  style={{
-                    background: dest.safetyScore >= 80
-                      ? 'rgba(16, 185, 129, 0.92)'
-                      : dest.safetyScore >= 70
-                      ? 'rgba(245, 158, 11, 0.92)'
-                      : 'rgba(239, 68, 68, 0.92)'
-                  }}
-                >
-                  <span className="text-white text-[10px] font-extrabold tabular-nums">{dest.safetyScore}</span>
-                </div>
-              </div>
-
-              {/* City + Country */}
-              <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                <p className="text-white font-bold text-sm leading-tight tracking-tight drop-shadow">{dest.city}</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <MapPin className="h-3 w-3 text-white/70" />
-                  <p className="text-white/85 text-[11px] truncate">{dest.country}</p>
-                </div>
-              </div>
-            </button>
+            />
           ))}
         </div>
       </section>

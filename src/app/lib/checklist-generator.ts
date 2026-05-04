@@ -1,6 +1,7 @@
 // Générateur de checklist intelligent basé sur les caractéristiques de la destination
 
 import { getDestinationData, type DestinationDetails } from '../data/destinationData';
+import { getStaleGoSafeScoreFromCache } from '../services/goSafeUpdateService';
 
 export interface ChecklistItem {
   id: number;
@@ -171,8 +172,10 @@ export function generateChecklistForDestination(destinationId: string): Checklis
     ]
   };
 
-  // Ajouter précautions selon niveau de sécurité
-  if (destination.goSafeScore < 60) {
+  // Ajouter précautions selon le score GoSafe en temps réel (Numbeo)
+  // On utilise le cache live — jamais la valeur statique de la base de données
+  const liveScore = getStaleGoSafeScoreFromCache(destinationId);
+  if (liveScore !== null && liveScore < 60) {
     security.items.push(
       { category: 'Sécurité', label: 'Antivol pour sac', priority: 'high' },
       { category: 'Sécurité', label: 'Ceinture cachette argent', priority: 'medium' }

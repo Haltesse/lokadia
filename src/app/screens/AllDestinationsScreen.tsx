@@ -11,7 +11,6 @@ interface DestinationCardProps {
     name: string;
     country: string;
     image: string;
-    goSafeScore: number;
   };
   onClick: () => void;
   index: number;
@@ -19,9 +18,10 @@ interface DestinationCardProps {
 
 function DestinationCard({ destination, onClick, index }: DestinationCardProps) {
   const { score: goSafeScore, loading } = useGoSafeScore(destination.id);
-  const displayedScore = goSafeScore || destination.goSafeScore;
+  const displayedScore = goSafeScore;
 
-  const getBadgeColor = (score: number) => {
+  const getBadgeColor = (score: number | null) => {
+    if (score === null) return 'var(--lokadia-gray-400)';
     if (score >= 70) return 'var(--lokadia-success)';
     if (score >= 50) return 'var(--lokadia-warning)';
     return 'var(--lokadia-danger)';
@@ -32,6 +32,7 @@ function DestinationCard({ destination, onClick, index }: DestinationCardProps) 
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`lk-card-hover-lift lk-fade-in-up ${delayClass} block w-full group bg-white rounded-2xl overflow-hidden text-left`}
       style={{ boxShadow: 'var(--shadow-sm)' }}
@@ -52,13 +53,13 @@ function DestinationCard({ destination, onClick, index }: DestinationCardProps) 
           className="absolute top-2 right-2 px-2 py-1 rounded-full backdrop-blur-md flex items-center gap-1 shadow-md"
           style={{ backgroundColor: "rgba(255, 255, 255, 0.92)" }}
         >
-          {loading ? (
+          {loading && displayedScore === null ? (
             <div className="lk-skeleton h-3 w-9 rounded" />
           ) : (
             <>
               <Shield className="h-3 w-3" strokeWidth={2.5} style={{ color: getBadgeColor(displayedScore) }} />
               <span className="font-bold text-[11px] tabular-nums" style={{ color: 'var(--lokadia-gray-900)' }}>
-                {displayedScore}
+                {displayedScore ?? '--'}
               </span>
             </>
           )}

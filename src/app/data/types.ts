@@ -41,7 +41,8 @@ export interface DestinationDetails {
   name: string;
   country: string;
   image: string;
-  goSafeScore: number;
+  /** @deprecated Ne jamais afficher cette valeur — score officiel fourni exclusivement par Numbeo via useGoSafeScore() */
+  goSafeScore?: number;
   safetyLevel: "safe" | "vigilance" | "danger";
   lastUpdate: string;
   timezone: string;

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { registerLandingSignup } from '../lib/landingSignupService';
+import { useGoSafeScore } from '../hooks/useGoSafeScore';
 
 /**
  * Landing page publique à la racine /.
@@ -34,6 +35,34 @@ export default function LandingScreen() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const {
+    score: lisbonGoSafeScore,
+    safetyLevel: lisbonSafetyLevel,
+    loading: lisbonScoreLoading,
+    lastUpdate: lisbonLastUpdate,
+  } = useGoSafeScore('lisbon-portugal');
+  const lisbonScoreLabel =
+    lisbonScoreLoading && lisbonGoSafeScore === null
+      ? '...'
+      : lisbonGoSafeScore !== null
+      ? lisbonGoSafeScore
+      : '--';
+  const lisbonSafetyLabel =
+    lisbonGoSafeScore === null
+      ? 'Score live indisponible'
+      : lisbonSafetyLevel === 'safe'
+      ? 'Très sûr'
+      : lisbonSafetyLevel === 'danger'
+      ? 'Risque'
+      : 'Vigilance';
+  const lisbonCardGradient =
+    lisbonGoSafeScore === null
+      ? 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)'
+      : lisbonSafetyLevel === 'safe'
+      ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+      : lisbonSafetyLevel === 'danger'
+      ? 'linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)'
+      : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,13 +226,17 @@ export default function LandingScreen() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl p-5 mb-5" style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' }}>
+                <div className="rounded-2xl p-5 mb-5" style={{ background: lisbonCardGradient }}>
                   <p className="text-xs font-semibold text-white/80 uppercase tracking-wider mb-1">GoSafe Score</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-5xl font-bold text-white">87</span>
+                    <span className="text-5xl font-bold text-white">{lisbonScoreLabel}</span>
                     <span className="text-lg text-white/80">/ 100</span>
                   </div>
-                  <p className="text-sm text-white/90 mt-1">Très sûr · mis à jour il y a 2 h</p>
+                  <p className="text-sm text-white/90 mt-1">
+                    {lisbonGoSafeScore !== null
+                      ? `${lisbonSafetyLabel} · MAJ ${lisbonLastUpdate}`
+                      : lisbonSafetyLabel}
+                  </p>
                 </div>
 
                 <div className="space-y-2 mb-4">

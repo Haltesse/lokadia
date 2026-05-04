@@ -1,7 +1,27 @@
 import { MapPin, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { useGoSafeScore } from "../hooks/useGoSafeScore";
 
 export function Dashboard() {
+  const { score: lisbonGoSafeScore, safetyLevel, loading: scoreLoading } = useGoSafeScore("lisbon-portugal");
+  const scoreLabel = scoreLoading && lisbonGoSafeScore === null ? "..." : lisbonGoSafeScore ?? "--";
+  const safetyLabel =
+    lisbonGoSafeScore === null
+      ? "Live indisponible"
+      : safetyLevel === "safe"
+      ? "Sûr"
+      : safetyLevel === "danger"
+      ? "Risque"
+      : "Vigilance";
+  const safetyColor =
+    lisbonGoSafeScore === null
+      ? "var(--lokadia-text-light)"
+      : safetyLevel === "safe"
+      ? "var(--lokadia-success-green)"
+      : safetyLevel === "danger"
+      ? "var(--lokadia-emergency-orange)"
+      : "var(--lokadia-warning-orange)";
+  const safetyBars = lisbonGoSafeScore === null ? 0 : Math.max(1, Math.ceil(lisbonGoSafeScore / 20));
   const checklistItems = [
     { label: "Visa", checked: true, required: true },
     { label: "Vaccins", checked: true, required: true },
@@ -47,13 +67,13 @@ export function Dashboard() {
               Indice GoSafe
             </h2>
             <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--lokadia-success-green)" }}></div>
-              <span className="text-sm font-medium" style={{ color: "var(--lokadia-success-green)" }}>Sûr</span>
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: safetyColor }}></div>
+              <span className="text-sm font-medium" style={{ color: safetyColor }}>{safetyLabel}</span>
             </div>
           </div>
 
           <div className="flex items-end gap-3 mb-4">
-            <div className="text-6xl font-bold" style={{ color: "#0A2545" }}>87</div>
+            <div className="text-6xl font-bold" style={{ color: "#0A2545" }}>{scoreLabel}</div>
             <div className="text-xl text-gray-400 mb-2">/100</div>
           </div>
 
@@ -65,7 +85,7 @@ export function Dashboard() {
                   <div
                     key={i}
                     className={`w-8 h-1.5 rounded-full ${
-                      i < 4 ? "bg-[var(--lokadia-success-green)]" : "bg-gray-200"
+                      i < safetyBars ? "bg-[var(--lokadia-success-green)]" : "bg-gray-200"
                     }`}
                   ></div>
                 ))}

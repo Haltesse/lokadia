@@ -3,7 +3,7 @@
  * Met à jour tous les scores de sécurité avec les données Numbeo en temps réel
  */
 
-import { fetchNumbeoSafety } from './numbeoService';
+import { fetchNumbeoSafety, invalidateNumbeoCache } from './numbeoService';
 import { destinationsDatabase } from '../data/destinationData';
 
 interface GoSafeScoreUpdate {
@@ -17,9 +17,102 @@ interface GoSafeScoreUpdate {
 
 // Cache global pour les scores Numbeo
 const globalScoresCache = new Map<string, number>();
+const scoreTimestamps = new Map<string, number>();
 const cacheTimestamp = { value: 0 };
 const GLOBAL_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 const loadingPromises = new Map<string, Promise<number | null>>();
+
+// ─── Persistance sessionStorage ──────────────────────────────────────────────
+// Partage les scores au sein de la même session (entre navigations).
+// Garantit que la liste et la fiche affichent toujours le même score Numbeo.
+// IMPORTANT : la version dans la clé invalide automatiquement les anciens caches
+// quand on change la logique des scores. Bumper si les scores statiques apparaissent.
+const SESSION_KEY = 'lokadia_gosafe_scores_v3';
+
+// Anciennes clés à nettoyer au démarrage (évite la pollution par d'anciens scores statiques)
+const LEGACY_SESSION_KEYS = ['lokadia_gosafe_scores', 'lokadia_gosafe_scores_v1', 'lokadia_gosafe_scores_v2'];
+
+function purgeLegacySessionCaches(): void {
+  try {
+    LEGACY_SESSION_KEYS.forEach(k => sessionStorage.removeItem(k));
+  } catch {
+    // Ignorer si sessionStorage indisponible
+  }
+}
+
+// Purge immédiate au chargement du module
+purgeLegacySessionCaches();
+
+interface StoredEntry { score: number; ts: number }
+type StoredScores = Record<string, StoredEntry>;
+
+function readSessionCache(): StoredScores {
+  try {
+    return JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? '{}') as StoredScores;
+  } catch {
+    return {};
+  }
+}
+
+function writeSessionCache(destinationId: string, score: number): void {
+  try {
+    const stored = readSessionCache();
+    stored[destinationId] = { score, ts: Date.now() };
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(stored));
+  } catch {
+    // sessionStorage peut être indisponible (mode privé strict, quota plein)
+  }
+}
+
+/** Initialise le cache mémoire depuis sessionStorage au démarrage */
+function hydrateFromSessionStorage(): void {
+  const stored = readSessionCache();
+  const now = Date.now();
+  let hydratedCount = 0;
+  for (const [id, { score, ts }] of Object.entries(stored)) {
+    if (now - ts < GLOBAL_CACHE_DURATION) {
+      globalScoresCache.set(id, score);
+      scoreTimestamps.set(id, ts);
+      hydratedCount++;
+    }
+  }
+  if (hydratedCount > 0) {
+    console.log(`💾 GoSafe v3: ${hydratedCount} scores Numbeo restaurés depuis sessionStorage`);
+  } else {
+    console.log(`🆕 GoSafe v3: cache vide, fetch Numbeo à la demande`);
+  }
+}
+
+// Hydratation immédiate à l'import du module
+hydrateFromSessionStorage();
+
+// ─── Limiteur de concurrence ────────────────────────────────────────────────
+// Quand 57 cartes chargent en même temps (DestinationCountScreen, AllDestinations),
+// les appels simultanés saturent l'API Numbeo / Supabase Edge Function.
+// On plafonne à MAX_CONCURRENT pour que tous les scores arrivent correctement.
+const MAX_CONCURRENT = 6;
+let activeCount = 0;
+const waitQueue: Array<() => void> = [];
+
+function drainQueue() {
+  while (activeCount < MAX_CONCURRENT && waitQueue.length > 0) {
+    const next = waitQueue.shift()!;
+    next();
+  }
+}
+
+async function withConcurrencyLimit<T>(fn: () => Promise<T>): Promise<T> {
+  if (activeCount >= MAX_CONCURRENT) {
+    await new Promise<void>(resolve => waitQueue.push(resolve));
+  }
+  activeCount++;
+  try {
+    return await fn();
+  } finally {
+    activeCount--;
+    drainQueue();
+  }
+}
 
 // Système d'événements pour notifier les composants des mises à jour
 type ScoreUpdateListener = (destinationId: string, score: number) => void;
@@ -46,6 +139,23 @@ function notifyScoreUpdate(destinationId: string, score: number) {
   });
 }
 
+function storeGoSafeScore(destinationId: string, score: number) {
+  globalScoresCache.set(destinationId, score);
+  scoreTimestamps.set(destinationId, Date.now());
+  writeSessionCache(destinationId, score); // ← persistance cross-navigation
+  notifyScoreUpdate(destinationId, score);
+}
+
+export function syncGoSafeScore(destinationId: string, score: number) {
+  if (!Number.isFinite(score)) return;
+  storeGoSafeScore(destinationId, Math.round(score));
+}
+
+function isScoreRecent(destinationId: string): boolean {
+  const updatedAt = scoreTimestamps.get(destinationId);
+  return updatedAt !== undefined && Date.now() - updatedAt < GLOBAL_CACHE_DURATION;
+}
+
 /**
  * Récupère toutes les IDs de destinations depuis la base de données
  */
@@ -56,14 +166,16 @@ function getAllDestinationIds(): string[] {
 }
 
 /**
- * Récupère le GoSafe Score depuis Numbeo pour une destination (avec déduplication)
+ * Récupère le GoSafe Score depuis Numbeo pour une destination.
+ * - Déduplication : si le même ID est déjà en cours de fetch, on réutilise la même promesse
+ * - Concurrence limitée : max MAX_CONCURRENT appels simultanés pour éviter de saturer l'API
  */
 async function fetchGoSafeScoreForDestination(destinationId: string): Promise<number | null> {
-  // Si déjà en cours de chargement, réutiliser la promesse
+  // Déduplication : réutiliser la promesse en cours si elle existe
   const existing = loadingPromises.get(destinationId);
   if (existing) return existing;
 
-  const promise = (async () => {
+  const promise = withConcurrencyLimit(async () => {
     try {
       const safetyData = await fetchNumbeoSafety(destinationId);
       const score = Math.round(safetyData.safetyIndex);
@@ -75,7 +187,7 @@ async function fetchGoSafeScoreForDestination(destinationId: string): Promise<nu
     } finally {
       loadingPromises.delete(destinationId);
     }
-  })();
+  });
 
   loadingPromises.set(destinationId, promise);
   return promise;
@@ -99,6 +211,10 @@ export async function updateAllGoSafeScores(forceRefresh: boolean = false): Prom
   if (!forceRefresh && isCacheRecent()) {
     console.log('✅ Cache GoSafe encore valide, pas de rafraîchissement');
     return [];
+  }
+
+  if (forceRefresh) {
+    invalidateNumbeoCache();
   }
   
   console.log('🔄 Mise à jour automatique de TOUS les GoSafe Index...');
@@ -125,10 +241,7 @@ export async function updateAllGoSafeScores(forceRefresh: boolean = false): Prom
         const newScore = await fetchGoSafeScoreForDestination(destinationId);
         
         if (newScore !== null) {
-          globalScoresCache.set(destinationId, newScore);
-          
-          // Notifier les composants de la mise à jour
-          notifyScoreUpdate(destinationId, newScore);
+          storeGoSafeScore(destinationId, newScore);
           
           const update: GoSafeScoreUpdate = {
             destinationId,
@@ -188,10 +301,24 @@ export async function updateAllGoSafeScores(forceRefresh: boolean = false): Prom
  */
 export function getGoSafeScoreFromCache(destinationId: string): number | null {
   const score = globalScoresCache.get(destinationId);
+  if (score === undefined) return null;
+  if (!isScoreRecent(destinationId)) {
+    console.log(`Score en cache expire pour ${destinationId}`);
+    return null;
+  }
   if (score) {
     console.log(`📊 Score en cache pour ${destinationId}:`, score);
   }
-  return score || null;
+  return score;
+}
+
+export function getGoSafeScoreLastUpdate(destinationId: string): number | null {
+  return scoreTimestamps.get(destinationId) ?? null;
+}
+
+export function getStaleGoSafeScoreFromCache(destinationId: string): number | null {
+  const score = globalScoresCache.get(destinationId);
+  return score ?? null;
 }
 
 /**
@@ -216,25 +343,30 @@ export function isCacheRecent(): boolean {
 /**
  * Récupère le GoSafe Score pour UNE destination (chargement à la demande)
  */
-export async function getGoSafeScoreOnDemand(destinationId: string): Promise<number | null> {
+export async function getGoSafeScoreOnDemand(destinationId: string, forceRefresh: boolean = false): Promise<number | null> {
   // Vérifier le cache d'abord
-  const cached = globalScoresCache.get(destinationId);
-  if (cached !== undefined) return cached;
+  const cached = getGoSafeScoreFromCache(destinationId);
+  if (!forceRefresh && cached !== null) return cached;
+
+  if (forceRefresh) {
+    invalidateNumbeoCache(destinationId);
+  }
 
   const score = await fetchGoSafeScoreForDestination(destinationId);
   if (score !== null) {
-    globalScoresCache.set(destinationId, score);
-    notifyScoreUpdate(destinationId, score);
+    storeGoSafeScore(destinationId, score);
   }
   return score;
 }
 
 /**
- * Initialise le cache au démarrage de l'application
- * Version légère: ne charge PAS toutes les destinations, juste prépare le cache
+ * Initialise le cache au démarrage de l'application.
+ * Les scores déjà présents en sessionStorage sont hydratés à l'import du module ;
+ * cette fonction ne fait que marquer le cache comme prêt.
  */
 export async function initializeGoSafeScoresCache(): Promise<void> {
-  console.log('🚀 Cache GoSafe Index initialisé (chargement à la demande)');
-  // On ne charge plus tout au démarrage, les scores se chargent quand on ouvre une destination
-  cacheTimestamp.value = Date.now();
+  console.log('🚀 Cache GoSafe Index initialisé (chargement à la demande + sessionStorage)');
+  console.log(`💾 ${globalScoresCache.size} scores restaurés depuis sessionStorage`);
+  // cacheTimestamp = 0 → laisse chaque score utiliser son propre scoreTimestamp
+  if (cacheTimestamp.value === 0) cacheTimestamp.value = 0; // no-op intentionnel
 }

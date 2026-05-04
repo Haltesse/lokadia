@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchNumbeoSafety, type NumbeoSafetyData, invalidateNumbeoCache } from "../services/numbeoService";
+import { syncGoSafeScore } from "../services/goSafeUpdateService";
 
 interface UseNumbeoSafetyResult {
   safetyData: NumbeoSafetyData | null;
@@ -38,6 +39,7 @@ export function useNumbeoSafety(
       }
 
       const data = await fetchNumbeoSafety(destinationId);
+      syncGoSafeScore(destinationId, data.safetyIndex);
       setSafetyData(data);
       
       console.log("✅ useNumbeoSafety - Données chargées:", data.cityName, data.safetyIndex);

@@ -8,8 +8,6 @@ interface TrendingDestinationCardProps {
     city: string;
     country: string;
     image: string;
-    safetyScore: number;
-    goSafeScore?: number;
   };
   index: number;
   onClick: () => void;
@@ -23,11 +21,11 @@ export function TrendingDestinationCard({ destination, index, onClick }: Trendin
   // Récupérer le score en temps réel depuis Numbeo
   const { score: goSafeScore, loading } = useGoSafeScore(destination.id);
 
-  // Utiliser le score temps réel si disponible, sinon le score statique
-  const displayedScore = goSafeScore || destination.goSafeScore || destination.safetyScore;
+  const displayedScore = goSafeScore;
 
-  // Déterminer la couleur du badge selon le score
-  const getBadgeColor = (score: number) => {
+  // Déterminer la couleur du badge selon le score live
+  const getBadgeColor = (score: number | null) => {
+    if (score === null) return 'var(--lokadia-gray-400)';
     if (score >= 70) return 'var(--lokadia-success)';
     if (score >= 50) return 'var(--lokadia-warning)';
     return 'var(--lokadia-danger)';
@@ -38,6 +36,7 @@ export function TrendingDestinationCard({ destination, index, onClick }: Trendin
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`lk-card-hover-lift lk-fade-in-up ${delayClass} flex-shrink-0 snap-start group block bg-white rounded-2xl overflow-hidden text-left`}
       style={{ width: "240px", boxShadow: 'var(--shadow-md)' }}
@@ -62,7 +61,7 @@ export function TrendingDestinationCard({ destination, index, onClick }: Trendin
             backgroundColor: "rgba(255, 255, 255, 0.92)",
           }}
         >
-          {loading ? (
+          {loading && displayedScore === null ? (
             <>
               <div className="lk-skeleton h-3.5 w-3.5 rounded-full" />
               <div className="lk-skeleton h-2.5 w-7 rounded" />
@@ -74,7 +73,7 @@ export function TrendingDestinationCard({ destination, index, onClick }: Trendin
                 className="font-bold text-xs tabular-nums"
                 style={{ color: 'var(--lokadia-gray-900)' }}
               >
-                {displayedScore}
+                {displayedScore ?? '--'}
               </span>
             </>
           )}

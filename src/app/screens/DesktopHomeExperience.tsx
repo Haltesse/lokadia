@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { BOOKING_PARTNERS } from "../components/PartnerBookingSection";
+import { useGoSafeScore } from "../hooks/useGoSafeScore";
 
 const destinations = [
   {
@@ -19,7 +20,6 @@ const destinations = [
     city: "Paris",
     country: "France",
     tag: "City break",
-    score: 85,
     image:
       "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   },
@@ -28,7 +28,6 @@ const destinations = [
     city: "Tokyo",
     country: "Japon",
     tag: "Ultra safe",
-    score: 95,
     image:
       "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   },
@@ -37,7 +36,6 @@ const destinations = [
     city: "Barcelone",
     country: "Espagne",
     tag: "Soleil",
-    score: 78,
     image:
       "https://images.unsplash.com/photo-1583422409516-2895a77efded?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   },
@@ -46,10 +44,56 @@ const destinations = [
     city: "Rome",
     country: "Italie",
     tag: "Culture",
-    score: 80,
     image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=900&q=80",
   },
 ];
+
+function DesktopDestinationCard({
+  destination,
+  onClick,
+}: {
+  destination: (typeof destinations)[number];
+  onClick: () => void;
+}) {
+  const { score, loading } = useGoSafeScore(destination.id);
+  const scoreBackground =
+    score === null
+      ? "var(--lokadia-gray-500)"
+      : score >= 70
+      ? "var(--lokadia-success)"
+      : score >= 50
+      ? "var(--lokadia-warning)"
+      : "var(--lokadia-danger)";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative min-h-[300px] overflow-hidden rounded-2xl text-left transition-all hover:-translate-y-1 hover:shadow-2xl"
+    >
+      <ImageWithFallback
+        src={destination.image}
+        alt={`${destination.city}, ${destination.country}`}
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/22 to-transparent" />
+      <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-white/20 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
+        <Star className="h-3.5 w-3.5 fill-white" />
+        {destination.tag}
+      </div>
+      <div className="absolute right-4 top-4 rounded-full px-3 py-1.5 text-xs font-black text-white" style={{ background: scoreBackground }}>
+        {loading && score === null ? "..." : score !== null ? `${score}/100` : "--"}
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 p-5">
+        <h3 className="text-2xl font-black text-white">{destination.city}</h3>
+        <div className="mt-1 flex items-center gap-1.5 text-sm font-medium text-white/85">
+          <MapPin className="h-4 w-4" />
+          {destination.country}
+        </div>
+      </div>
+    </button>
+  );
+}
 
 export function DesktopHomeExperience() {
   const navigate = useNavigate();
@@ -190,32 +234,11 @@ export function DesktopHomeExperience() {
 
         <div className="grid grid-cols-4 gap-5">
           {destinations.map((destination) => (
-            <button
+            <DesktopDestinationCard
               key={destination.id}
+              destination={destination}
               onClick={() => navigate(`/destination/${destination.id}`)}
-              className="group relative min-h-[300px] overflow-hidden rounded-2xl text-left transition-all hover:-translate-y-1 hover:shadow-2xl"
-            >
-              <ImageWithFallback
-                src={destination.image}
-                alt={`${destination.city}, ${destination.country}`}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/22 to-transparent" />
-              <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-white/20 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
-                <Star className="h-3.5 w-3.5 fill-white" />
-                {destination.tag}
-              </div>
-              <div className="absolute right-4 top-4 rounded-full px-3 py-1.5 text-xs font-black text-white" style={{ background: "var(--lokadia-success)" }}>
-                {destination.score}/100
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 p-5">
-                <h3 className="text-2xl font-black text-white">{destination.city}</h3>
-                <div className="mt-1 flex items-center gap-1.5 text-sm font-medium text-white/85">
-                  <MapPin className="h-4 w-4" />
-                  {destination.country}
-                </div>
-              </div>
-            </button>
+            />
           ))}
         </div>
       </section>

@@ -82,10 +82,24 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
   // Récupérer le GoSafe Score depuis Numbeo en temps réel
   const { score: goSafeScore, safetyLevel, loading: scoreLoading, lastUpdate: scoreLastUpdate } = useGoSafeScore(destination.id);
   
-  // Utiliser le score Numbeo si disponible, sinon utiliser le score statique
-  const displayedScore = goSafeScore || destination.goSafeScore;
-  const displayedSafetyLevel = goSafeScore ? safetyLevel : destination.safetyLevel;
-  const displayedLastUpdate = goSafeScore ? scoreLastUpdate : destination.lastUpdate;
+  const displayedScore = goSafeScore;
+  const displayedSafetyLevel = safetyLevel;
+  const displayedLastUpdate = scoreLastUpdate;
+  const hasLiveScore = displayedScore !== null;
+  const scoreBadgeVariant: "safe" | "vigilance" | "urgent" | "neutral" = !hasLiveScore
+    ? "neutral"
+    : displayedSafetyLevel === "safe"
+    ? "safe"
+    : displayedSafetyLevel === "danger"
+    ? "urgent"
+    : "vigilance";
+  const scoreBadgeLabel = !hasLiveScore
+    ? "Live indisponible"
+    : displayedSafetyLevel === "safe"
+    ? "Sûr"
+    : displayedSafetyLevel === "danger"
+    ? "Risque"
+    : "Vigilance";
 
   const tabs = [
     { id: "overview", label: t.destination.overview_tab, icon: Info },
@@ -259,7 +273,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
                   className="text-4xl font-bold"
                   style={{ color: "#0A2545" }}
                 >
-                  {displayedScore}
+                  {scoreLoading && !hasLiveScore ? "..." : displayedScore ?? "--"}
                 </span>
                 <span className="text-xl" style={{ color: "var(--lokadia-text-light)" }}>
                   /100
@@ -267,13 +281,13 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
               </div>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <Badge variant="safe" size="md">
+              <Badge variant={scoreBadgeVariant} size="md">
                 <CheckCircle className="h-4 w-4 mr-1" />
-                Sûr
+                {scoreBadgeLabel}
               </Badge>
               <div className="flex items-center gap-1 text-xs" style={{ color: "var(--lokadia-text-light)" }}>
                 <Clock className="h-3 w-3" />
-                {displayedLastUpdate}
+                {scoreLoading && !hasLiveScore ? "Actualisation..." : hasLiveScore ? displayedLastUpdate : "Indisponible"}
               </div>
             </div>
           </div>
@@ -617,33 +631,60 @@ function AlertsTab({ destination }: { destination: DestinationDetails }) {
 
 function SafetyTab({ destination }: { destination: DestinationDetails }) {
   const { safetyData, loading: safetyLoading, error: safetyError, refresh } = useNumbeoSafety(destination.id);
+  const {
+    score: liveGoSafeScore,
+    loading: goSafeLoading,
+    lastUpdate: goSafeLastUpdate,
+  } = useGoSafeScore(destination.id);
+  // Score officiel : toujours depuis useGoSafeScore (Numbeo via l'algo live)
+  // safetyData est utilisé uniquement pour les métriques détaillées (crimeIndex, healthCareIndex…)
+  const displayedGoSafeScore = liveGoSafeScore;
+  const goSafeLevel: "safe" | "vigilance" | "urgent" | "neutral" =
+    displayedGoSafeScore === null
+      ? "neutral"
+      : displayedGoSafeScore >= 70
+      ? "safe"
+      : displayedGoSafeScore >= 50
+      ? "vigilance"
+      : "urgent";
+  const goSafeLabel =
+    displayedGoSafeScore === null
+      ? "Live indisponible"
+      : displayedGoSafeScore >= 70
+      ? "Sûr"
+      : displayedGoSafeScore >= 50
+      ? "Vigilance"
+      : "Risqué";
+  const handleSafetyRefresh = () => {
+    refresh();
+  };
   
   return (
     <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-      {/* Numbeo Safety Index Card */}
+      {/* GoSafe Index Card */}
       {safetyData && (
         <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 shadow-sm border-2 border-blue-100">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-xs font-medium mb-1 text-blue-600">
-                Numbeo Safety Index (temps réel)
+                GoSafe Index (temps réel)
               </h3>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-bold text-blue-900">
-                  {safetyData.safetyIndex.toFixed(1)}
+                  {goSafeLoading && displayedGoSafeScore === null ? "..." : displayedGoSafeScore ?? "--"}
                 </span>
                 <span className="text-lg text-blue-600">/100</span>
               </div>
             </div>
             <div className="flex flex-col items-end gap-2">
               <Badge 
-                variant={safetyData.safetyLevel === "safe" ? "safe" : safetyData.safetyLevel === "moderate" ? "vigilance" : "danger"} 
+                variant={goSafeLevel} 
                 size="md"
               >
-                {safetyData.safetyLevel === "safe" ? "Sûr" : safetyData.safetyLevel === "moderate" ? "Modéré" : "Risqué"}
+                {goSafeLabel}
               </Badge>
               <button
-                onClick={refresh}
+                onClick={handleSafetyRefresh}
                 className="text-xs text-blue-600 underline hover:text-blue-800"
               >
                 Actualiser
@@ -666,7 +707,7 @@ function SafetyTab({ destination }: { destination: DestinationDetails }) {
           
           <div className="flex items-center justify-between text-xs text-blue-600">
             <span>Source: Numbeo.com</span>
-            <span>MAJ: {safetyData.lastUpdate}</span>
+            <span>MAJ: {liveGoSafeScore !== null ? goSafeLastUpdate : safetyData.lastUpdate}</span>
           </div>
         </div>
       )}
