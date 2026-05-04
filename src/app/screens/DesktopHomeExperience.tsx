@@ -373,10 +373,13 @@ export function DesktopHomeExperience() {
 
         <div className="mt-4 flex items-center justify-center gap-2">
           {destinations.map((destination, index) => (
-            <span
+            <button
               key={destination.id}
-              aria-hidden="true"
-              className="h-2.5 rounded-full transition-all"
+              type="button"
+              onClick={() => setActiveDestinationIndex(index)}
+              aria-label={`Afficher ${destination.city}`}
+              aria-current={activeDestinationIndex === index ? "true" : undefined}
+              className="h-2.5 rounded-full transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[var(--lokadia-primary)] focus:ring-offset-2"
               style={{
                 width: activeDestinationIndex === index ? 28 : 10,
                 background:
