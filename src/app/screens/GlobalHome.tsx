@@ -32,15 +32,9 @@ function PopularDestinationCard({
   index: number;
   onClick: () => void;
 }) {
-  const { score, loading } = useGoSafeScore(dest.id);
-  const scoreBackground =
-    score === null
-      ? "rgba(107, 114, 128, 0.92)"
-      : score >= 80
-      ? "rgba(16, 185, 129, 0.92)"
-      : score >= 70
-      ? "rgba(245, 158, 11, 0.92)"
-      : "rgba(239, 68, 68, 0.92)";
+  const { score, loading, level } = useGoSafeScore(dest.id);
+  // Couleur 5-tiers Lokascore officielle
+  const scoreBackground = level.fillColor;
 
   return (
     <button

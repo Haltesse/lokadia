@@ -13,23 +13,10 @@ interface DestinationListItemProps {
 }
 
 function DestinationListItem({ dest, onClick }: DestinationListItemProps) {
-  const { score, loading } = useGoSafeScore(dest.id);
-  const scoreColor =
-    score === null
-      ? "var(--lokadia-gray-500)"
-      : score >= 70
-      ? "#22c55e"
-      : score >= 50
-      ? "#fb923c"
-      : "#ef4444";
-  const scoreBackground =
-    score === null
-      ? "rgba(107, 114, 128, 0.1)"
-      : score >= 70
-      ? "rgba(34, 197, 94, 0.1)"
-      : score >= 50
-      ? "rgba(251, 146, 60, 0.1)"
-      : "rgba(239, 68, 68, 0.1)";
+  const { score, loading, level } = useGoSafeScore(dest.id);
+  // Couleurs 5-tiers Lokascore (cf. lib/lokascore.ts)
+  const scoreColor = level.color;
+  const scoreBackground = level.bgColor;
 
   return (
     <button

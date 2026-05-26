@@ -17,15 +17,9 @@ interface DestinationCardProps {
 }
 
 function DestinationCard({ destination, onClick, index }: DestinationCardProps) {
-  const { score: goSafeScore, loading } = useGoSafeScore(destination.id);
+  const { score: goSafeScore, loading, level } = useGoSafeScore(destination.id);
   const displayedScore = goSafeScore;
-
-  const getBadgeColor = (score: number | null) => {
-    if (score === null) return 'var(--lokadia-gray-400)';
-    if (score >= 70) return 'var(--lokadia-success)';
-    if (score >= 50) return 'var(--lokadia-warning)';
-    return 'var(--lokadia-danger)';
-  };
+  const badgeColor = level.fillColor;
 
   // Stagger compact (max delay-6) basé sur l'index
   const delayClass = `lk-delay-${Math.min((index % 6) + 1, 6)}`;
@@ -57,7 +51,7 @@ function DestinationCard({ destination, onClick, index }: DestinationCardProps) 
             <div className="lk-skeleton h-3 w-9 rounded" />
           ) : (
             <>
-              <Shield className="h-3 w-3" strokeWidth={2.5} style={{ color: getBadgeColor(displayedScore) }} />
+              <Shield className="h-3 w-3" strokeWidth={2.5} style={{ color: badgeColor }} />
               <span className="font-bold text-[11px] tabular-nums" style={{ color: 'var(--lokadia-gray-900)' }}>
                 {displayedScore ?? '--'}
               </span>

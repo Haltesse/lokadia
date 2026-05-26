@@ -18,18 +18,11 @@ interface TrendingDestinationCardProps {
  * Compact premium : 240px, hover lift + image zoom via classes utilitaires .lk-*.
  */
 export function TrendingDestinationCard({ destination, index, onClick }: TrendingDestinationCardProps) {
-  // Récupérer le score en temps réel depuis Numbeo
-  const { score: goSafeScore, loading } = useGoSafeScore(destination.id);
+  // Récupérer le Lokascore (modulé par profil) en temps réel
+  const { score: goSafeScore, loading, level } = useGoSafeScore(destination.id);
 
   const displayedScore = goSafeScore;
-
-  // Déterminer la couleur du badge selon le score live
-  const getBadgeColor = (score: number | null) => {
-    if (score === null) return 'var(--lokadia-gray-400)';
-    if (score >= 70) return 'var(--lokadia-success)';
-    if (score >= 50) return 'var(--lokadia-warning)';
-    return 'var(--lokadia-danger)';
-  };
+  const badgeColor = level.fillColor;
 
   // Stagger d'apparition basé sur l'index (max 6 pour cohérence)
   const delayClass = `lk-delay-${Math.min(index + 1, 6)}`;
@@ -68,7 +61,7 @@ export function TrendingDestinationCard({ destination, index, onClick }: Trendin
             </>
           ) : (
             <>
-              <Shield className="h-3.5 w-3.5" strokeWidth={2.5} style={{ color: getBadgeColor(displayedScore) }} />
+              <Shield className="h-3.5 w-3.5" strokeWidth={2.5} style={{ color: badgeColor }} />
               <span
                 className="font-bold text-xs tabular-nums"
                 style={{ color: 'var(--lokadia-gray-900)' }}

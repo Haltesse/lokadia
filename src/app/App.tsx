@@ -23,6 +23,7 @@ import { RootLayout } from "./components/RootLayout";
 import { CurrencyProvider } from "./context/CurrencyContext";
 import { AuthProvider } from "./context/AuthContext";
 import { LanguageProvider } from "./context/LanguageContext";
+import { TravelProfileProvider } from "./context/TravelProfileContext";
 import { AutoTranslate } from "./components/AutoTranslate";
 import { TranslationIndicator } from "./components/TranslationIndicator";
 import { GoSafeCacheInitializer } from "./components/GoSafeCacheInitializer";
@@ -112,6 +113,7 @@ function App() {
         <AuthProvider>
           <LanguageProvider>
             <CurrencyProvider>
+            <TravelProfileProvider>
               {/* Traduction automatique de toute l'application */}
               <AutoTranslate />
               <TranslationIndicator />
@@ -155,6 +157,7 @@ function App() {
                 </Route>
               </Routes>
             </MemoryRouter>
+            </TravelProfileProvider>
             </CurrencyProvider>
           </LanguageProvider>
         </AuthProvider>

@@ -1,5 +1,5 @@
 /**
- * GoSafeScoreInfo — encart explicatif affiché sous le GoSafe Score
+ * GoSafeScoreInfo — encart explicatif affiché sous le Lokascore
  * sur la page d'une destination.
  *
  * Explique en clair :
@@ -95,7 +95,7 @@ export function GoSafeScoreInfo({ cityName, countryName, score }: Props) {
               Méthodologie
             </h4>
             <p className="text-sm text-gray-700 leading-relaxed">
-              Le <strong>GoSafe Score</strong> est un indice de{' '}
+              Le <strong>Lokascore</strong> est un indice de{' '}
               <strong>{GOSAFE_METHODOLOGY.scoreRange}</strong> calculé à partir
               du <strong>Safety Index</strong> de{' '}
               <a

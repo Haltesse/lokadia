@@ -30,6 +30,8 @@ import { getDestinationData, type DestinationDetails } from "../data/destination
 import { useLanguageSafe } from "../context/LanguageContext";
 import { DestinationImage } from "../components/DestinationImage";
 import { GoSafeScoreInfo } from "../components/GoSafeScoreInfo";
+import { LokascoreBreakdown } from "../components/LokascoreBreakdown";
+import { ActiveProfileBadge } from "../components/TravelProfileSelector";
 import { Badge } from "../components/Badge";
 import { Chip } from "../components/Chip";
 import { Modal } from "../components/Modal";
@@ -79,27 +81,29 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
   const [canScrollRight, setCanScrollRight] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
-  // Récupérer le GoSafe Score depuis Numbeo en temps réel
-  const { score: goSafeScore, safetyLevel, loading: scoreLoading, lastUpdate: scoreLastUpdate } = useGoSafeScore(destination.id);
-  
+  // Récupérer le Lokascore (modulé par profil) en temps réel
+  const {
+    score: goSafeScore,
+    safetyLevel,
+    level: lokascoreLevel,
+    loading: scoreLoading,
+    lastUpdate: scoreLastUpdate,
+    dimensions,
+  } = useGoSafeScore(destination.id);
+
   const displayedScore = goSafeScore;
   const displayedSafetyLevel = safetyLevel;
   const displayedLastUpdate = scoreLastUpdate;
   const hasLiveScore = displayedScore !== null;
+  // Mapping Lokascore 5-tiers → variant Badge legacy (safe / vigilance / urgent / neutral)
   const scoreBadgeVariant: "safe" | "vigilance" | "urgent" | "neutral" = !hasLiveScore
     ? "neutral"
-    : displayedSafetyLevel === "safe"
+    : lokascoreLevel.level === "safe"
     ? "safe"
-    : displayedSafetyLevel === "danger"
-    ? "urgent"
-    : "vigilance";
-  const scoreBadgeLabel = !hasLiveScore
-    ? "Live indisponible"
-    : displayedSafetyLevel === "safe"
-    ? "Sûr"
-    : displayedSafetyLevel === "danger"
-    ? "Risque"
-    : "Vigilance";
+    : lokascoreLevel.level === "vigilance"
+    ? "vigilance"
+    : "urgent";
+  const scoreBadgeLabel = !hasLiveScore ? "Lokascore indisponible" : lokascoreLevel.label;
 
   const tabs = [
     { id: "overview", label: t.destination.overview_tab, icon: Info },
@@ -260,18 +264,18 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
         </div>
       </div>
 
-      {/* GoSafe Score Card */}
-      <div className="relative z-10 mb-8 px-6 -mt-6 lg:mx-auto lg:max-w-5xl">
+      {/* Lokascore Card */}
+      <div className="relative z-10 mb-8 px-6 -mt-6 lg:mx-auto lg:max-w-5xl space-y-3">
         <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-medium mb-2" style={{ color: "var(--lokadia-text-light)" }}>
-                GoSafe Index
+                Lokascore
               </h3>
               <div className="flex items-baseline gap-2">
                 <span
-                  className="text-4xl font-bold"
-                  style={{ color: "#0A2545" }}
+                  className="text-4xl font-bold tabular-nums"
+                  style={{ color: hasLiveScore ? lokascoreLevel.color : "#0A2545" }}
                 >
                   {scoreLoading && !hasLiveScore ? "..." : displayedScore ?? "--"}
                 </span>
@@ -290,6 +294,14 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
                 {scoreLoading && !hasLiveScore ? "Actualisation..." : hasLiveScore ? displayedLastUpdate : "Indisponible"}
               </div>
             </div>
+          </div>
+
+          {/* Badge profil voyage actif → invite à personnaliser */}
+          <div className="flex items-center justify-between mb-4 pb-4 border-b" style={{ borderColor: 'var(--lokadia-gray-100)' }}>
+            <span className="text-xs" style={{ color: 'var(--lokadia-gray-600)' }}>
+              Score pondéré selon votre profil voyage :
+            </span>
+            <ActiveProfileBadge onEdit={() => navigate('/profile')} />
           </div>
 
           {/* Quick Actions */}
@@ -332,6 +344,12 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
             )}
           </button>
         </div>
+
+        {/* Breakdown 4 dimensions Lokascore (Sécurité / Santé / Nature / Infrastructure) */}
+        <LokascoreBreakdown
+          dimensions={dimensions}
+          compositeScore={displayedScore}
+        />
       </div>
 
       {/* Comment ce score est-il calculé + sources officielles */}
@@ -635,39 +653,33 @@ function SafetyTab({ destination }: { destination: DestinationDetails }) {
     score: liveGoSafeScore,
     loading: goSafeLoading,
     lastUpdate: goSafeLastUpdate,
+    level: lokascoreLevel,
+    dimensions,
   } = useGoSafeScore(destination.id);
-  // Score officiel : toujours depuis useGoSafeScore (Numbeo via l'algo live)
-  // safetyData est utilisé uniquement pour les métriques détaillées (crimeIndex, healthCareIndex…)
   const displayedGoSafeScore = liveGoSafeScore;
+  // Mapping Lokascore 5-tiers → variant Badge legacy
   const goSafeLevel: "safe" | "vigilance" | "urgent" | "neutral" =
     displayedGoSafeScore === null
       ? "neutral"
-      : displayedGoSafeScore >= 70
+      : lokascoreLevel.level === "safe"
       ? "safe"
-      : displayedGoSafeScore >= 50
+      : lokascoreLevel.level === "vigilance"
       ? "vigilance"
       : "urgent";
-  const goSafeLabel =
-    displayedGoSafeScore === null
-      ? "Live indisponible"
-      : displayedGoSafeScore >= 70
-      ? "Sûr"
-      : displayedGoSafeScore >= 50
-      ? "Vigilance"
-      : "Risqué";
+  const goSafeLabel = displayedGoSafeScore === null ? "Lokascore indisponible" : lokascoreLevel.label;
   const handleSafetyRefresh = () => {
     refresh();
   };
   
   return (
     <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-      {/* GoSafe Index Card */}
+      {/* Lokascore Card (temps réel) */}
       {safetyData && (
         <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 shadow-sm border-2 border-blue-100">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-xs font-medium mb-1 text-blue-600">
-                GoSafe Index (temps réel)
+                Lokascore (temps réel)
               </h3>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-bold text-blue-900">

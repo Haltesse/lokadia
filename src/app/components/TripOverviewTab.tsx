@@ -62,14 +62,19 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
     return 'bg-blue-100 border-blue-300 text-blue-800';
   };
 
+  // Couleurs alignées sur les 5 niveaux Lokascore (80/60/40/20)
   const goSafeScoreColor =
     liveGoSafeScore === null
       ? 'text-gray-500'
-      : liveGoSafeScore >= 70
+      : liveGoSafeScore >= 80
       ? 'text-green-600'
-      : liveGoSafeScore >= 50
+      : liveGoSafeScore >= 60
+      ? 'text-yellow-600'
+      : liveGoSafeScore >= 40
       ? 'text-orange-500'
-      : 'text-red-500';
+      : liveGoSafeScore >= 20
+      ? 'text-red-500'
+      : 'text-gray-900';
   const goSafeScoreText =
     scoreLoading && liveGoSafeScore === null
       ? '...'
@@ -237,7 +242,7 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
               <span className="font-medium text-gray-900">{destination.currency}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Score GoSafe</span>
+              <span className="text-gray-600">Lokascore</span>
               <span className={`font-bold ${goSafeScoreColor}`}>
                 {goSafeScoreText}
               </span>

@@ -5,6 +5,7 @@
 
 import { fetchNumbeoSafety, invalidateNumbeoCache } from './numbeoService';
 import { destinationsDatabase } from '../data/destinationData';
+import { buildDimensionsFromNumbeo, type LokascoreDimensions } from '../lib/lokascore';
 
 interface GoSafeScoreUpdate {
   destinationId: string;
@@ -15,12 +16,15 @@ interface GoSafeScoreUpdate {
   lastUpdate: string;
 }
 
-// Cache global pour les scores Numbeo
+// Cache global pour les scores Numbeo (security index uniquement, retro-compat)
 const globalScoresCache = new Map<string, number>();
 const scoreTimestamps = new Map<string, number>();
+// Cache des 4 dimensions Lokascore (Security/Health/Nature/Infrastructure)
+const dimensionsCache = new Map<string, LokascoreDimensions>();
 const cacheTimestamp = { value: 0 };
 const GLOBAL_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 const loadingPromises = new Map<string, Promise<number | null>>();
+const dimensionsLoadingPromises = new Map<string, Promise<LokascoreDimensions | null>>();
 
 // ─── Persistance sessionStorage ──────────────────────────────────────────────
 // Partage les scores au sein de la même session (entre navigations).
@@ -28,6 +32,7 @@ const loadingPromises = new Map<string, Promise<number | null>>();
 // IMPORTANT : la version dans la clé invalide automatiquement les anciens caches
 // quand on change la logique des scores. Bumper si les scores statiques apparaissent.
 const SESSION_KEY = 'lokadia_gosafe_scores_v3';
+const SESSION_KEY_DIMENSIONS = 'lokadia_lokascore_dims_v1';
 
 // Anciennes clés à nettoyer au démarrage (évite la pollution par d'anciens scores statiques)
 const LEGACY_SESSION_KEYS = ['lokadia_gosafe_scores', 'lokadia_gosafe_scores_v1', 'lokadia_gosafe_scores_v2'];
@@ -64,6 +69,28 @@ function writeSessionCache(destinationId: string, score: number): void {
   }
 }
 
+// ─── sessionStorage pour les dimensions Lokascore ───
+interface StoredDimensionsEntry { dims: LokascoreDimensions; ts: number }
+type StoredDimensions = Record<string, StoredDimensionsEntry>;
+
+function readDimensionsSessionCache(): StoredDimensions {
+  try {
+    return JSON.parse(sessionStorage.getItem(SESSION_KEY_DIMENSIONS) ?? '{}') as StoredDimensions;
+  } catch {
+    return {};
+  }
+}
+
+function writeDimensionsSessionCache(destinationId: string, dims: LokascoreDimensions): void {
+  try {
+    const stored = readDimensionsSessionCache();
+    stored[destinationId] = { dims, ts: Date.now() };
+    sessionStorage.setItem(SESSION_KEY_DIMENSIONS, JSON.stringify(stored));
+  } catch {
+    // ignorer
+  }
+}
+
 /** Initialise le cache mémoire depuis sessionStorage au démarrage */
 function hydrateFromSessionStorage(): void {
   const stored = readSessionCache();
@@ -76,10 +103,19 @@ function hydrateFromSessionStorage(): void {
       hydratedCount++;
     }
   }
-  if (hydratedCount > 0) {
-    console.log(`💾 GoSafe v3: ${hydratedCount} scores Numbeo restaurés depuis sessionStorage`);
+  // Hydrate aussi les dimensions Lokascore
+  const storedDims = readDimensionsSessionCache();
+  let hydratedDims = 0;
+  for (const [id, { dims, ts }] of Object.entries(storedDims)) {
+    if (now - ts < GLOBAL_CACHE_DURATION) {
+      dimensionsCache.set(id, dims);
+      hydratedDims++;
+    }
+  }
+  if (hydratedCount > 0 || hydratedDims > 0) {
+    console.log(`💾 Lokascore v4: ${hydratedCount} scores + ${hydratedDims} dimensions restaurés depuis sessionStorage`);
   } else {
-    console.log(`🆕 GoSafe v3: cache vide, fetch Numbeo à la demande`);
+    console.log(`🆕 Lokascore v4: cache vide, fetch Numbeo à la demande`);
   }
 }
 
@@ -117,6 +153,31 @@ async function withConcurrencyLimit<T>(fn: () => Promise<T>): Promise<T> {
 // Système d'événements pour notifier les composants des mises à jour
 type ScoreUpdateListener = (destinationId: string, score: number) => void;
 const scoreUpdateListeners = new Set<ScoreUpdateListener>();
+
+// Listeners spécifiques aux mises à jour de dimensions
+type DimensionsUpdateListener = (destinationId: string, dims: LokascoreDimensions) => void;
+const dimensionsUpdateListeners = new Set<DimensionsUpdateListener>();
+
+export function subscribeToDimensionsUpdate(listener: DimensionsUpdateListener): () => void {
+  dimensionsUpdateListeners.add(listener);
+  return () => dimensionsUpdateListeners.delete(listener);
+}
+
+function notifyDimensionsUpdate(destinationId: string, dims: LokascoreDimensions) {
+  dimensionsUpdateListeners.forEach(listener => {
+    try {
+      listener(destinationId, dims);
+    } catch (error) {
+      console.error('❌ Erreur listener dimensions:', error);
+    }
+  });
+}
+
+function storeDimensions(destinationId: string, dims: LokascoreDimensions) {
+  dimensionsCache.set(destinationId, dims);
+  writeDimensionsSessionCache(destinationId, dims);
+  notifyDimensionsUpdate(destinationId, dims);
+}
 
 /**
  * Abonne un listener aux mises à jour de scores
@@ -166,9 +227,10 @@ function getAllDestinationIds(): string[] {
 }
 
 /**
- * Récupère le GoSafe Score depuis Numbeo pour une destination.
+ * Récupère le GoSafe Score + les 4 dimensions Lokascore depuis Numbeo.
  * - Déduplication : si le même ID est déjà en cours de fetch, on réutilise la même promesse
  * - Concurrence limitée : max MAX_CONCURRENT appels simultanés pour éviter de saturer l'API
+ * - Effet de bord : remplit aussi `dimensionsCache` pour la modulation profil
  */
 async function fetchGoSafeScoreForDestination(destinationId: string): Promise<number | null> {
   // Déduplication : réutiliser la promesse en cours si elle existe
@@ -179,7 +241,15 @@ async function fetchGoSafeScoreForDestination(destinationId: string): Promise<nu
     try {
       const safetyData = await fetchNumbeoSafety(destinationId);
       const score = Math.round(safetyData.safetyIndex);
-      console.log(`✅ GoSafe Score pour ${destinationId}: ${score}`);
+      // Construction des 4 dimensions Lokascore à partir des indices Numbeo
+      const dims = buildDimensionsFromNumbeo({
+        safetyIndex: safetyData.safetyIndex,
+        healthCareIndex: safetyData.healthCareIndex,
+        qualityOfLifeIndex: safetyData.qualityOfLifeIndex,
+        pollutionIndex: safetyData.pollutionIndex,
+      });
+      storeDimensions(destinationId, dims);
+      console.log(`✅ Lokascore pour ${destinationId}: S=${Math.round(dims.security)} H=${Math.round(dims.health)} N=${Math.round(dims.nature)} I=${Math.round(dims.infrastructure)}`);
       return score;
     } catch (error) {
       console.error(`❌ Erreur score ${destinationId}:`, error);
@@ -191,6 +261,53 @@ async function fetchGoSafeScoreForDestination(destinationId: string): Promise<nu
 
   loadingPromises.set(destinationId, promise);
   return promise;
+}
+
+/**
+ * Récupère uniquement les 4 dimensions Lokascore (utilisé par useGoSafeScore
+ * quand on a besoin de moduler par profil voyage).
+ */
+async function fetchDimensionsForDestination(destinationId: string): Promise<LokascoreDimensions | null> {
+  const existing = dimensionsLoadingPromises.get(destinationId);
+  if (existing) return existing;
+
+  const promise = (async () => {
+    try {
+      // fetchGoSafeScoreForDestination remplit déjà dimensionsCache via storeDimensions
+      await fetchGoSafeScoreForDestination(destinationId);
+      return dimensionsCache.get(destinationId) ?? null;
+    } catch {
+      return null;
+    } finally {
+      dimensionsLoadingPromises.delete(destinationId);
+    }
+  })();
+
+  dimensionsLoadingPromises.set(destinationId, promise);
+  return promise;
+}
+
+// ─── API publique : dimensions ──────────────────────────────────────────────
+
+export function getDimensionsFromCache(destinationId: string): LokascoreDimensions | null {
+  return dimensionsCache.get(destinationId) ?? null;
+}
+
+export function getStaleDimensionsFromCache(destinationId: string): LokascoreDimensions | null {
+  return dimensionsCache.get(destinationId) ?? null;
+}
+
+export async function getDimensionsOnDemand(
+  destinationId: string,
+  forceRefresh: boolean = false
+): Promise<LokascoreDimensions | null> {
+  if (!forceRefresh) {
+    const cached = getDimensionsFromCache(destinationId);
+    if (cached !== null) return cached;
+  } else {
+    invalidateNumbeoCache(destinationId);
+  }
+  return fetchDimensionsForDestination(destinationId);
 }
 
 /**

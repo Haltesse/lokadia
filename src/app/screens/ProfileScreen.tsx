@@ -51,6 +51,9 @@ import { useUserData } from "../hooks/useUserData";
 import { useComments } from "../hooks/useComments";
 import { getUserTrips, deleteTrip as deleteTripService, type Trip } from "../lib/tripService";
 import { getChecklistItemsForTrip } from "../lib/checklistService";
+import { TravelProfileSelector } from "../components/TravelProfileSelector";
+import { useTravelProfile } from "../context/TravelProfileContext";
+import { PROFILE_META } from "../lib/lokascore";
 
 export function ProfileScreen() {
   const navigate = useNavigate();
@@ -62,8 +65,9 @@ export function ProfileScreen() {
   const setLanguage = context?.setLanguage || (() => {});
   const translate = context?.translate || ((text: string) => text);
   const { user: authUser, signOut, updateProfile: updateAuthProfile } = useAuth();
-  const { 
-    favorites, 
+  const { profile: travelProfile } = useTravelProfile();
+  const {
+    favorites,
     getStats,
   } = useUserData();
   const { stats: commentStats } = useComments();
@@ -646,6 +650,38 @@ export function ProfileScreen() {
             count={0}
             onClick={() => navigate("/checklist")}
           />
+        </div>
+      </Section>
+
+      {/* ─── Préférences voyage (Lokascore) ─── */}
+      <Section title="Profil voyage (Lokascore)" icon={Shield}>
+        <div className="space-y-3">
+          <div className="p-3.5 rounded-xl flex items-start gap-3" style={{
+            background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.06), rgba(109, 40, 217, 0.06))',
+            border: '1px solid var(--lokadia-gray-100)',
+          }}>
+            <div className="text-2xl flex-shrink-0">{PROFILE_META[travelProfile].emoji}</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-black uppercase tracking-wide" style={{ color: 'var(--lokadia-primary)' }}>
+                Profil actif
+              </p>
+              <p className="text-sm font-bold mt-0.5" style={{ color: 'var(--lokadia-gray-900)' }}>
+                {PROFILE_META[travelProfile].label}
+              </p>
+              <p className="text-xs mt-1 leading-snug" style={{ color: 'var(--lokadia-gray-600)' }}>
+                {PROFILE_META[travelProfile].rationale}
+              </p>
+            </div>
+          </div>
+
+          <p className="text-xs leading-relaxed px-1" style={{ color: 'var(--lokadia-gray-600)' }}>
+            Le profil module les pondérations des 4 dimensions du Lokascore
+            (Sécurité / Santé / Nature / Infrastructure). <strong>Aucune donnée
+            personnelle</strong> n'est collectée — uniquement un contexte de voyage
+            (Privacy by Design, RGPD art. 25).
+          </p>
+
+          <TravelProfileSelector variant="list" />
         </div>
       </Section>
 

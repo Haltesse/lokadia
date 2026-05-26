@@ -3,24 +3,10 @@ import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useGoSafeScore } from "../hooks/useGoSafeScore";
 
 export function Dashboard() {
-  const { score: lisbonGoSafeScore, safetyLevel, loading: scoreLoading } = useGoSafeScore("lisbon-portugal");
+  const { score: lisbonGoSafeScore, loading: scoreLoading, level } = useGoSafeScore("lisbon-portugal");
   const scoreLabel = scoreLoading && lisbonGoSafeScore === null ? "..." : lisbonGoSafeScore ?? "--";
-  const safetyLabel =
-    lisbonGoSafeScore === null
-      ? "Live indisponible"
-      : safetyLevel === "safe"
-      ? "Sûr"
-      : safetyLevel === "danger"
-      ? "Risque"
-      : "Vigilance";
-  const safetyColor =
-    lisbonGoSafeScore === null
-      ? "var(--lokadia-text-light)"
-      : safetyLevel === "safe"
-      ? "var(--lokadia-success-green)"
-      : safetyLevel === "danger"
-      ? "var(--lokadia-emergency-orange)"
-      : "var(--lokadia-warning-orange)";
+  const safetyLabel = lisbonGoSafeScore === null ? "Lokascore indisponible" : level.label;
+  const safetyColor = level.color;
   const safetyBars = lisbonGoSafeScore === null ? 0 : Math.max(1, Math.ceil(lisbonGoSafeScore / 20));
   const checklistItems = [
     { label: "Visa", checked: true, required: true },
@@ -60,11 +46,11 @@ export function Dashboard() {
 
       {/* Main Content */}
       <div className="px-4 -mt-6 relative z-10">
-        {/* GoSafe Index Card */}
+        {/* Lokascore Card */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold" style={{ color: "var(--lokadia-text-dark)" }}>
-              Indice GoSafe
+              Lokascore
             </h2>
             <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: safetyColor }}></div>

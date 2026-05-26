@@ -103,15 +103,8 @@ function DesktopDestinationFeature({
   onClick: () => void;
   slideIndex: number;
 }) {
-  const { score, loading } = useGoSafeScore(destination.id);
-  const scoreBackground =
-    score === null
-      ? "var(--lokadia-gray-500)"
-      : score >= 70
-      ? "var(--lokadia-success)"
-      : score >= 50
-      ? "var(--lokadia-warning)"
-      : "var(--lokadia-danger)";
+  const { score, loading, level } = useGoSafeScore(destination.id);
+  const scoreBackground = level.fillColor;
 
   return (
     <button

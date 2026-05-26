@@ -2,18 +2,17 @@ import { useEffect } from 'react';
 import { useGoSafeCacheInitializer } from '../hooks/useGoSafeScore';
 
 /**
- * Composant qui initialise le cache GoSafe au démarrage
- * Les scores sont maintenant chargés à la demande, pas au démarrage
+ * Initialise le cache Lokascore au démarrage de l'application.
+ * Les scores sont chargés à la demande (lazy) et persistés en sessionStorage.
  */
 export function GoSafeCacheInitializer() {
   const { isReady } = useGoSafeCacheInitializer();
 
   useEffect(() => {
     if (isReady) {
-      console.log('✅ Système GoSafe Index prêt (chargement à la demande)');
+      console.log('✅ Système Lokascore prêt (chargement à la demande, 4 dimensions + modulation profil)');
     }
   }, [isReady]);
 
-  // Pas d'UI - les scores se chargent quand on ouvre une destination
   return null;
 }
