@@ -14,6 +14,7 @@ import {
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { BOOKING_PARTNERS } from "../components/PartnerBookingSection";
 import { useLokascore } from "../hooks/useLokascore";
+import { LiveAlertsBanner } from "../components/LiveAlertsBanner";
 
 const destinations = [
   {
@@ -286,6 +287,10 @@ export function DesktopHomeExperience() {
             </button>
           </motion.div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-8 pt-6">
+        <LiveAlertsBanner variant="desktop" />
       </section>
 
       <section className="mx-auto max-w-7xl px-8 py-10">

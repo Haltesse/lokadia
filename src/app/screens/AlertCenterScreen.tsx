@@ -19,6 +19,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { fetchRealTimeAlerts, type RealTimeAlert } from "../services/alertService";
+import { LiveAlertsList } from "../components/LiveAlertsList";
 
 type AlertType = "all" | "weather" | "security" | "transport" | "health" | "political" | "disaster";
 type AlertLevel = "all" | "info" | "vigilance" | "urgent";
@@ -334,6 +335,26 @@ export function AlertCenterScreen() {
             )}
           </div>
         </div>
+      </section>
+
+      {/* ───────── ALERTES MONDIALES TEMPS RÉEL (USGS + ReliefWeb) ───────── */}
+      <section className="mx-5 mt-6 lg:mx-auto lg:max-w-7xl lg:px-0">
+        <div className="mb-3 flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'rgba(239, 68, 68, 0.12)' }}>
+            <AlertTriangle className="h-4 w-4" style={{ color: '#dc2626' }} />
+          </div>
+          <h2 className="text-lg font-black tracking-tight" style={{ color: 'var(--lokadia-gray-900)' }}>
+            Alertes mondiales temps réel
+          </h2>
+          <span className="ml-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider" style={{ background: 'rgba(34, 197, 94, 0.12)', color: '#15803d' }}>
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: '#22c55e' }} />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ background: '#22c55e' }} />
+            </span>
+            Live
+          </span>
+        </div>
+        <LiveAlertsList />
       </section>
 
       {showFilters && (

@@ -12,6 +12,7 @@ import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useLanguageSafe } from "../context/LanguageContext";
 import { PartnerBookingSection } from "../components/PartnerBookingSection";
 import { HeroSlideshow } from "../components/HeroSlideshow";
+import { LiveAlertsBanner } from "../components/LiveAlertsBanner";
 import { DesktopHomeExperience } from "./DesktopHomeExperience";
 import { useLokascore } from "../hooks/useLokascore";
 
@@ -293,6 +294,11 @@ export function GlobalHome() {
           </p>
         </div>
       </HeroSlideshow>
+
+      {/* ───────── LIVE ALERTS BANNER — USGS + ReliefWeb temps réel ───────── */}
+      <div className="px-5 -mt-3 relative z-10 mb-4 max-w-3xl mx-auto w-full lk-fade-in-up lk-delay-1">
+        <LiveAlertsBanner variant="mobile" />
+      </div>
 
       {/* ───────── SEARCH BAR — focus state premium ───────── */}
       <div className="px-5 -mt-5 relative z-10 mb-6 max-w-3xl mx-auto w-full lk-fade-in-up lk-delay-2">
