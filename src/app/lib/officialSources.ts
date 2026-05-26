@@ -6,7 +6,7 @@
  * directement vers les sites officiels que l'utilisateur peut consulter.
  *
  * Sources :
- *   - Numbeo Crime Index (source primaire du GoSafe Score)
+ *   - Numbeo Crime Index (source primaire du Lokascore)
  *   - France Diplomatie / MEAE (conseils aux voyageurs officiels)
  *   - GDACS (Global Disaster Alert and Coordination System, ONU)
  *   - WHO / OMS (alertes sanitaires)
@@ -173,13 +173,13 @@ export function getOfficialSources(
 ): OfficialSource[] {
   const sources: OfficialSource[] = [];
 
-  // ─── 1. Numbeo (source primaire du GoSafe Score) ───
+  // ─── 1. Numbeo (source primaire du Lokascore) ───
   sources.push({
     id: 'numbeo',
     name: 'Crime Index Numbeo',
     organization: 'Numbeo',
     description:
-      'Indices Safety & Crime calculés à partir de plus de 600 000 contributeurs dans le monde. Source primaire du GoSafe Score.',
+      'Indices Safety & Crime calculés à partir de plus de 600 000 contributeurs dans le monde. Source primaire du Lokascore.',
     url: `https://www.numbeo.com/crime/in/${encodeURIComponent(
       cityName.replace(/\s+/g, '-'),
     )}`,
@@ -250,9 +250,9 @@ export function getOfficialSources(
 }
 
 /**
- * Métadonnées descriptives pour la page GoSafePage (vue marketing).
+ * Métadonnées descriptives pour la page LokascorePage (vue marketing).
  */
-export const GOSAFE_METHODOLOGY = {
+export const LOKASCORE_METHODOLOGY = {
   primarySource: {
     name: 'Numbeo',
     url: 'https://www.numbeo.com',

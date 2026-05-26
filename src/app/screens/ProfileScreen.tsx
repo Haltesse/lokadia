@@ -1339,8 +1339,8 @@ export function ProfileScreen() {
       <Modal isOpen={showFAQModal} onClose={() => setShowFAQModal(false)} title="Questions fréquentes">
         <div className="space-y-3">
           <FAQItem
-            question="Comment fonctionne le GoSafe Score ?"
-            answer="Le GoSafe Score est un indice de sécurité calculé en temps réel basé sur les données locales, les alertes gouvernementales, et les retours de la communauté."
+            question="Comment fonctionne le Lokascore ?"
+            answer="Le Lokascore est un indice de sécurité calculé en temps réel basé sur les données locales, les alertes gouvernementales, et les retours de la communauté."
           />
           <FAQItem
             question="Puis-je utiliser Lokadia hors connexion ?"

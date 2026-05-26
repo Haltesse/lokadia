@@ -1,5 +1,5 @@
 import { Shield, MapPin, TrendingUp } from 'lucide-react';
-import { useGoSafeScore } from '../hooks/useGoSafeScore';
+import { useLokascore } from '../hooks/useLokascore';
 import { DestinationImage } from './DestinationImage';
 
 interface TrendingDestinationCardProps {
@@ -14,14 +14,14 @@ interface TrendingDestinationCardProps {
 }
 
 /**
- * Carte de destination tendance avec GoSafe Score en temps réel.
+ * Carte de destination tendance avec Lokascore en temps réel.
  * Compact premium : 240px, hover lift + image zoom via classes utilitaires .lk-*.
  */
 export function TrendingDestinationCard({ destination, index, onClick }: TrendingDestinationCardProps) {
   // Récupérer le Lokascore (modulé par profil) en temps réel
-  const { score: goSafeScore, loading, level } = useGoSafeScore(destination.id);
+  const { score: lokascore, loading, level } = useLokascore(destination.id);
 
-  const displayedScore = goSafeScore;
+  const displayedScore = lokascore;
   const badgeColor = level.fillColor;
 
   // Stagger d'apparition basé sur l'index (max 6 pour cohérence)

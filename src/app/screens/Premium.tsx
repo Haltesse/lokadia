@@ -74,7 +74,7 @@ export function Premium() {
   ];
 
   const freeFeatures = [
-    "Indice GoSafe basique",
+    "Indice Lokascore basique",
     "Alertes quotidiennes",
     "1 destination suivie",
     "Conseils de la communauté",

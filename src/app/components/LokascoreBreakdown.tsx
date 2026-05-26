@@ -1,9 +1,12 @@
 /**
  * LokascoreBreakdown — affichage détaillé des 4 dimensions Lokascore
  * Affiche les barres de progression pour Sécurité / Santé / Nature / Infrastructure
- * avec les sources officielles cibles et la pondération appliquée selon le profil.
+ * avec les sources officielles utilisées et la pondération appliquée selon le profil.
+ *
+ * Phase 3 : affiche les VRAIES sources qui ont contribué (MAE, FCDO, WJP, CPI…)
+ * via la `sourceTrace` retournée par useLokascore().
  */
-import { Info } from 'lucide-react';
+import { Info, CheckCircle2 } from 'lucide-react';
 import {
   DIMENSION_META,
   PROFILE_WEIGHTS,
@@ -12,12 +15,15 @@ import {
   type LokascoreDimensions,
   type TravelProfile,
 } from '../lib/lokascore';
+import type { LokascoreSourceTrace } from '../lib/lokascoreSources';
 import { useTravelProfile } from '../context/TravelProfileContext';
 
 interface LokascoreBreakdownProps {
   dimensions: LokascoreDimensions | null;
   /** Score Lokascore composite (pour cohérence avec affichage parent) */
   compositeScore: number | null;
+  /** Trace des sources officielles utilisées (Phase 3) */
+  sourceTrace?: LokascoreSourceTrace | null;
   /** Profil utilisé pour la modulation (par défaut = celui du context) */
   profile?: TravelProfile;
   /** Affichage compact (mode card) vs étendu (mode page détail) */
@@ -27,6 +33,7 @@ interface LokascoreBreakdownProps {
 export function LokascoreBreakdown({
   dimensions,
   compositeScore,
+  sourceTrace,
   profile: profileProp,
   compact = false,
 }: LokascoreBreakdownProps) {
@@ -127,24 +134,64 @@ export function LokascoreBreakdown({
                 />
               </div>
               {!compact && (
-                <p className="text-[10px] mt-1" style={{ color: 'var(--lokadia-gray-500)' }}>
-                  Sources cibles : {meta.sources.join(' · ')}
-                </p>
+                <div className="mt-1.5">
+                  {/* Phase 3 : sources réellement utilisées vs cibles */}
+                  {sourceTrace && sourceTrace[key].hasOfficialSource ? (
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <CheckCircle2 className="h-2.5 w-2.5" style={{ color: '#15803d' }} />
+                      {sourceTrace[key].contributions.map((c) => (
+                        <span
+                          key={c.id}
+                          className="text-[9px] font-bold tabular-nums px-1.5 py-0.5 rounded"
+                          style={{ background: `${meta.color}15`, color: meta.color }}
+                          title={`${c.label} : ${Math.round(c.value)}/100 (poids ${Math.round(c.weight * 100)}%)`}
+                        >
+                          {c.label} · {Math.round(c.value)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>
+                      Sources cibles : {meta.sources.join(' · ')}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           );
         })}
       </div>
 
-      {/* Disclaimer MVP */}
+      {/* Disclaimer Phase 3 ou MVP selon les sources réellement utilisées */}
       {!compact && (
-        <div className="mt-4 p-2.5 rounded-lg flex items-start gap-2" style={{ background: 'var(--lokadia-info-bg)' }}>
-          <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--lokadia-primary)' }} />
-          <p className="text-[10px] leading-relaxed" style={{ color: 'var(--lokadia-gray-700)' }}>
-            <strong>MVP :</strong> les 4 dimensions sont actuellement estimées via les sous-indices Numbeo
-            (safety, healthcare, pollution, quality of life). L'intégration progressive des sources officielles
-            (MAE, OMS, GDACS, WJP…) remplacera ces approximations.
-          </p>
+        <div
+          className="mt-4 p-2.5 rounded-lg flex items-start gap-2"
+          style={{
+            background: sourceTrace?.hasAnyOfficialSource
+              ? 'rgba(34, 197, 94, 0.10)'
+              : 'var(--lokadia-info-bg)',
+          }}
+        >
+          {sourceTrace?.hasAnyOfficialSource ? (
+            <>
+              <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" style={{ color: '#15803d' }} />
+              <p className="text-[10px] leading-relaxed" style={{ color: 'var(--lokadia-gray-700)' }}>
+                <strong style={{ color: '#15803d' }}>Phase 3 active :</strong> le Lokascore de cette destination utilise
+                des sources officielles réelles (MAE France, UK FCDO, US State, Lancet HAQ,
+                WJP Rule of Law, Transparency CPI, World Bank Stability, EM-DAT…). Snapshot mis à jour trimestriellement
+                pour les advisories.
+              </p>
+            </>
+          ) : (
+            <>
+              <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--lokadia-primary)' }} />
+              <p className="text-[10px] leading-relaxed" style={{ color: 'var(--lokadia-gray-700)' }}>
+                <strong>Fallback Numbeo :</strong> ce pays n'est pas encore dans la base de données
+                officielle Phase 3. Le score est estimé via les sous-indices Numbeo
+                (safety, healthcare, pollution, quality of life).
+              </p>
+            </>
+          )}
         </div>
       )}
     </div>

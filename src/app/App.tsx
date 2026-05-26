@@ -13,7 +13,7 @@ import TripDetailScreen from "./screens/TripDetailScreen";
 import TripMapPlannerScreen from "./screens/TripMapPlannerScreen";
 import { Premium } from "./screens/Premium";
 import LandingScreen from "./screens/LandingScreen";
-import GoSafePage from "./screens/GoSafePage";
+import LokascorePage from "./screens/LokascorePage";
 import ProPage from "./screens/ProPage";
 import { ProfileScreen } from "./screens/ProfileScreen";
 import { FavoritesScreen } from "./screens/FavoritesScreen";
@@ -26,7 +26,7 @@ import { LanguageProvider } from "./context/LanguageContext";
 import { TravelProfileProvider } from "./context/TravelProfileContext";
 import { AutoTranslate } from "./components/AutoTranslate";
 import { TranslationIndicator } from "./components/TranslationIndicator";
-import { GoSafeCacheInitializer } from "./components/GoSafeCacheInitializer";
+import { LokascoreCacheInitializer } from "./components/LokascoreCacheInitializer";
 import { SplashScreen } from "./screens/SplashScreen";
 import { AuthErrorBoundary } from "./components/AuthErrorBoundary";
 import { checkMissingMappings } from "./utils/checkDestinationMappings";
@@ -38,20 +38,20 @@ if (typeof window !== 'undefined') {
   console.log('\n===========================================\n');
   
   // Exposer une fonction globale pour forcer le rechargement des scores
-  (window as any).refreshAllGoSafeScores = async () => {
-    console.log('🔄 RECHARGEMENT MANUEL FORCÉ de tous les scores GoSafe...');
-    const { refreshGoSafeScoresCache } = await import('./services/goSafeUpdateService');
+  (window as any).refreshAllLokascores = async () => {
+    console.log('🔄 RECHARGEMENT MANUEL FORCÉ de tous les scores Lokascore...');
+    const { refreshLokascoresCache } = await import('./services/lokascoreUpdateService');
     const { invalidateNumbeoCache } = await import('./services/numbeoService');
     
     // Invalider tous les caches
     invalidateNumbeoCache();
     
     // Forcer le rechargement
-    await refreshGoSafeScoresCache();
+    await refreshLokascoresCache();
     console.log('✅ Rechargement terminé !');
   };
   
-  console.log('💡 TIP: Pour forcer un rechargement manuel, tapez: refreshAllGoSafeScores()');
+  console.log('💡 TIP: Pour forcer un rechargement manuel, tapez: refreshAllLokascores()');
 }
 
 // Error Boundary Component
@@ -118,8 +118,8 @@ function App() {
               <AutoTranslate />
               <TranslationIndicator />
               
-              {/* Initialisation du cache GoSafe Index (Numbeo) en arrière-plan */}
-              <GoSafeCacheInitializer />
+              {/* Initialisation du cache Lokascore (Numbeo) en arrière-plan */}
+              <LokascoreCacheInitializer />
               
               <MemoryRouter
                 future={{
@@ -134,7 +134,7 @@ function App() {
               {/* Routes avec layout (TopBar desktop + BottomNav mobile) */}
               <Route element={<RootLayout />}>
                 <Route path="/" element={<LandingScreen />} />
-                <Route path="/gosafe" element={<GoSafePage />} />
+                <Route path="/lokascore" element={<LokascorePage />} />
                 <Route path="/pro" element={<ProPage />} />
                 <Route path="/global-home" element={<GlobalHome />} />
                 <Route path="/search" element={<SearchScreen />} />

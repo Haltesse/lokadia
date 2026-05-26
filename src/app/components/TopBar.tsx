@@ -19,7 +19,7 @@ export function TopBar() {
     { path: "/global-home", label: "Accueil" },
     { path: "/trips", label: "Voyages" },
     { path: "/alerts", label: "Alertes" },
-    { path: "/gosafe", label: "GoSafe" },
+    { path: "/lokascore", label: "Lokascore" },
     { path: "/pro", label: "Pro" },
   ];
 

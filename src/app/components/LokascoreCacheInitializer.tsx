@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
-import { useGoSafeCacheInitializer } from '../hooks/useGoSafeScore';
+import { useLokascoreCacheInitializer } from '../hooks/useLokascore';
 
 /**
  * Initialise le cache Lokascore au démarrage de l'application.
  * Les scores sont chargés à la demande (lazy) et persistés en sessionStorage.
  */
-export function GoSafeCacheInitializer() {
-  const { isReady } = useGoSafeCacheInitializer();
+export function LokascoreCacheInitializer() {
+  const { isReady } = useLokascoreCacheInitializer();
 
   useEffect(() => {
     if (isReady) {

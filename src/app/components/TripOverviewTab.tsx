@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import type { TripDashboard } from '../lib/tripBriefService';
 import type { TripWithChecklist } from '../lib/tripService';
-import { useGoSafeScore } from '../hooks/useGoSafeScore';
+import { useLokascore } from '../hooks/useLokascore';
 
 interface Props {
   dashboard: TripDashboard;
@@ -47,7 +47,7 @@ const getEmergencyIcon = (emoji: string): LucideIcon => {
 export default function TripOverviewTab({ dashboard, trip }: Props) {
   const navigate = useNavigate();
   const { priorityActions, alerts, checklistProgress, transportSummary, destination } = dashboard;
-  const { score: liveGoSafeScore, loading: scoreLoading } = useGoSafeScore(trip.destinationId);
+  const { score: liveLokascore, loading: scoreLoading } = useLokascore(trip.destinationId);
 
   const getPriorityColor = (priority: string) => {
     if (priority === 'high') return 'border-l-red-500 bg-red-50';
@@ -63,23 +63,23 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
   };
 
   // Couleurs alignées sur les 5 niveaux Lokascore (80/60/40/20)
-  const goSafeScoreColor =
-    liveGoSafeScore === null
+  const lokascoreColor =
+    liveLokascore === null
       ? 'text-gray-500'
-      : liveGoSafeScore >= 80
+      : liveLokascore >= 80
       ? 'text-green-600'
-      : liveGoSafeScore >= 60
+      : liveLokascore >= 60
       ? 'text-yellow-600'
-      : liveGoSafeScore >= 40
+      : liveLokascore >= 40
       ? 'text-orange-500'
-      : liveGoSafeScore >= 20
+      : liveLokascore >= 20
       ? 'text-red-500'
       : 'text-gray-900';
-  const goSafeScoreText =
-    scoreLoading && liveGoSafeScore === null
+  const lokascoreText =
+    scoreLoading && liveLokascore === null
       ? '...'
-      : liveGoSafeScore !== null
-      ? `${liveGoSafeScore}/100`
+      : liveLokascore !== null
+      ? `${liveLokascore}/100`
       : 'Indisponible';
 
   return (
@@ -243,8 +243,8 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Lokascore</span>
-              <span className={`font-bold ${goSafeScoreColor}`}>
-                {goSafeScoreText}
+              <span className={`font-bold ${lokascoreColor}`}>
+                {lokascoreText}
               </span>
             </div>
           </div>

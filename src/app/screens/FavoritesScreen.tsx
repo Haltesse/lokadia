@@ -36,7 +36,7 @@ export function FavoritesScreen() {
             <div className="mt-5 space-y-2">
               {[
                 { icon: MapPin, label: "Destinations", count: 0 },
-                { icon: Shield, label: "GoSafe", count: 0 },
+                { icon: Shield, label: "Lokascore", count: 0 },
                 { icon: Search, label: "Recherches", count: 0 },
               ].map((item) => {
                 const Icon = item.icon;

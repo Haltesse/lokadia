@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { BOOKING_PARTNERS } from "../components/PartnerBookingSection";
-import { useGoSafeScore } from "../hooks/useGoSafeScore";
+import { useLokascore } from "../hooks/useLokascore";
 
 const destinations = [
   {
@@ -103,7 +103,7 @@ function DesktopDestinationFeature({
   onClick: () => void;
   slideIndex: number;
 }) {
-  const { score, loading, level } = useGoSafeScore(destination.id);
+  const { score, loading, level } = useLokascore(destination.id);
   const scoreBackground = level.fillColor;
 
   return (
@@ -163,7 +163,7 @@ function DesktopDestinationFeature({
             className="rounded-full px-4 py-2 text-sm font-black text-white shadow-lg"
             style={{ background: scoreBackground }}
           >
-            GoSafe {loading && score === null ? "..." : score !== null ? `${score}/100` : "--"}
+            Lokascore {loading && score === null ? "..." : score !== null ? `${score}/100` : "--"}
           </div>
         </div>
 
@@ -216,9 +216,9 @@ export function DesktopHomeExperience() {
       bg: "var(--lokadia-info-bg)",
     },
     {
-      title: "Consulter GoSafe",
+      title: "Consulter Lokascore",
       description: "Vérifier le niveau de sécurité d'une destination.",
-      path: "/gosafe",
+      path: "/lokascore",
       Icon: Shield,
       tone: "var(--lokadia-success)",
       bg: "var(--lokadia-success-bg)",

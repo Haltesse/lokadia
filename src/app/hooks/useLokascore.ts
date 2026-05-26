@@ -1,5 +1,5 @@
 /**
- * useGoSafeScore (Lokascore) — hook unifié de score de sécurité
+ * useLokascore (Lokascore) — hook unifié de score de sécurité
  *
  * Retourne le Lokascore composite [0;100] modulé par le profil de voyage
  * sélectionné dans l'app (via TravelProfileContext). Le calcul agrège les
@@ -17,18 +17,19 @@
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  getGoSafeScoreFromCache,
-  getGoSafeScoreLastUpdate,
-  getGoSafeScoreOnDemand,
-  getStaleGoSafeScoreFromCache,
+  getLokascoreFromCache,
+  getLokascoreLastUpdate,
+  getLokascoreOnDemand,
+  getStaleLokascoreFromCache,
   getDimensionsFromCache,
   getStaleDimensionsFromCache,
   getDimensionsOnDemand,
-  initializeGoSafeScoresCache,
+  getSourceTraceFromCache,
+  initializeLokascoresCache,
   isCacheRecent,
   subscribeToScoreUpdates,
   subscribeToDimensionsUpdate,
-} from '../services/goSafeUpdateService';
+} from '../services/lokascoreUpdateService';
 import {
   computeLokascore,
   getLokascoreLevel,
@@ -37,15 +38,18 @@ import {
   type LokascoreLevelConfig,
   type LegacySafetyLevel,
 } from '../lib/lokascore';
+import type { LokascoreSourceTrace } from '../lib/lokascoreSources';
 import { useTravelProfile } from '../context/TravelProfileContext';
 
-interface UseGoSafeScoreResult {
-  /** Lokascore composite modulé par profil (rétro-compat avec ancien GoSafe Score) */
+interface UseLokascoreResult {
+  /** Lokascore composite modulé par profil (rétro-compat avec ancien Lokascore) */
   score: number | null;
   /** Mapping legacy 3-niveaux (rétro-compat) */
   safetyLevel: LegacySafetyLevel;
   /** Niveau Lokascore officiel 5-tiers (couleur, label, description, plage) */
   level: LokascoreLevelConfig;
+  /** Trace des sources officielles utilisées (Phase 3) — null tant que pas chargé */
+  sourceTrace: LokascoreSourceTrace | null;
   loading: boolean;
   lastUpdate: string;
   refresh: () => void;
@@ -69,7 +73,7 @@ function formatLastUpdate(timestamp: number | null): string {
   });
 }
 
-export function useGoSafeScore(destinationId: string | undefined): UseGoSafeScoreResult {
+export function useLokascore(destinationId: string | undefined): UseLokascoreResult {
   const { profile } = useTravelProfile();
   const [rawSecurityScore, setRawSecurityScore] = useState<number | null>(null);
   const [dimensions, setDimensions] = useState<LokascoreDimensions | null>(null);
@@ -87,31 +91,31 @@ export function useGoSafeScore(destinationId: string | undefined): UseGoSafeScor
 
     // 1. Cache lookup ultra-rapide (mémoire + sessionStorage hydraté)
     const cachedDims = forceRefresh ? null : getDimensionsFromCache(destinationId);
-    const cachedScore = forceRefresh ? null : getGoSafeScoreFromCache(destinationId);
+    const cachedScore = forceRefresh ? null : getLokascoreFromCache(destinationId);
     if (cachedDims !== null) {
       setDimensions(cachedDims);
       setRawSecurityScore(cachedScore ?? Math.round(cachedDims.security));
-      setLastUpdate(formatLastUpdate(getGoSafeScoreLastUpdate(destinationId)));
+      setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId)));
       setLoading(false);
       return;
     }
     if (cachedScore !== null) {
       setRawSecurityScore(cachedScore);
-      setLastUpdate(formatLastUpdate(getGoSafeScoreLastUpdate(destinationId)));
+      setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId)));
       setLoading(false);
       return;
     }
 
     // 2. Stale data en attendant le fetch frais
     const staleDims = getStaleDimensionsFromCache(destinationId);
-    const staleScore = getStaleGoSafeScoreFromCache(destinationId);
+    const staleScore = getStaleLokascoreFromCache(destinationId);
     if (staleDims !== null) {
       setDimensions(staleDims);
       setRawSecurityScore(staleScore ?? Math.round(staleDims.security));
-      setLastUpdate(formatLastUpdate(getGoSafeScoreLastUpdate(destinationId)));
+      setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId)));
     } else if (staleScore !== null) {
       setRawSecurityScore(staleScore);
-      setLastUpdate(formatLastUpdate(getGoSafeScoreLastUpdate(destinationId)));
+      setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId)));
     } else {
       setRawSecurityScore(null);
       setDimensions(null);
@@ -121,12 +125,12 @@ export function useGoSafeScore(destinationId: string | undefined): UseGoSafeScor
 
     // 3. Fetch frais
     try {
-      const newScore = await getGoSafeScoreOnDemand(destinationId, forceRefresh);
+      const newScore = await getLokascoreOnDemand(destinationId, forceRefresh);
       const newDims = await getDimensionsOnDemand(destinationId, false);
       if (newDims !== null) setDimensions(newDims);
       if (newScore !== null) {
         setRawSecurityScore(newScore);
-        setLastUpdate(formatLastUpdate(getGoSafeScoreLastUpdate(destinationId)));
+        setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId)));
       } else if (staleScore === null && staleDims === null) {
         setRawSecurityScore(null);
         setLastUpdate('Indisponible');
@@ -147,7 +151,7 @@ export function useGoSafeScore(destinationId: string | undefined): UseGoSafeScor
     const unsubScore = subscribeToScoreUpdates((id, score) => {
       if (id === destinationId) {
         setRawSecurityScore(score);
-        setLastUpdate(formatLastUpdate(getGoSafeScoreLastUpdate(destinationId)));
+        setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId)));
         setLoading(false);
       }
     });
@@ -186,6 +190,13 @@ export function useGoSafeScore(destinationId: string | undefined): UseGoSafeScor
   const level = useMemo(() => getLokascoreLevel(score), [score]);
   const safetyLevel = useMemo<LegacySafetyLevel>(() => toLegacySafetyLevel(score), [score]);
 
+  // Trace des sources officielles (Phase 3) — re-lu à chaque update du score
+  const sourceTrace = useMemo<LokascoreSourceTrace | null>(
+    () => (destinationId ? getSourceTraceFromCache(destinationId) : null),
+    // dimensions sert de signal de changement (la trace est stockée en même temps)
+    [destinationId, dimensions]
+  );
+
   const refresh = useCallback(async () => {
     console.log('🔄 Rafraîchissement manuel du Lokascore...');
     if (!destinationId) return;
@@ -197,6 +208,7 @@ export function useGoSafeScore(destinationId: string | undefined): UseGoSafeScor
     score,
     safetyLevel,
     level,
+    sourceTrace,
     loading,
     lastUpdate,
     refresh,
@@ -209,7 +221,7 @@ export function useGoSafeScore(destinationId: string | undefined): UseGoSafeScor
  * Hook pour initialiser le cache au démarrage de l'application
  * À appeler une seule fois dans App.tsx
  */
-export function useGoSafeCacheInitializer() {
+export function useLokascoreCacheInitializer() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -220,7 +232,7 @@ export function useGoSafeCacheInitializer() {
     console.log('🌟 Page ouverte - Initialisation du cache Lokascore...');
     const initialize = async () => {
       try {
-        await initializeGoSafeScoresCache();
+        await initializeLokascoresCache();
         isInitialized = true;
         setIsReady(true);
         console.log('✅ Cache Lokascore actualisé avec succès');

@@ -4,7 +4,7 @@ import { ArrowLeft, MapPin, CheckCircle, Search, Shield, X } from "lucide-react"
 import { destinationsDatabase, type DestinationDetails } from "../data/destinationData";
 import { motion } from "motion/react";
 import { HeroSlideshow } from "../components/HeroSlideshow";
-import { useGoSafeScore } from "../hooks/useGoSafeScore";
+import { useLokascore } from "../hooks/useLokascore";
 import { DestinationImage } from "../components/DestinationImage";
 
 interface DestinationListItemProps {
@@ -13,7 +13,7 @@ interface DestinationListItemProps {
 }
 
 function DestinationListItem({ dest, onClick }: DestinationListItemProps) {
-  const { score, loading, level } = useGoSafeScore(dest.id);
+  const { score, loading, level } = useLokascore(dest.id);
   // Couleurs 5-tiers Lokascore (cf. lib/lokascore.ts)
   const scoreColor = level.color;
   const scoreBackground = level.bgColor;
@@ -161,7 +161,7 @@ export function DestinationCountScreen() {
               fiches détaillées
             </p>
             <p className="text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
-              Score GoSafe, alertes, zones à risque, santé, visa, arnaques, prix indicatifs, urgences et coutumes locales.
+              Score Lokascore, alertes, zones à risque, santé, visa, arnaques, prix indicatifs, urgences et coutumes locales.
             </p>
           </div>
         </aside>
@@ -184,7 +184,7 @@ export function DestinationCountScreen() {
               </h2>
             </div>
             <p className="text-sm" style={{ color: "var(--lokadia-text-light)" }}>
-              Chaque fiche contient: score GoSafe, alertes, zones dangereuses, conseils de sécurité, 
+              Chaque fiche contient: score Lokascore, alertes, zones dangereuses, conseils de sécurité, 
               vaccins, système de santé, visa, arnaques courantes, prix indicatifs, numéros d'urgence, 
               consulat, coutumes locales et comportements à éviter.
             </p>

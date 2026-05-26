@@ -1,13 +1,13 @@
 import { MapPin, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { useGoSafeScore } from "../hooks/useGoSafeScore";
+import { useLokascore } from "../hooks/useLokascore";
 
 export function Dashboard() {
-  const { score: lisbonGoSafeScore, loading: scoreLoading, level } = useGoSafeScore("lisbon-portugal");
-  const scoreLabel = scoreLoading && lisbonGoSafeScore === null ? "..." : lisbonGoSafeScore ?? "--";
-  const safetyLabel = lisbonGoSafeScore === null ? "Lokascore indisponible" : level.label;
+  const { score: lisbonLokascore, loading: scoreLoading, level } = useLokascore("lisbon-portugal");
+  const scoreLabel = scoreLoading && lisbonLokascore === null ? "..." : lisbonLokascore ?? "--";
+  const safetyLabel = lisbonLokascore === null ? "Lokascore indisponible" : level.label;
   const safetyColor = level.color;
-  const safetyBars = lisbonGoSafeScore === null ? 0 : Math.max(1, Math.ceil(lisbonGoSafeScore / 20));
+  const safetyBars = lisbonLokascore === null ? 0 : Math.max(1, Math.ceil(lisbonLokascore / 20));
   const checklistItems = [
     { label: "Visa", checked: true, required: true },
     { label: "Vaccins", checked: true, required: true },

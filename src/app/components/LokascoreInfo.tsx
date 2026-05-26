@@ -1,5 +1,5 @@
 /**
- * GoSafeScoreInfo — encart explicatif affiché sous le Lokascore
+ * LokascoreInfo — encart explicatif affiché sous le Lokascore
  * sur la page d'une destination.
  *
  * Explique en clair :
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import {
   getOfficialSources,
-  GOSAFE_METHODOLOGY,
+  LOKASCORE_METHODOLOGY,
   type SourceCategory,
 } from '../lib/officialSources';
 
@@ -52,13 +52,13 @@ const CATEGORY_META: Record<
   },
 };
 
-export function GoSafeScoreInfo({ cityName, countryName, score }: Props) {
+export function LokascoreInfo({ cityName, countryName, score }: Props) {
   const [open, setOpen] = useState(false);
   const sources = getOfficialSources(cityName, countryName);
 
   // Trouver dans quel seuil se situe le score
   const currentThreshold = score !== null
-    ? GOSAFE_METHODOLOGY.thresholds.find(
+    ? LOKASCORE_METHODOLOGY.thresholds.find(
         (t) => score >= t.min && score <= t.max,
       )
     : null;
@@ -96,10 +96,10 @@ export function GoSafeScoreInfo({ cityName, countryName, score }: Props) {
             </h4>
             <p className="text-sm text-gray-700 leading-relaxed">
               Le <strong>Lokascore</strong> est un indice de{' '}
-              <strong>{GOSAFE_METHODOLOGY.scoreRange}</strong> calculé à partir
+              <strong>{LOKASCORE_METHODOLOGY.scoreRange}</strong> calculé à partir
               du <strong>Safety Index</strong> de{' '}
               <a
-                href={GOSAFE_METHODOLOGY.primarySource.url}
+                href={LOKASCORE_METHODOLOGY.primarySource.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-700 underline font-semibold"
@@ -111,11 +111,11 @@ export function GoSafeScoreInfo({ cityName, countryName, score }: Props) {
             </p>
             <p className="text-xs text-gray-600 leading-relaxed">
               Les données sont rafraîchies automatiquement toutes les{' '}
-              <strong>{GOSAFE_METHODOLOGY.refreshInterval}</strong>. Plus le
+              <strong>{LOKASCORE_METHODOLOGY.refreshInterval}</strong>. Plus le
               score est haut, plus la destination est considérée comme sûre.
             </p>
             <a
-              href={GOSAFE_METHODOLOGY.primarySource.methodology}
+              href={LOKASCORE_METHODOLOGY.primarySource.methodology}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:underline"
@@ -131,7 +131,7 @@ export function GoSafeScoreInfo({ cityName, countryName, score }: Props) {
               Échelle de lecture
             </h4>
             <div className="space-y-1.5">
-              {GOSAFE_METHODOLOGY.thresholds.map((t) => {
+              {LOKASCORE_METHODOLOGY.thresholds.map((t) => {
                 const isCurrent = currentThreshold?.level === t.level;
                 return (
                   <div

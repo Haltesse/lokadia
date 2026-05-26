@@ -19,14 +19,14 @@ import {
 } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { registerLandingSignup } from '../lib/landingSignupService';
-import { useGoSafeScore } from '../hooks/useGoSafeScore';
+import { useLokascore } from '../hooks/useLokascore';
 
 /**
  * Landing page publique à la racine /.
  * Objectifs :
  * - Capturer des emails (validation pré-lancement Phase 0A)
  * - Communiquer le positionnement "assistant sécurité + logistique" (pas réseau social)
- * - Exposer GoSafe Score (actif défensable)
+ * - Exposer Lokascore (actif défensable)
  * - Montrer les partenaires de commissions (crédibilité modèle)
  * - Appel B2B vers /pro
  */
@@ -36,19 +36,19 @@ export default function LandingScreen() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const {
-    score: lisbonGoSafeScore,
+    score: lisbonLokascore,
     safetyLevel: lisbonSafetyLevel,
     loading: lisbonScoreLoading,
     lastUpdate: lisbonLastUpdate,
-  } = useGoSafeScore('lisbon-portugal');
+  } = useLokascore('lisbon-portugal');
   const lisbonScoreLabel =
-    lisbonScoreLoading && lisbonGoSafeScore === null
+    lisbonScoreLoading && lisbonLokascore === null
       ? '...'
-      : lisbonGoSafeScore !== null
-      ? lisbonGoSafeScore
+      : lisbonLokascore !== null
+      ? lisbonLokascore
       : '--';
   const lisbonSafetyLabel =
-    lisbonGoSafeScore === null
+    lisbonLokascore === null
       ? 'Score live indisponible'
       : lisbonSafetyLevel === 'safe'
       ? 'Très sûr'
@@ -56,7 +56,7 @@ export default function LandingScreen() {
       ? 'Risque'
       : 'Vigilance';
   const lisbonCardGradient =
-    lisbonGoSafeScore === null
+    lisbonLokascore === null
       ? 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)'
       : lisbonSafetyLevel === 'safe'
       ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
@@ -128,7 +128,7 @@ export default function LandingScreen() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="text-lg md:text-xl text-white/90 mb-8 max-w-xl"
               >
-                Score GoSafe en temps réel, alertes géolocalisées officielles,
+                Score Lokascore en temps réel, alertes géolocalisées officielles,
                 et réservation intégrée des essentiels. Tout dans une seule app.
               </motion.p>
 
@@ -203,7 +203,7 @@ export default function LandingScreen() {
               </div>
             </div>
 
-            {/* Visuel side — GoSafe card preview */}
+            {/* Visuel side — Lokascore card preview */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -227,13 +227,13 @@ export default function LandingScreen() {
                 </div>
 
                 <div className="rounded-2xl p-5 mb-5" style={{ background: lisbonCardGradient }}>
-                  <p className="text-xs font-semibold text-white/80 uppercase tracking-wider mb-1">GoSafe Score</p>
+                  <p className="text-xs font-semibold text-white/80 uppercase tracking-wider mb-1">Lokascore</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-5xl font-bold text-white">{lisbonScoreLabel}</span>
                     <span className="text-lg text-white/80">/ 100</span>
                   </div>
                   <p className="text-sm text-white/90 mt-1">
-                    {lisbonGoSafeScore !== null
+                    {lisbonLokascore !== null
                       ? `${lisbonSafetyLabel} · MAJ ${lisbonLastUpdate}`
                       : lisbonSafetyLabel}
                   </p>
@@ -293,7 +293,7 @@ export default function LandingScreen() {
           {[
             {
               icon: Shield,
-              title: 'GoSafe Score',
+              title: 'Lokascore',
               desc: 'Algorithme propriétaire qui croise MAE, GDACS, OMS et IATA pour un score 0-100 mis à jour en temps réel.',
               color: '#0F4C81',
               bg: 'rgba(15, 76, 129, 0.1)',
@@ -339,14 +339,14 @@ export default function LandingScreen() {
 
         <div className="text-center mt-10">
           <button
-            onClick={() => navigate('/gosafe')}
+            onClick={() => navigate('/lokascore')}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm"
             style={{
               background: 'var(--lokadia-info-bg)',
               color: 'var(--lokadia-primary)',
             }}
           >
-            Comprendre l'algorithme GoSafe <ArrowRight className="h-4 w-4" />
+            Comprendre l'algorithme Lokascore <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       </section>
@@ -410,7 +410,7 @@ export default function LandingScreen() {
                 Protégez vos équipes, vos étudiants, vos assurés.
               </h2>
               <p className="text-base md:text-lg text-white/90 mb-8 max-w-xl">
-                L'API GoSafe en white-label pour écoles, ONG, assureurs et compagnies aériennes.
+                L'API Lokascore en white-label pour écoles, ONG, assureurs et compagnies aériennes.
                 Tableau de bord, alertes groupe, reporting RGPD.
               </p>
               <button
@@ -465,7 +465,7 @@ export default function LandingScreen() {
           <div className="flex gap-4 text-xs" style={{ color: 'var(--lokadia-gray-500)' }}>
             <button onClick={() => navigate('/global-home')}>Démo</button>
             <button onClick={() => navigate('/pro')}>Pro</button>
-            <button onClick={() => navigate('/gosafe')}>GoSafe</button>
+            <button onClick={() => navigate('/lokascore')}>Lokascore</button>
           </div>
         </div>
       </footer>

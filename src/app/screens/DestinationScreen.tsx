@@ -23,13 +23,13 @@ import {
 } from "lucide-react";
 import { useWeather } from "../hooks/useWeather";
 import { useNumbeoSafety } from "../hooks/useNumbeoSafety";
-import { useGoSafeScore } from "../hooks/useGoSafeScore";
+import { useLokascore } from "../hooks/useLokascore";
 import { WeatherCard, WeatherCardSkeleton } from "../components/WeatherCard";
 import { NumbeoLoadingIndicator } from "../components/NumbeoLoadingIndicator";
 import { getDestinationData, type DestinationDetails } from "../data/destinationData";
 import { useLanguageSafe } from "../context/LanguageContext";
 import { DestinationImage } from "../components/DestinationImage";
-import { GoSafeScoreInfo } from "../components/GoSafeScoreInfo";
+import { LokascoreInfo } from "../components/LokascoreInfo";
 import { LokascoreBreakdown } from "../components/LokascoreBreakdown";
 import { ActiveProfileBadge } from "../components/TravelProfileSelector";
 import { Badge } from "../components/Badge";
@@ -83,15 +83,16 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
   
   // Récupérer le Lokascore (modulé par profil) en temps réel
   const {
-    score: goSafeScore,
+    score: lokascore,
     safetyLevel,
     level: lokascoreLevel,
     loading: scoreLoading,
     lastUpdate: scoreLastUpdate,
     dimensions,
-  } = useGoSafeScore(destination.id);
+    sourceTrace,
+  } = useLokascore(destination.id);
 
-  const displayedScore = goSafeScore;
+  const displayedScore = lokascore;
   const displayedSafetyLevel = safetyLevel;
   const displayedLastUpdate = scoreLastUpdate;
   const hasLiveScore = displayedScore !== null;
@@ -345,16 +346,18 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
           </button>
         </div>
 
-        {/* Breakdown 4 dimensions Lokascore (Sécurité / Santé / Nature / Infrastructure) */}
+        {/* Breakdown 4 dimensions Lokascore (Sécurité / Santé / Nature / Infrastructure)
+            + sources officielles réellement utilisées (Phase 3) */}
         <LokascoreBreakdown
           dimensions={dimensions}
           compositeScore={displayedScore}
+          sourceTrace={sourceTrace}
         />
       </div>
 
       {/* Comment ce score est-il calculé + sources officielles */}
       <div className="mb-6 px-6 lg:mx-auto lg:max-w-5xl">
-        <GoSafeScoreInfo
+        <LokascoreInfo
           cityName={destination.name}
           countryName={destination.country}
           score={displayedScore}
@@ -650,23 +653,23 @@ function AlertsTab({ destination }: { destination: DestinationDetails }) {
 function SafetyTab({ destination }: { destination: DestinationDetails }) {
   const { safetyData, loading: safetyLoading, error: safetyError, refresh } = useNumbeoSafety(destination.id);
   const {
-    score: liveGoSafeScore,
-    loading: goSafeLoading,
-    lastUpdate: goSafeLastUpdate,
+    score: liveLokascore,
+    loading: lokascoreLoading,
+    lastUpdate: lokascoreLastUpdate,
     level: lokascoreLevel,
     dimensions,
-  } = useGoSafeScore(destination.id);
-  const displayedGoSafeScore = liveGoSafeScore;
+  } = useLokascore(destination.id);
+  const displayedLokascore = liveLokascore;
   // Mapping Lokascore 5-tiers → variant Badge legacy
-  const goSafeLevel: "safe" | "vigilance" | "urgent" | "neutral" =
-    displayedGoSafeScore === null
+  const badgeVariant: "safe" | "vigilance" | "urgent" | "neutral" =
+    displayedLokascore === null
       ? "neutral"
       : lokascoreLevel.level === "safe"
       ? "safe"
       : lokascoreLevel.level === "vigilance"
       ? "vigilance"
       : "urgent";
-  const goSafeLabel = displayedGoSafeScore === null ? "Lokascore indisponible" : lokascoreLevel.label;
+  const lokascoreLabel = displayedLokascore === null ? "Lokascore indisponible" : lokascoreLevel.label;
   const handleSafetyRefresh = () => {
     refresh();
   };
@@ -683,17 +686,17 @@ function SafetyTab({ destination }: { destination: DestinationDetails }) {
               </h3>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-bold text-blue-900">
-                  {goSafeLoading && displayedGoSafeScore === null ? "..." : displayedGoSafeScore ?? "--"}
+                  {lokascoreLoading && displayedLokascore === null ? "..." : displayedLokascore ?? "--"}
                 </span>
                 <span className="text-lg text-blue-600">/100</span>
               </div>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <Badge 
-                variant={goSafeLevel} 
+              <Badge
+                variant={badgeVariant}
                 size="md"
               >
-                {goSafeLabel}
+                {lokascoreLabel}
               </Badge>
               <button
                 onClick={handleSafetyRefresh}
@@ -719,7 +722,7 @@ function SafetyTab({ destination }: { destination: DestinationDetails }) {
           
           <div className="flex items-center justify-between text-xs text-blue-600">
             <span>Source: Numbeo.com</span>
-            <span>MAJ: {liveGoSafeScore !== null ? goSafeLastUpdate : safetyData.lastUpdate}</span>
+            <span>MAJ: {liveLokascore !== null ? lokascoreLastUpdate : safetyData.lastUpdate}</span>
           </div>
         </div>
       )}

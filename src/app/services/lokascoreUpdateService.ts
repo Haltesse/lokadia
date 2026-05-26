@@ -1,13 +1,14 @@
 /**
- * Service de mise à jour automatique des GoSafe Index
+ * Service de mise à jour automatique des Lokascore
  * Met à jour tous les scores de sécurité avec les données Numbeo en temps réel
  */
 
 import { fetchNumbeoSafety, invalidateNumbeoCache } from './numbeoService';
 import { destinationsDatabase } from '../data/destinationData';
 import { buildDimensionsFromNumbeo, type LokascoreDimensions } from '../lib/lokascore';
+import { computeDimensionsFromSources, type LokascoreSourceTrace } from '../lib/lokascoreSources';
 
-interface GoSafeScoreUpdate {
+interface LokascoreUpdate {
   destinationId: string;
   cityName: string;
   oldScore: number;
@@ -21,6 +22,9 @@ const globalScoresCache = new Map<string, number>();
 const scoreTimestamps = new Map<string, number>();
 // Cache des 4 dimensions Lokascore (Security/Health/Nature/Infrastructure)
 const dimensionsCache = new Map<string, LokascoreDimensions>();
+// Cache des traces de sources (Phase 3) : permet à l'UI de montrer
+// quelles sources officielles ont contribué à chaque dimension
+const sourceTracesCache = new Map<string, LokascoreSourceTrace>();
 const cacheTimestamp = { value: 0 };
 const GLOBAL_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 const loadingPromises = new Map<string, Promise<number | null>>();
@@ -31,11 +35,11 @@ const dimensionsLoadingPromises = new Map<string, Promise<LokascoreDimensions | 
 // Garantit que la liste et la fiche affichent toujours le même score Numbeo.
 // IMPORTANT : la version dans la clé invalide automatiquement les anciens caches
 // quand on change la logique des scores. Bumper si les scores statiques apparaissent.
-const SESSION_KEY = 'lokadia_gosafe_scores_v3';
+const SESSION_KEY = 'lokadia_lokascore_scores_v3';
 const SESSION_KEY_DIMENSIONS = 'lokadia_lokascore_dims_v1';
 
 // Anciennes clés à nettoyer au démarrage (évite la pollution par d'anciens scores statiques)
-const LEGACY_SESSION_KEYS = ['lokadia_gosafe_scores', 'lokadia_gosafe_scores_v1', 'lokadia_gosafe_scores_v2'];
+const LEGACY_SESSION_KEYS = ['lokadia_lokascore_scores', 'lokadia_lokascore_scores_v1', 'lokadia_lokascore_scores_v2'];
 
 function purgeLegacySessionCaches(): void {
   try {
@@ -179,6 +183,15 @@ function storeDimensions(destinationId: string, dims: LokascoreDimensions) {
   notifyDimensionsUpdate(destinationId, dims);
 }
 
+function storeSourceTrace(destinationId: string, trace: LokascoreSourceTrace) {
+  sourceTracesCache.set(destinationId, trace);
+}
+
+/** Récupère la trace des sources officielles utilisées pour calculer le Lokascore */
+export function getSourceTraceFromCache(destinationId: string): LokascoreSourceTrace | null {
+  return sourceTracesCache.get(destinationId) ?? null;
+}
+
 /**
  * Abonne un listener aux mises à jour de scores
  */
@@ -200,16 +213,16 @@ function notifyScoreUpdate(destinationId: string, score: number) {
   });
 }
 
-function storeGoSafeScore(destinationId: string, score: number) {
+function storeLokascore(destinationId: string, score: number) {
   globalScoresCache.set(destinationId, score);
   scoreTimestamps.set(destinationId, Date.now());
   writeSessionCache(destinationId, score); // ← persistance cross-navigation
   notifyScoreUpdate(destinationId, score);
 }
 
-export function syncGoSafeScore(destinationId: string, score: number) {
+export function syncLokascore(destinationId: string, score: number) {
   if (!Number.isFinite(score)) return;
-  storeGoSafeScore(destinationId, Math.round(score));
+  storeLokascore(destinationId, Math.round(score));
 }
 
 function isScoreRecent(destinationId: string): boolean {
@@ -227,12 +240,12 @@ function getAllDestinationIds(): string[] {
 }
 
 /**
- * Récupère le GoSafe Score + les 4 dimensions Lokascore depuis Numbeo.
+ * Récupère le Lokascore + les 4 dimensions Lokascore depuis Numbeo.
  * - Déduplication : si le même ID est déjà en cours de fetch, on réutilise la même promesse
  * - Concurrence limitée : max MAX_CONCURRENT appels simultanés pour éviter de saturer l'API
  * - Effet de bord : remplit aussi `dimensionsCache` pour la modulation profil
  */
-async function fetchGoSafeScoreForDestination(destinationId: string): Promise<number | null> {
+async function fetchLokascoreForDestination(destinationId: string): Promise<number | null> {
   // Déduplication : réutiliser la promesse en cours si elle existe
   const existing = loadingPromises.get(destinationId);
   if (existing) return existing;
@@ -241,15 +254,18 @@ async function fetchGoSafeScoreForDestination(destinationId: string): Promise<nu
     try {
       const safetyData = await fetchNumbeoSafety(destinationId);
       const score = Math.round(safetyData.safetyIndex);
-      // Construction des 4 dimensions Lokascore à partir des indices Numbeo
-      const dims = buildDimensionsFromNumbeo({
+      // Phase 3 : on agrège les sources officielles (MAE/FCDO/US State/DFAT/
+      // WJP/CPI/EM-DAT/etc.) avec fallback Numbeo dimension par dimension.
+      const { dimensions: dims, trace } = computeDimensionsFromSources(destinationId, {
         safetyIndex: safetyData.safetyIndex,
         healthCareIndex: safetyData.healthCareIndex,
         qualityOfLifeIndex: safetyData.qualityOfLifeIndex,
         pollutionIndex: safetyData.pollutionIndex,
       });
       storeDimensions(destinationId, dims);
-      console.log(`✅ Lokascore pour ${destinationId}: S=${Math.round(dims.security)} H=${Math.round(dims.health)} N=${Math.round(dims.nature)} I=${Math.round(dims.infrastructure)}`);
+      storeSourceTrace(destinationId, trace);
+      const officialFlag = trace.hasAnyOfficialSource ? '🟢 sources officielles' : '⚪ Numbeo fallback';
+      console.log(`✅ Lokascore ${destinationId} [${officialFlag}]: S=${Math.round(dims.security)} H=${Math.round(dims.health)} N=${Math.round(dims.nature)} I=${Math.round(dims.infrastructure)}`);
       return score;
     } catch (error) {
       console.error(`❌ Erreur score ${destinationId}:`, error);
@@ -264,7 +280,7 @@ async function fetchGoSafeScoreForDestination(destinationId: string): Promise<nu
 }
 
 /**
- * Récupère uniquement les 4 dimensions Lokascore (utilisé par useGoSafeScore
+ * Récupère uniquement les 4 dimensions Lokascore (utilisé par useLokascore
  * quand on a besoin de moduler par profil voyage).
  */
 async function fetchDimensionsForDestination(destinationId: string): Promise<LokascoreDimensions | null> {
@@ -273,8 +289,8 @@ async function fetchDimensionsForDestination(destinationId: string): Promise<Lok
 
   const promise = (async () => {
     try {
-      // fetchGoSafeScoreForDestination remplit déjà dimensionsCache via storeDimensions
-      await fetchGoSafeScoreForDestination(destinationId);
+      // fetchLokascoreForDestination remplit déjà dimensionsCache via storeDimensions
+      await fetchLokascoreForDestination(destinationId);
       return dimensionsCache.get(destinationId) ?? null;
     } catch {
       return null;
@@ -320,13 +336,13 @@ function getSafetyLevel(score: number): 'safe' | 'vigilance' | 'danger' {
 }
 
 /**
- * Met à jour tous les GoSafe Index depuis Numbeo
+ * Met à jour tous les Lokascore depuis Numbeo
  * Retourne la liste des mises à jour effectuées
  */
-export async function updateAllGoSafeScores(forceRefresh: boolean = false): Promise<GoSafeScoreUpdate[]> {
+export async function updateAllLokascores(forceRefresh: boolean = false): Promise<LokascoreUpdate[]> {
   // Vérifier si un rafraîchissement est nécessaire
   if (!forceRefresh && isCacheRecent()) {
-    console.log('✅ Cache GoSafe encore valide, pas de rafraîchissement');
+    console.log('✅ Cache Lokascore encore valide, pas de rafraîchissement');
     return [];
   }
 
@@ -334,9 +350,9 @@ export async function updateAllGoSafeScores(forceRefresh: boolean = false): Prom
     invalidateNumbeoCache();
   }
   
-  console.log('🔄 Mise à jour automatique de TOUS les GoSafe Index...');
+  console.log('🔄 Mise à jour automatique de TOUS les Lokascore...');
   
-  const updates: GoSafeScoreUpdate[] = [];
+  const updates: LokascoreUpdate[] = [];
   
   // Récupérer TOUTES les destinations depuis la base de données
   const allDestinationIds = getAllDestinationIds();
@@ -355,12 +371,12 @@ export async function updateAllGoSafeScores(forceRefresh: boolean = false): Prom
     // Charger chaque batch en parallèle
     const batchPromises = batch.map(async (destinationId) => {
       try {
-        const newScore = await fetchGoSafeScoreForDestination(destinationId);
+        const newScore = await fetchLokascoreForDestination(destinationId);
         
         if (newScore !== null) {
-          storeGoSafeScore(destinationId, newScore);
+          storeLokascore(destinationId, newScore);
           
-          const update: GoSafeScoreUpdate = {
+          const update: LokascoreUpdate = {
             destinationId,
             cityName: destinationId.split('-')[0],
             oldScore: 0,
@@ -394,7 +410,7 @@ export async function updateAllGoSafeScores(forceRefresh: boolean = false): Prom
     
     // Attendre que le batch soit terminé avant de continuer
     const batchResults = await Promise.all(batchPromises);
-    updates.push(...batchResults.filter((u): u is GoSafeScoreUpdate => u !== null));
+    updates.push(...batchResults.filter((u): u is LokascoreUpdate => u !== null));
     
     // Afficher la progression du batch
     const progress = Math.round((completed / allDestinationIds.length) * 100);
@@ -414,9 +430,9 @@ export async function updateAllGoSafeScores(forceRefresh: boolean = false): Prom
 }
 
 /**
- * Récupère le GoSafe Score depuis le cache (si disponible et récent)
+ * Récupère le Lokascore depuis le cache (si disponible et récent)
  */
-export function getGoSafeScoreFromCache(destinationId: string): number | null {
+export function getLokascoreFromCache(destinationId: string): number | null {
   const score = globalScoresCache.get(destinationId);
   if (score === undefined) return null;
   if (!isScoreRecent(destinationId)) {
@@ -429,11 +445,11 @@ export function getGoSafeScoreFromCache(destinationId: string): number | null {
   return score;
 }
 
-export function getGoSafeScoreLastUpdate(destinationId: string): number | null {
+export function getLokascoreLastUpdate(destinationId: string): number | null {
   return scoreTimestamps.get(destinationId) ?? null;
 }
 
-export function getStaleGoSafeScoreFromCache(destinationId: string): number | null {
+export function getStaleLokascoreFromCache(destinationId: string): number | null {
   const score = globalScoresCache.get(destinationId);
   return score ?? null;
 }
@@ -441,9 +457,9 @@ export function getStaleGoSafeScoreFromCache(destinationId: string): number | nu
 /**
  * Force le rechargement du cache
  */
-export async function refreshGoSafeScoresCache(): Promise<void> {
-  console.log('🔄 Rechargement forcé du cache GoSafe...');
-  await updateAllGoSafeScores(true);
+export async function refreshLokascoresCache(): Promise<void> {
+  console.log('🔄 Rechargement forcé du cache Lokascore...');
+  await updateAllLokascores(true);
 }
 
 /**
@@ -458,20 +474,20 @@ export function isCacheRecent(): boolean {
 }
 
 /**
- * Récupère le GoSafe Score pour UNE destination (chargement à la demande)
+ * Récupère le Lokascore pour UNE destination (chargement à la demande)
  */
-export async function getGoSafeScoreOnDemand(destinationId: string, forceRefresh: boolean = false): Promise<number | null> {
+export async function getLokascoreOnDemand(destinationId: string, forceRefresh: boolean = false): Promise<number | null> {
   // Vérifier le cache d'abord
-  const cached = getGoSafeScoreFromCache(destinationId);
+  const cached = getLokascoreFromCache(destinationId);
   if (!forceRefresh && cached !== null) return cached;
 
   if (forceRefresh) {
     invalidateNumbeoCache(destinationId);
   }
 
-  const score = await fetchGoSafeScoreForDestination(destinationId);
+  const score = await fetchLokascoreForDestination(destinationId);
   if (score !== null) {
-    storeGoSafeScore(destinationId, score);
+    storeLokascore(destinationId, score);
   }
   return score;
 }
@@ -481,8 +497,8 @@ export async function getGoSafeScoreOnDemand(destinationId: string, forceRefresh
  * Les scores déjà présents en sessionStorage sont hydratés à l'import du module ;
  * cette fonction ne fait que marquer le cache comme prêt.
  */
-export async function initializeGoSafeScoresCache(): Promise<void> {
-  console.log('🚀 Cache GoSafe Index initialisé (chargement à la demande + sessionStorage)');
+export async function initializeLokascoresCache(): Promise<void> {
+  console.log('🚀 Cache Lokascore initialisé (chargement à la demande + sessionStorage)');
   console.log(`💾 ${globalScoresCache.size} scores restaurés depuis sessionStorage`);
   // cacheTimestamp = 0 → laisse chaque score utiliser son propre scoreTimestamp
   if (cacheTimestamp.value === 0) cacheTimestamp.value = 0; // no-op intentionnel

@@ -13,7 +13,7 @@ import { useLanguageSafe } from "../context/LanguageContext";
 import { PartnerBookingSection } from "../components/PartnerBookingSection";
 import { HeroSlideshow } from "../components/HeroSlideshow";
 import { DesktopHomeExperience } from "./DesktopHomeExperience";
-import { useGoSafeScore } from "../hooks/useGoSafeScore";
+import { useLokascore } from "../hooks/useLokascore";
 
 interface PopularDestination {
   id: string;
@@ -32,7 +32,7 @@ function PopularDestinationCard({
   index: number;
   onClick: () => void;
 }) {
-  const { score, loading, level } = useGoSafeScore(dest.id);
+  const { score, loading, level } = useLokascore(dest.id);
   // Couleur 5-tiers Lokascore officielle
   const scoreBackground = level.fillColor;
 

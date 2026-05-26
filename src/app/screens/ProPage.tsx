@@ -54,7 +54,7 @@ export default function ProPage() {
       price: "5 000 - 20 000 €",
       unit: "/an",
       features: [
-        "API GoSafe Score intégrée à votre espace client",
+        "API Lokascore intégrée à votre espace client",
         "Tarification ajustée en fonction du risque pays",
         "Branding personnalisé",
         "SLA 99,9 %",
@@ -69,7 +69,7 @@ export default function ProPage() {
       price: "8 000 - 25 000 €",
       unit: "/an",
       features: [
-        "Notifications GoSafe dans l'app passager",
+        "Notifications Lokascore dans l'app passager",
         "Information destination pré-vol",
         "Intégration aux alertes opérationnelles",
         "Co-branding",

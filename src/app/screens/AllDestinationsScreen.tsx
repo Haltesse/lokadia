@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Shield, MapPin, TrendingUp, Search, X } from "lucide-react";
 import { destinationsDatabase } from "../data/destinationData";
-import { useGoSafeScore } from "../hooks/useGoSafeScore";
+import { useLokascore } from "../hooks/useLokascore";
 import { DestinationImage } from "../components/DestinationImage";
 
 interface DestinationCardProps {
@@ -17,8 +17,8 @@ interface DestinationCardProps {
 }
 
 function DestinationCard({ destination, onClick, index }: DestinationCardProps) {
-  const { score: goSafeScore, loading, level } = useGoSafeScore(destination.id);
-  const displayedScore = goSafeScore;
+  const { score: lokascore, loading, level } = useLokascore(destination.id);
+  const displayedScore = lokascore;
   const badgeColor = level.fillColor;
 
   // Stagger compact (max delay-6) basé sur l'index
@@ -174,7 +174,7 @@ export function AllDestinationsScreen() {
               Catalogue
             </h2>
             <p className="mt-2 text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
-              Une grille dense pour scanner rapidement les destinations, avec score GoSafe visible dès la liste.
+              Une grille dense pour scanner rapidement les destinations, avec score Lokascore visible dès la liste.
             </p>
           </div>
         </aside>

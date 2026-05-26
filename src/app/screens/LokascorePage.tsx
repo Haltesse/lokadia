@@ -1,5 +1,5 @@
 /**
- * Page Méthodologie Lokascore (anciennement GoSafe).
+ * Page Méthodologie Lokascore (anciennement Lokascore).
  * Reflète fidèlement la méthodologie officielle décrite dans le mémoire
  * méthodologique v1.0 déposé en enveloppe e-Soleau INPI.
  */
@@ -25,7 +25,7 @@ import {
   PROFILE_WEIGHTS,
 } from "../lib/lokascore";
 
-export default function GoSafePage() {
+export default function LokascorePage() {
   const navigate = useNavigate();
 
   // Les 4 dimensions documentées (sources officielles cibles)
