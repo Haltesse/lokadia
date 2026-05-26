@@ -20,6 +20,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { fetchRealTimeAlerts, type RealTimeAlert } from "../services/alertService";
 import { LiveAlertsList } from "../components/LiveAlertsList";
+import { WorldAlertsMap } from "../components/WorldAlertsMap";
 
 type AlertType = "all" | "weather" | "security" | "transport" | "health" | "political" | "disaster";
 type AlertLevel = "all" | "info" | "vigilance" | "urgent";
@@ -354,6 +355,13 @@ export function AlertCenterScreen() {
             Live
           </span>
         </div>
+
+        {/* Carte mondiale interactive Leaflet */}
+        <div className="mb-4">
+          <WorldAlertsMap />
+        </div>
+
+        {/* Liste détaillée par pays */}
         <LiveAlertsList />
       </section>
 
