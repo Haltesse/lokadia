@@ -22,7 +22,13 @@ import {
   US_STATE_SCORE,
   DFAT_SCORE,
   getCountryRiskForDestination,
+  DESTINATION_TO_COUNTRY_ISO,
 } from '../data/countryRiskData';
+import {
+  getMaxAlertSeverityForCountry,
+  getAlertsForCountry,
+  type LiveAlert,
+} from './liveAlertsService';
 
 export interface NumbeoFallback {
   safetyIndex: number;
@@ -58,6 +64,8 @@ export interface LokascoreSourceTrace {
   infrastructure: DimensionTrace;
   /** True si au moins une source officielle a contribué */
   hasAnyOfficialSource: boolean;
+  /** Alertes live actuellement actives pour ce pays (USGS / ReliefWeb) */
+  liveAlerts?: LiveAlert[];
 }
 
 const clamp = (n: number) => Math.max(0, Math.min(100, n));
@@ -134,29 +142,58 @@ function computeHealth(country: CountryRisk | null, numbeo: NumbeoFallback): Dim
   };
 }
 
-function computeNature(country: CountryRisk | null, numbeo: NumbeoFallback): DimensionTrace {
+function computeNature(
+  country: CountryRisk | null,
+  numbeo: NumbeoFallback,
+  liveAlertSeverity: 'orange' | 'red' | null
+): DimensionTrace {
   const contribs: SourceContribution[] = [];
-  // N_act : alerte GDACS active (modulation temporelle simplifiée)
-  if (country?.gdacsActive !== undefined) {
-    const gdacsValue = country.gdacsActive === 'red' ? 30 : country.gdacsActive === 'orange' ? 60 : 100;
-    contribs.push({ id: 'gdacs', label: 'GDACS', value: gdacsValue, weight: 0.60 });
+
+  // N_act : 60% — priorité aux alertes LIVE USGS/ReliefWeb si présentes,
+  // sinon GDACS statique de la base, sinon neutre 100
+  let nActValue: number = 100;
+  let nActLabel = 'Aucune alerte active';
+  let nActId = 'live-none';
+  if (liveAlertSeverity === 'red') {
+    nActValue = 30;
+    nActLabel = 'USGS/ReliefWeb (alerte rouge)';
+    nActId = 'live-red';
+  } else if (liveAlertSeverity === 'orange') {
+    nActValue = 60;
+    nActLabel = 'USGS/ReliefWeb (alerte orange)';
+    nActId = 'live-orange';
+  } else if (country?.gdacsActive === 'red') {
+    nActValue = 30;
+    nActLabel = 'GDACS (alerte rouge)';
+    nActId = 'gdacs-red';
+  } else if (country?.gdacsActive === 'orange') {
+    nActValue = 60;
+    nActLabel = 'GDACS (alerte orange)';
+    nActId = 'gdacs-orange';
   }
-  // N_str : risque structurel EM-DAT
+  contribs.push({ id: nActId, label: nActLabel, value: nActValue, weight: 0.60 });
+
+  // N_str : 40% — risque structurel EM-DAT
   if (country?.emdatStructural !== undefined) {
     contribs.push({ id: 'emdat', label: 'EM-DAT (structurel)', value: clamp(country.emdatStructural), weight: 0.40 });
-  }
-  const hasOfficial = contribs.length > 0;
-  // Fallback Numbeo : pollution inversée
-  if (!hasOfficial && numbeo.pollutionIndex !== undefined) {
+  } else if (numbeo.pollutionIndex !== undefined) {
+    // Fallback : pollution Numbeo inversée comme proxy de risque environnemental
     contribs.push({
       id: 'numbeo-pollution',
-      label: 'Numbeo Pollution (inversée)',
+      label: 'Numbeo Pollution (proxy)',
       value: clamp(100 - numbeo.pollutionIndex),
-      weight: 1,
+      weight: 0.40,
     });
-  } else if (!hasOfficial) {
-    contribs.push({ id: 'fallback', label: 'Estimation (donnée manquante)', value: 70, weight: 1 });
+  } else {
+    contribs.push({ id: 'fallback', label: 'Estimation', value: 70, weight: 0.40 });
   }
+
+  // hasOfficial = on a soit EM-DAT, soit une vraie alerte live, soit GDACS
+  const hasOfficial =
+    country?.emdatStructural !== undefined ||
+    liveAlertSeverity !== null ||
+    country?.gdacsActive !== undefined;
+
   return {
     score: weightedAverage(contribs),
     contributions: contribs,
@@ -197,16 +234,22 @@ function computeInfrastructure(country: CountryRisk | null, numbeo: NumbeoFallba
 
 /**
  * Calcule les 4 dimensions Lokascore à partir des sources officielles +
- * fallback Numbeo. Retourne aussi la trace complète pour l'UI.
+ * fallback Numbeo, en intégrant les alertes LIVE actives (USGS / ReliefWeb).
+ * Retourne aussi la trace complète pour l'UI.
  */
 export function computeDimensionsFromSources(
   destinationId: string,
   numbeo: NumbeoFallback
 ): { dimensions: LokascoreDimensions; trace: LokascoreSourceTrace } {
   const country = getCountryRiskForDestination(destinationId);
+  const iso = DESTINATION_TO_COUNTRY_ISO[destinationId] ?? country?.iso ?? null;
+  // Alerte live active sur le pays (USGS/ReliefWeb) — null si rien
+  const liveAlertSeverity = iso ? getMaxAlertSeverityForCountry(iso) : null;
+  const liveAlerts = iso ? getAlertsForCountry(iso) : [];
+
   const S = computeSecurity(country, numbeo);
   const H = computeHealth(country, numbeo);
-  const N = computeNature(country, numbeo);
+  const N = computeNature(country, numbeo, liveAlertSeverity);
   const I = computeInfrastructure(country, numbeo);
 
   return {
@@ -221,7 +264,9 @@ export function computeDimensionsFromSources(
       health: H,
       nature: N,
       infrastructure: I,
-      hasAnyOfficialSource: S.hasOfficialSource || H.hasOfficialSource || N.hasOfficialSource || I.hasOfficialSource,
+      hasAnyOfficialSource:
+        S.hasOfficialSource || H.hasOfficialSource || N.hasOfficialSource || I.hasOfficialSource,
+      liveAlerts: liveAlerts.length > 0 ? liveAlerts : undefined,
     },
   };
 }

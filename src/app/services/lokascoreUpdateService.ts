@@ -193,6 +193,27 @@ export function getSourceTraceFromCache(destinationId: string): LokascoreSourceT
 }
 
 /**
+ * Recalcule toutes les dimensions cachées en intégrant les alertes live
+ * fraîchement reçues, SANS re-fetcher Numbeo (les indices statiques n'ont pas
+ * changé — seules les alertes temporaires sont nouvelles). Notifie les
+ * composants avec les nouveaux scores pour éviter tout flicker.
+ */
+export function invalidateAllDimensions(): void {
+  const ids = Array.from(dimensionsCache.keys());
+  if (ids.length === 0) return;
+  console.log(`🔄 Recalcul ${ids.length} destinations avec nouvelles alertes live`);
+  let recomputedCount = 0;
+  for (const destinationId of ids) {
+    // Pour recalculer correctement, on doit récupérer les indices Numbeo bruts.
+    // Sans accès au cache Numbeo ici, on déclenche un re-fetch asynchrone
+    // (qui sera servi depuis le cache numbeoService → ~0ms).
+    fetchGoSafeScoreForDestination(destinationId).then(() => {
+      recomputedCount++;
+    }).catch(() => {});
+  }
+}
+
+/**
  * Abonne un listener aux mises à jour de scores
  */
 export function subscribeToScoreUpdates(listener: ScoreUpdateListener): () => void {

@@ -6,7 +6,7 @@
  * Phase 3 : affiche les VRAIES sources qui ont contribué (MAE, FCDO, WJP, CPI…)
  * via la `sourceTrace` retournée par useLokascore().
  */
-import { Info, CheckCircle2 } from 'lucide-react';
+import { Info, CheckCircle2, AlertTriangle } from 'lucide-react';
 import {
   DIMENSION_META,
   PROFILE_WEIGHTS,
@@ -91,6 +91,39 @@ export function LokascoreBreakdown({
           </div>
         )}
       </div>
+
+      {/* ⚠️ Alertes live actives — USGS / ReliefWeb */}
+      {sourceTrace?.liveAlerts && sourceTrace.liveAlerts.length > 0 && (
+        <div
+          className="mb-3 p-3 rounded-xl flex items-start gap-2.5"
+          style={{
+            background: 'rgba(239, 68, 68, 0.08)',
+            border: '1px solid rgba(239, 68, 68, 0.25)',
+          }}
+        >
+          <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: '#dc2626' }} />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-black" style={{ color: '#991b1b' }}>
+              {sourceTrace.liveAlerts.length} alerte{sourceTrace.liveAlerts.length > 1 ? 's' : ''} active{sourceTrace.liveAlerts.length > 1 ? 's' : ''}
+            </p>
+            <ul className="mt-1 space-y-0.5">
+              {sourceTrace.liveAlerts.slice(0, 3).map((alert, i) => (
+                <li key={i} className="text-[10px] leading-snug" style={{ color: '#7f1d1d' }}>
+                  <span className="font-bold">[{alert.source}]</span> {alert.description}
+                </li>
+              ))}
+              {sourceTrace.liveAlerts.length > 3 && (
+                <li className="text-[10px] italic" style={{ color: '#7f1d1d' }}>
+                  +{sourceTrace.liveAlerts.length - 3} autre{sourceTrace.liveAlerts.length - 3 > 1 ? 's' : ''}…
+                </li>
+              )}
+            </ul>
+            <p className="text-[10px] mt-1 italic" style={{ color: '#991b1b' }}>
+              La dimension Nature est réduite en conséquence (modulation temporelle).
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Barres par dimension */}
       <div className="space-y-2.5">

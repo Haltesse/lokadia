@@ -166,6 +166,33 @@ export const COUNTRY_RISK_DATA: Record<string, CountryRisk> = {
 
   // ─── Océanie ───
   AU: { iso: 'AU', name: 'Australia',      mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 92, emdatStructural: 75, wjpRuleOfLaw: 80, cpiCorruption: 75, whoRoadSafety: 87, wbStability: 80, gsmaConnectivity: 85 },
+  NZ: { iso: 'NZ', name: 'New Zealand',    mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 89, emdatStructural: 65, wjpRuleOfLaw: 83, cpiCorruption: 83, whoRoadSafety: 80, wbStability: 90, gsmaConnectivity: 85 },
+
+  // ─── Europe centrale & balkans (extension future-proof) ───
+  HU: { iso: 'HU', name: 'Hungary',        mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 78, emdatStructural: 88, wjpRuleOfLaw: 51, cpiCorruption: 41, whoRoadSafety: 70, wbStability: 60, gsmaConnectivity: 76 },
+  RO: { iso: 'RO', name: 'Romania',        mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 73, emdatStructural: 75, wjpRuleOfLaw: 55, cpiCorruption: 46, whoRoadSafety: 50, wbStability: 50, gsmaConnectivity: 72 },
+  HR: { iso: 'HR', name: 'Croatia',        mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 80, emdatStructural: 70, wjpRuleOfLaw: 62, cpiCorruption: 47, whoRoadSafety: 70, wbStability: 60, gsmaConnectivity: 75 },
+  SI: { iso: 'SI', name: 'Slovenia',       mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 86, emdatStructural: 85, wjpRuleOfLaw: 75, cpiCorruption: 60, whoRoadSafety: 85, wbStability: 75, gsmaConnectivity: 80 },
+  SK: { iso: 'SK', name: 'Slovakia',       mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 80, emdatStructural: 88, wjpRuleOfLaw: 64, cpiCorruption: 49, whoRoadSafety: 75, wbStability: 65, gsmaConnectivity: 78 },
+  EE: { iso: 'EE', name: 'Estonia',        mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 80, emdatStructural: 92, wjpRuleOfLaw: 78, cpiCorruption: 76, whoRoadSafety: 80, wbStability: 70, gsmaConnectivity: 85 },
+
+  // ─── Asie (extension) ───
+  VN: { iso: 'VN', name: 'Vietnam',        mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 65, emdatStructural: 50, wjpRuleOfLaw: 47, cpiCorruption: 40, whoRoadSafety: 35, wbStability: 60, gsmaConnectivity: 70 },
+  PH: { iso: 'PH', name: 'Philippines',    mae: 'jaune',  fcdo: 'advisory', usState: 2, dfat: 'caution',    lancetHaq: 60, emdatStructural: 35, wjpRuleOfLaw: 47, cpiCorruption: 34, whoRoadSafety: 30, wbStability: 30, gsmaConnectivity: 64 },
+  TW: { iso: 'TW', name: 'Taiwan',         mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 90, emdatStructural: 55, wjpRuleOfLaw: 75, cpiCorruption: 67, whoRoadSafety: 70, wbStability: 65, gsmaConnectivity: 85 },
+
+  // ─── Amériques (extension) ───
+  CL: { iso: 'CL', name: 'Chile',          mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 78, emdatStructural: 55, wjpRuleOfLaw: 70, cpiCorruption: 63, whoRoadSafety: 60, wbStability: 60, gsmaConnectivity: 75 },
+  CO: { iso: 'CO', name: 'Colombia',       mae: 'orange', fcdo: 'advisory', usState: 3, dfat: 'reconsider', whoActiveAlerts: 0, lancetHaq: 70, emdatStructural: 60, wjpRuleOfLaw: 45, cpiCorruption: 39, whoRoadSafety: 45, wbStability: 30, gsmaConnectivity: 68 },
+  PE: { iso: 'PE', name: 'Peru',           mae: 'jaune',  fcdo: 'advisory', usState: 2, dfat: 'caution',    lancetHaq: 65, emdatStructural: 50, wjpRuleOfLaw: 50, cpiCorruption: 33, whoRoadSafety: 45, wbStability: 30, gsmaConnectivity: 65 },
+  UY: { iso: 'UY', name: 'Uruguay',        mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 75, emdatStructural: 90, wjpRuleOfLaw: 75, cpiCorruption: 76, whoRoadSafety: 70, wbStability: 75, gsmaConnectivity: 72 },
+
+  // ─── Afrique & Moyen-Orient (extension) ───
+  KE: { iso: 'KE', name: 'Kenya',          mae: 'jaune',  fcdo: 'advisory', usState: 2, dfat: 'caution',    lancetHaq: 50, emdatStructural: 70, wjpRuleOfLaw: 45, cpiCorruption: 31, whoRoadSafety: 30, wbStability: 30, gsmaConnectivity: 55 },
+  TN: { iso: 'TN', name: 'Tunisia',        mae: 'jaune',  fcdo: 'advisory', usState: 2, dfat: 'caution',    lancetHaq: 65, emdatStructural: 85, wjpRuleOfLaw: 50, cpiCorruption: 39, whoRoadSafety: 50, wbStability: 40, gsmaConnectivity: 67 },
+  JO: { iso: 'JO', name: 'Jordan',         mae: 'jaune',  fcdo: 'advisory', usState: 2, dfat: 'caution',    lancetHaq: 70, emdatStructural: 88, wjpRuleOfLaw: 55, cpiCorruption: 46, whoRoadSafety: 50, wbStability: 35, gsmaConnectivity: 72 },
+  SA: { iso: 'SA', name: 'Saudi Arabia',   mae: 'jaune',  fcdo: 'advisory', usState: 2, dfat: 'caution',    lancetHaq: 70, emdatStructural: 92, wjpRuleOfLaw: 50, cpiCorruption: 53, whoRoadSafety: 35, wbStability: 50, gsmaConnectivity: 78 },
+  QA: { iso: 'QA', name: 'Qatar',          mae: 'vert',   fcdo: 'none',     usState: 1, dfat: 'normal',     lancetHaq: 78, emdatStructural: 95, wjpRuleOfLaw: 65, cpiCorruption: 58, whoRoadSafety: 60, wbStability: 70, gsmaConnectivity: 84 },
 };
 
 // ─── Mapping destinationId → ISO pays ──────────────────────────────────────
