@@ -31,7 +31,8 @@ import {
 } from './liveAlertsService';
 
 export interface NumbeoFallback {
-  safetyIndex: number;
+  /** Tous optionnels : permet de calculer un Lokascore même si Numbeo est en panne */
+  safetyIndex?: number;
   healthCareIndex?: number;
   qualityOfLifeIndex?: number;
   pollutionIndex?: number;
@@ -99,9 +100,13 @@ function computeSecurity(country: CountryRisk | null, numbeo: NumbeoFallback): D
     contribs.push({ id: 'dfat', label: 'AU DFAT', value: DFAT_SCORE[country.dfat], weight: 0.10 });
   }
   const hasOfficial = contribs.length > 0;
-  // Fallback Numbeo : si aucune source officielle, on utilise le safetyIndex
   if (!hasOfficial) {
-    contribs.push({ id: 'numbeo', label: 'Numbeo Safety Index', value: clamp(numbeo.safetyIndex), weight: 1 });
+    if (numbeo.safetyIndex !== undefined) {
+      contribs.push({ id: 'numbeo', label: 'Numbeo Safety Index', value: clamp(numbeo.safetyIndex), weight: 1 });
+    } else {
+      // Aucune source dispo : valeur neutre "vigilance moyenne"
+      contribs.push({ id: 'fallback', label: 'Estimation (sources indisponibles)', value: 65, weight: 1 });
+    }
   }
   return {
     score: weightedAverage(contribs),

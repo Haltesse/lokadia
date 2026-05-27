@@ -123,14 +123,19 @@ export function useLokascore(destinationId: string | undefined): UseLokascoreRes
       setLoading(true);
     }
 
-    // 3. Fetch frais
+    // 3. Fetch frais — un seul appel, qui remplit dimensionsCache (effet de bord
+    // de fetchLokascoreForDestination). getDimensionsOnDemand lit le cache et
+    // déclenche un re-fetch seulement si nécessaire.
     try {
       const newScore = await getLokascoreOnDemand(destinationId, forceRefresh);
       const newDims = await getDimensionsOnDemand(destinationId, false);
       if (newDims !== null) setDimensions(newDims);
       if (newScore !== null) {
         setRawSecurityScore(newScore);
-        setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId)));
+        setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId) ?? Date.now()));
+      } else if (newDims !== null) {
+        // Pas de score Numbeo mais on a les dimensions officielles : OK, affichage live
+        setLastUpdate(formatLastUpdate(Date.now()));
       } else if (staleScore === null && staleDims === null) {
         setRawSecurityScore(null);
         setLastUpdate('Indisponible');

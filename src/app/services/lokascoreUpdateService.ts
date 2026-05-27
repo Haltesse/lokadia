@@ -5,8 +5,9 @@
 
 import { fetchNumbeoSafety, invalidateNumbeoCache } from './numbeoService';
 import { destinationsDatabase } from '../data/destinationData';
-import { buildDimensionsFromNumbeo, type LokascoreDimensions } from '../lib/lokascore';
+import { buildDimensionsFromNumbeo, computeLokascore, type LokascoreDimensions } from '../lib/lokascore';
 import { computeDimensionsFromSources, type LokascoreSourceTrace } from '../lib/lokascoreSources';
+import { getCountryRiskForDestination } from '../data/countryRiskData';
 
 interface LokascoreUpdate {
   destinationId: string;
@@ -273,23 +274,54 @@ async function fetchLokascoreForDestination(destinationId: string): Promise<numb
 
   const promise = withConcurrencyLimit(async () => {
     try {
-      const safetyData = await fetchNumbeoSafety(destinationId);
-      const score = Math.round(safetyData.safetyIndex);
-      // Phase 3 : on agrège les sources officielles (MAE/FCDO/US State/DFAT/
-      // WJP/CPI/EM-DAT/etc.) avec fallback Numbeo dimension par dimension.
-      const { dimensions: dims, trace } = computeDimensionsFromSources(destinationId, {
-        safetyIndex: safetyData.safetyIndex,
-        healthCareIndex: safetyData.healthCareIndex,
-        qualityOfLifeIndex: safetyData.qualityOfLifeIndex,
-        pollutionIndex: safetyData.pollutionIndex,
-      });
+      let numbeoData: {
+        safetyIndex?: number;
+        healthCareIndex?: number;
+        qualityOfLifeIndex?: number;
+        pollutionIndex?: number;
+      } = {};
+      let numbeoOk = false;
+
+      // ─── Étape 1 : tenter Numbeo (best-effort, on absorbe l'erreur) ───
+      try {
+        const safetyData = await fetchNumbeoSafety(destinationId);
+        numbeoData = {
+          safetyIndex: safetyData.safetyIndex,
+          healthCareIndex: safetyData.healthCareIndex,
+          qualityOfLifeIndex: safetyData.qualityOfLifeIndex,
+          pollutionIndex: safetyData.pollutionIndex,
+        };
+        numbeoOk = true;
+      } catch {
+        console.warn(`⚠️ Numbeo indisponible pour ${destinationId}, fallback sur données officielles seules`);
+      }
+
+      // ─── Étape 2 : calculer les dimensions à partir des sources disponibles ───
+      const { dimensions: dims, trace } = computeDimensionsFromSources(destinationId, numbeoData);
+
+      // ─── Étape 3 : vérifier qu'on a au moins UNE source utilisable ───
+      const countryRisk = getCountryRiskForDestination(destinationId);
+      const hasOfficial = trace.hasAnyOfficialSource || !!countryRisk;
+      if (!numbeoOk && !hasOfficial) {
+        console.error(`❌ Aucune source disponible pour ${destinationId} (ni Numbeo, ni dataset curé)`);
+        return null;
+      }
+
+      // ─── Étape 4 : stocker et notifier ───
       storeDimensions(destinationId, dims);
       storeSourceTrace(destinationId, trace);
-      const officialFlag = trace.hasAnyOfficialSource ? '🟢 sources officielles' : '⚪ Numbeo fallback';
-      console.log(`✅ Lokascore ${destinationId} [${officialFlag}]: S=${Math.round(dims.security)} H=${Math.round(dims.health)} N=${Math.round(dims.nature)} I=${Math.round(dims.infrastructure)}`);
-      return score;
+      const compositeScore = computeLokascore(dims, 'default');
+
+      let badge: string;
+      if (trace.hasAnyOfficialSource && numbeoOk) badge = '🟢 officielles + 🔵 Numbeo';
+      else if (trace.hasAnyOfficialSource) badge = '🟢 officielles uniquement';
+      else if (numbeoOk) badge = '🔵 Numbeo uniquement';
+      else badge = '⚠️ fallback estimation';
+      console.log(`✅ Lokascore ${destinationId} [${badge}]: ${compositeScore}/100 (S=${Math.round(dims.security)} H=${Math.round(dims.health)} N=${Math.round(dims.nature)} I=${Math.round(dims.infrastructure)})`);
+
+      return compositeScore;
     } catch (error) {
-      console.error(`❌ Erreur score ${destinationId}:`, error);
+      console.error(`❌ Erreur fatale fetch ${destinationId}:`, error);
       return null;
     } finally {
       loadingPromises.delete(destinationId);
