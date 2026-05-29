@@ -17,6 +17,7 @@
 import type { LokascoreDimensions } from './lokascore';
 import {
   CountryRisk,
+  COUNTRY_RISK_DATA,
   MAE_SCORE,
   FCDO_SCORE,
   US_STATE_SCORE,
@@ -29,6 +30,7 @@ import {
   getAlertsForCountry,
   type LiveAlert,
 } from './liveAlertsService';
+import { getLiveAdvisoriesForCountry } from './liveAdvisoriesService';
 
 export interface NumbeoFallback {
   /** Tous optionnels : permet de calculer un Lokascore même si Numbeo est en panne */
@@ -241,12 +243,17 @@ function computeInfrastructure(country: CountryRisk | null, numbeo: NumbeoFallba
  * Calcule les 4 dimensions Lokascore à partir des sources officielles +
  * fallback Numbeo, en intégrant les alertes LIVE actives (USGS / ReliefWeb).
  * Retourne aussi la trace complète pour l'UI.
+ *
+ * @param liveCountryOverride - Si fourni, remplace les données pays curées
+ *   par les valeurs live fraîchement fetchées depuis les Edge Functions
+ *   MAE/FCDO/US State/OMS.
  */
 export function computeDimensionsFromSources(
   destinationId: string,
-  numbeo: NumbeoFallback
+  numbeo: NumbeoFallback,
+  liveCountryOverride?: CountryRisk | null
 ): { dimensions: LokascoreDimensions; trace: LokascoreSourceTrace } {
-  const country = getCountryRiskForDestination(destinationId);
+  const country = liveCountryOverride ?? getCountryRiskForDestination(destinationId);
   const iso = DESTINATION_TO_COUNTRY_ISO[destinationId] ?? country?.iso ?? null;
   // Alerte live active sur le pays (USGS/ReliefWeb) — null si rien
   const liveAlertSeverity = iso ? getMaxAlertSeverityForCountry(iso) : null;
@@ -273,5 +280,46 @@ export function computeDimensionsFromSources(
         S.hasOfficialSource || H.hasOfficialSource || N.hasOfficialSource || I.hasOfficialSource,
       liveAlerts: liveAlerts.length > 0 ? liveAlerts : undefined,
     },
+  };
+}
+
+/**
+ * Variante ASYNC qui fetche d'abord les Edge Functions MAE/FCDO/US State/OMS,
+ * fusionne avec les données curées, puis calcule les dimensions live.
+ *
+ * Si les Edge Functions ne sont pas déployées, retombe silencieusement sur
+ * la version synchrone (données curées statiques).
+ */
+export async function computeDimensionsFromSourcesLive(
+  destinationId: string,
+  numbeo: NumbeoFallback
+): Promise<{ dimensions: LokascoreDimensions; trace: LokascoreSourceTrace; usedLiveAdvisories: boolean }> {
+  const iso = DESTINATION_TO_COUNTRY_ISO[destinationId];
+  if (!iso) {
+    return { ...computeDimensionsFromSources(destinationId, numbeo), usedLiveAdvisories: false };
+  }
+
+  // Fetch les advisories live (MAE, FCDO, US State, OMS) en parallèle interne
+  const live = await getLiveAdvisoriesForCountry(iso);
+  if (!live) {
+    // Edge Functions pas déployées ou toutes en erreur : fallback sur curé
+    return { ...computeDimensionsFromSources(destinationId, numbeo), usedLiveAdvisories: false };
+  }
+
+  // Merge : valeurs live > valeurs curées
+  const staticData = COUNTRY_RISK_DATA[iso];
+  const merged: CountryRisk = {
+    ...(staticData ?? { iso, name: iso }),
+    iso,
+    name: staticData?.name ?? iso,
+    mae: live.mae ?? staticData?.mae,
+    fcdo: live.fcdo ?? staticData?.fcdo,
+    usState: live.usState ?? staticData?.usState,
+    whoActiveAlerts: live.whoActiveAlerts ?? staticData?.whoActiveAlerts,
+  };
+
+  return {
+    ...computeDimensionsFromSources(destinationId, numbeo, merged),
+    usedLiveAdvisories: true,
   };
 }

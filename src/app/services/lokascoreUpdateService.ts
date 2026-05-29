@@ -6,7 +6,7 @@
 import { fetchNumbeoSafety, invalidateNumbeoCache } from './numbeoService';
 import { destinationsDatabase } from '../data/destinationData';
 import { buildDimensionsFromNumbeo, computeLokascore, type LokascoreDimensions } from '../lib/lokascore';
-import { computeDimensionsFromSources, type LokascoreSourceTrace } from '../lib/lokascoreSources';
+import { computeDimensionsFromSources, computeDimensionsFromSourcesLive, type LokascoreSourceTrace } from '../lib/lokascoreSources';
 import { getCountryRiskForDestination } from '../data/countryRiskData';
 
 interface LokascoreUpdate {
@@ -296,8 +296,13 @@ async function fetchLokascoreForDestination(destinationId: string): Promise<numb
         console.warn(`⚠️ Numbeo indisponible pour ${destinationId}, fallback sur données officielles seules`);
       }
 
-      // ─── Étape 2 : calculer les dimensions à partir des sources disponibles ───
-      const { dimensions: dims, trace } = computeDimensionsFromSources(destinationId, numbeoData);
+      // ─── Étape 2 : calculer les dimensions à partir des sources disponibles
+      //              en intégrant les advisories LIVE (MAE/FCDO/US State/OMS via
+      //              Edge Functions Supabase quand disponibles) ───
+      const { dimensions: dims, trace, usedLiveAdvisories } = await computeDimensionsFromSourcesLive(
+        destinationId,
+        numbeoData
+      );
 
       // ─── Étape 3 : vérifier qu'on a au moins UNE source utilisable ───
       const countryRisk = getCountryRiskForDestination(destinationId);
@@ -313,8 +318,9 @@ async function fetchLokascoreForDestination(destinationId: string): Promise<numb
       const compositeScore = computeLokascore(dims, 'default');
 
       let badge: string;
-      if (trace.hasAnyOfficialSource && numbeoOk) badge = '🟢 officielles + 🔵 Numbeo';
-      else if (trace.hasAnyOfficialSource) badge = '🟢 officielles uniquement';
+      const live = usedLiveAdvisories ? ' + ⚡ live MAE/FCDO/US/OMS' : '';
+      if (trace.hasAnyOfficialSource && numbeoOk) badge = `🟢 officielles + 🔵 Numbeo${live}`;
+      else if (trace.hasAnyOfficialSource) badge = `🟢 officielles uniquement${live}`;
       else if (numbeoOk) badge = '🔵 Numbeo uniquement';
       else badge = '⚠️ fallback estimation';
       console.log(`✅ Lokascore ${destinationId} [${badge}]: ${compositeScore}/100 (S=${Math.round(dims.security)} H=${Math.round(dims.health)} N=${Math.round(dims.nature)} I=${Math.round(dims.infrastructure)})`);

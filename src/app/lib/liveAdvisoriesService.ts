@@ -11,7 +11,7 @@
  * statiques de countryRiskData.ts.
  */
 
-import { COUNTRY_RISK_DATA, type MaeLevel, type UsStateLevel } from '../data/countryRiskData';
+import { COUNTRY_RISK_DATA, type MaeLevel, type FcdoLevel, type UsStateLevel } from '../data/countryRiskData';
 
 // ─── Mapping pays → slug France Diplomatie ────────────────────────────────
 // Tous les slugs nécessaires pour appeler /advisories-mae?country={slug}
@@ -35,10 +35,30 @@ const ISO_TO_MAE_SLUG: Record<string, string> = {
 
 interface LiveAdvisoriesResult {
   mae?: MaeLevel;
+  fcdo?: FcdoLevel;
   usState?: UsStateLevel;
   whoActiveAlerts?: number;
   lastUpdate: number;
 }
+
+// ─── Mapping ISO → slug UK FCDO ────────────────────────────────────────────
+// Tous les slugs nécessaires pour appeler /advisories-fcdo?country={slug}
+const ISO_TO_FCDO_SLUG: Record<string, string> = {
+  FR: 'france', DE: 'germany', ES: 'spain', IT: 'italy', PT: 'portugal',
+  NL: 'netherlands', BE: 'belgium', CH: 'switzerland', AT: 'austria',
+  IE: 'ireland', SE: 'sweden', NO: 'norway', DK: 'denmark', FI: 'finland',
+  IS: 'iceland', PL: 'poland', CZ: 'czech-republic', GR: 'greece',
+  RU: 'russia', TR: 'turkey', US: 'usa', CA: 'canada', MX: 'mexico',
+  BR: 'brazil', AR: 'argentina', MA: 'morocco', EG: 'egypt',
+  AE: 'united-arab-emirates', IL: 'israel', ZA: 'south-africa',
+  JP: 'japan', CN: 'china', HK: 'hong-kong', KR: 'south-korea',
+  TH: 'thailand', SG: 'singapore', MY: 'malaysia', ID: 'indonesia',
+  IN: 'india', AU: 'australia', VN: 'vietnam', PH: 'philippines',
+  TW: 'taiwan', CL: 'chile', CO: 'colombia', PE: 'peru', UY: 'uruguay',
+  KE: 'kenya', TN: 'tunisia', JO: 'jordan', SA: 'saudi-arabia',
+  QA: 'qatar', NZ: 'new-zealand', HU: 'hungary', RO: 'romania',
+  HR: 'croatia', SI: 'slovenia', SK: 'slovakia', EE: 'estonia',
+};
 
 const SESSION_KEY = 'lokadia_live_advisories_v1';
 const CACHE_DURATION = 60 * 60 * 1000; // 1h
@@ -109,6 +129,30 @@ async function fetchMaeAdvisory(iso: string): Promise<MaeLevel | null> {
   }
 }
 
+/** Appelle l'Edge Function UK FCDO */
+async function fetchFcdoAdvisory(iso: string): Promise<FcdoLevel | null> {
+  const slug = ISO_TO_FCDO_SLUG[iso];
+  if (!slug) return null;
+  try {
+    const baseUrl = await getEdgeFunctionsBaseUrl();
+    const key = await getAnonKey();
+    const url = `${baseUrl}/advisories-fcdo?country=${slug}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { level: string };
+    if (data.level === 'unknown') return null;
+    if (['none', 'advisory', 'essential', 'donottravel'].includes(data.level)) {
+      return data.level as FcdoLevel;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 /** Appelle l'Edge Function US State Department */
 async function fetchUsStateAdvisory(iso: string): Promise<UsStateLevel | null> {
   try {
@@ -163,21 +207,23 @@ export async function getLiveAdvisoriesForCountry(iso: string): Promise<LiveAdvi
     return cached;
   }
 
-  // 2. Fetch les 3 sources en parallèle
-  const [mae, usState, whoAlerts] = await Promise.all([
+  // 2. Fetch les 4 sources en parallèle
+  const [mae, fcdo, usState, whoAlerts] = await Promise.all([
     fetchMaeAdvisory(iso),
+    fetchFcdoAdvisory(iso),
     fetchUsStateAdvisory(iso),
     fetchWhoAdvisory(iso),
   ]);
 
   // 3. Si tout est null, on retourne null (les Edge Functions sont down ou pas déployées)
-  if (mae === null && usState === null && whoAlerts === null) {
+  if (mae === null && fcdo === null && usState === null && whoAlerts === null) {
     return null;
   }
 
   // 4. Stocker le résultat
   const result: LiveAdvisoriesResult = {
     mae: mae ?? undefined,
+    fcdo: fcdo ?? undefined,
     usState: usState ?? undefined,
     whoActiveAlerts: whoAlerts ?? undefined,
     lastUpdate: Date.now(),
@@ -204,6 +250,7 @@ export function mergeLiveAdvisoriesWithStatic(iso: string, live: LiveAdvisoriesR
     iso,
     name: staticData?.name ?? iso,
     mae: live.mae ?? staticData?.mae,
+    fcdo: live.fcdo ?? staticData?.fcdo,
     usState: live.usState ?? staticData?.usState,
     whoActiveAlerts: live.whoActiveAlerts ?? staticData?.whoActiveAlerts,
   };
