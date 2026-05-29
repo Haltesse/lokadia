@@ -290,38 +290,24 @@ export function AlertCenterScreen() {
           </div>
 
           <div className="mt-6 lg:mt-0">
-            <div className="rounded-3xl bg-white p-3 shadow-xl">
-              <div className="flex items-center gap-3">
-                <Search className="ml-2 h-5 w-5" style={{ color: "var(--lokadia-gray-400)" }} />
-                <input
-                  type="text"
-                  placeholder="Rechercher une alerte, destination..."
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  className="min-w-0 flex-1 bg-transparent py-3 text-sm font-semibold outline-none"
-                  style={{ color: "var(--lokadia-gray-900)" }}
-                />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery("")} className="rounded-full p-2 hover:bg-gray-100">
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowFilters((value) => !value)}
-                  className="rounded-2xl p-3 lg:hidden"
-                  style={{ background: "var(--lokadia-info-bg)", color: "var(--lokadia-primary)" }}
-                >
-                  <Filter className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="rounded-2xl p-3"
-                  style={{ background: "var(--lokadia-info-bg)", color: "var(--lokadia-primary)" }}
-                >
-                  <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
-                </button>
-              </div>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowFilters((value) => !value)}
+                className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-bold shadow-lg lg:hidden"
+                style={{ color: "var(--lokadia-primary)" }}
+              >
+                <Filter className="h-5 w-5" />
+                Filtres
+              </button>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-bold shadow-lg"
+                style={{ color: "var(--lokadia-primary)" }}
+              >
+                <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
+                Actualiser
+              </button>
             </div>
 
             {!loading && (
