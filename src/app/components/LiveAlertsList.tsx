@@ -6,46 +6,16 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import {
-  AlertTriangle,
-  Activity,
-  Cloud,
-  Droplets,
-  Flame,
-  Globe,
-  MapPin,
-  RefreshCw,
-  Waves,
-} from 'lucide-react';
+import { Globe, MapPin, RefreshCw } from 'lucide-react';
 import {
   fetchLiveAlerts,
   getLiveAlertsSnapshot,
   subscribeToLiveAlerts,
+  ALERT_TYPE_META,
   type LiveAlert,
   type LiveAlertsSnapshot,
 } from '../lib/liveAlertsService';
 import { DESTINATION_TO_COUNTRY_ISO } from '../data/countryRiskData';
-
-// Icône par type d'alerte
-const TYPE_ICONS = {
-  earthquake: Activity,
-  flood: Droplets,
-  storm: Cloud,
-  volcano: Flame,
-  wildfire: Flame,
-  epidemic: AlertTriangle,
-  other: AlertTriangle,
-};
-
-const TYPE_LABELS: Record<LiveAlert['type'], string> = {
-  earthquake: 'Séisme',
-  flood: 'Inondation',
-  storm: 'Tempête / Cyclone',
-  volcano: 'Volcan',
-  wildfire: 'Incendie',
-  epidemic: 'Épidémie',
-  other: 'Catastrophe',
-};
 
 // Drapeaux par code ISO (emoji unicode)
 function isoToFlag(iso: string): string {
@@ -251,8 +221,7 @@ export function LiveAlertsList() {
               {/* Liste des alertes */}
               <ul className="space-y-2">
                 {group.alerts.slice(0, 5).map((alert, i) => {
-                  const Icon = TYPE_ICONS[alert.type] ?? AlertTriangle;
-                  const sevColor = alert.severity === 'red' ? '#dc2626' : '#f59e0b';
+                  const meta = ALERT_TYPE_META[alert.type] ?? ALERT_TYPE_META.other;
                   return (
                     <li
                       key={i}
@@ -261,13 +230,13 @@ export function LiveAlertsList() {
                         background: alert.severity === 'red' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(245, 158, 11, 0.05)',
                       }}
                     >
-                      <Icon className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" style={{ color: sevColor }} />
+                      <span className="text-sm flex-shrink-0 mt-0.5" aria-hidden="true">{meta.emoji}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-[11px] font-bold leading-snug" style={{ color: 'var(--lokadia-gray-900)' }}>
                           {alert.description}
                         </p>
                         <p className="text-[9px] mt-0.5" style={{ color: 'var(--lokadia-gray-500)' }}>
-                          <span className="font-bold">{TYPE_LABELS[alert.type]}</span> · {alert.source} ·{' '}
+                          <span className="font-bold" style={{ color: meta.color }}>{meta.label}</span> · {alert.source} ·{' '}
                           {new Date(alert.detectedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                         </p>
                       </div>

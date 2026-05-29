@@ -1,202 +1,165 @@
 /**
- * WorldAlertsMap — carte mondiale interactive des alertes catastrophes
- * en temps réel (USGS séismes + ReliefWeb catastrophes).
+ * WorldAlertsMap — carte mondiale interactive des alertes temps réel.
  *
- * Affichage : marqueurs circulaires sur les pays affectés, colorés selon
- * la sévérité (rouge = alertes red, orange = orange seulement). Popup au
- * clic avec détail des alertes + lien vers les destinations Lokadia.
+ * Affiche UN marqueur par alerte, géolocalisé à ses coordonnées exactes
+ * (GDACS/USGS) ou au centroïde pays (épidémies, guerres, crises). Couleur
+ * par sévérité, icône/label par type. Popup détaillé au clic.
  *
- * Basé sur Leaflet + OpenStreetMap, sans clé API.
+ * Sources agrégées : GDACS · USGS · ReliefWeb · OMS · géopolitique.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { AlertTriangle, MapPin } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import {
   subscribeToLiveAlerts,
   getLiveAlertsSnapshot,
+  fetchLiveAlerts,
+  ALERT_TYPE_META,
   type LiveAlert,
   type LiveAlertsSnapshot,
 } from '../lib/liveAlertsService';
-import { COUNTRY_CENTROIDS } from '../data/countryCentroids';
 import { DESTINATION_TO_COUNTRY_ISO } from '../data/countryRiskData';
 
-interface CountryMarker {
-  iso: string;
-  lat: number;
-  lon: number;
-  name: string;
-  alerts: LiveAlert[];
-  severity: 'orange' | 'red';
-  destinations: string[];
-}
-
-// Mapping inverse ISO → destinations Lokadia
 const ISO_TO_DESTINATIONS = (() => {
-  const map = new Map<string, string[]>();
-  for (const [destId, iso] of Object.entries(DESTINATION_TO_COUNTRY_ISO)) {
-    const existing = map.get(iso) ?? [];
-    existing.push(destId);
-    map.set(iso, existing);
+  const m = new Map<string, string[]>();
+  for (const [d, iso] of Object.entries(DESTINATION_TO_COUNTRY_ISO)) {
+    (m.get(iso) ?? m.set(iso, []).get(iso)!).push(d);
   }
-  return map;
+  return m;
 })();
 
-function isoToFlag(iso: string): string {
-  if (iso.length !== 2) return '🌍';
-  return String.fromCodePoint(...iso.toUpperCase().split('').map((c) => 127397 + c.charCodeAt(0)));
-}
-
-// Force la carte à se recalculer correctement après le mount (Leaflet bug
-// quand le container est initialement caché ou de taille indéterminée).
 function MapResizer() {
   const map = useMap();
   useEffect(() => {
-    const t = setTimeout(() => {
-      map.invalidateSize();
-    }, 200);
+    const t = setTimeout(() => map.invalidateSize(), 200);
     return () => clearTimeout(t);
   }, [map]);
   return null;
 }
 
+const niceLabel = (destId: string) =>
+  destId.split('-').slice(0, -1).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
 export function WorldAlertsMap() {
   const navigate = useNavigate();
   const [snapshot, setSnapshot] = useState<LiveAlertsSnapshot | null>(getLiveAlertsSnapshot());
+  const [refreshing, setRefreshing] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
 
   useEffect(() => {
     const unsub = subscribeToLiveAlerts((s) => setSnapshot(s));
     return () => unsub();
   }, []);
 
-  const markers = useMemo<CountryMarker[]>(() => {
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try { setSnapshot(await fetchLiveAlerts(true)); } finally { setRefreshing(false); }
+  };
+
+  // Alertes géolocalisables (avec lat/lon)
+  const located = useMemo<LiveAlert[]>(() => {
     if (!snapshot) return [];
-    const result: CountryMarker[] = [];
-    snapshot.byCountry.forEach((alerts, iso) => {
-      const centroid = COUNTRY_CENTROIDS[iso];
-      if (!centroid) return; // Pays non géolocalisé dans notre dataset
-      result.push({
-        iso,
-        lat: centroid.lat,
-        lon: centroid.lon,
-        name: centroid.name,
-        alerts,
-        severity: alerts.some((a) => a.severity === 'red') ? 'red' : 'orange',
-        destinations: ISO_TO_DESTINATIONS.get(iso) ?? [],
-      });
-    });
-    return result;
+    let list = snapshot.alerts.filter((a) => a.lat !== null && a.lon !== null);
+    if (typeFilter) list = list.filter((a) => a.type === typeFilter);
+    return list;
+  }, [snapshot, typeFilter]);
+
+  // Types présents (pour les filtres)
+  const presentTypes = useMemo(() => {
+    if (!snapshot) return [];
+    const set = new Set(snapshot.alerts.map((a) => a.type));
+    return [...set].filter((t) => ALERT_TYPE_META[t]);
   }, [snapshot]);
 
   if (!snapshot) {
     return (
-      <div
-        className="rounded-2xl bg-white p-8 text-center"
-        style={{ border: '1px solid var(--lokadia-gray-100)', minHeight: '320px' }}
-      >
-        <div className="animate-pulse text-sm" style={{ color: 'var(--lokadia-gray-500)' }}>
-          Chargement de la carte mondiale…
-        </div>
+      <div className="rounded-2xl bg-white p-8 text-center" style={{ border: '1px solid var(--lokadia-gray-100)', minHeight: '320px' }}>
+        <div className="animate-pulse text-sm" style={{ color: 'var(--lokadia-gray-500)' }}>Chargement de la carte mondiale…</div>
       </div>
     );
   }
 
-  return (
-    <div
-      className="overflow-hidden rounded-2xl bg-white relative"
-      style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}
-    >
-      <div className="relative" style={{ height: '420px' }}>
-        <MapContainer
-          center={[20, 10]}
-          zoom={2}
-          minZoom={2}
-          maxZoom={6}
-          scrollWheelZoom={false}
-          worldCopyJump={true}
-          style={{ height: '100%', width: '100%', background: '#f1f5f9' }}
-          attributionControl={false}
-        >
-          <MapResizer />
-          {/* Tuiles OSM allégées (CartoDB Positron = fond très neutre) */}
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; OpenStreetMap &copy; CARTO'
-            subdomains="abcd"
-          />
+  const redCount = snapshot.alerts.filter((a) => a.severity === 'red').length;
 
-          {/* Marqueurs : un cercle par pays affecté */}
-          {markers.map((m) => {
-            const isRed = m.severity === 'red';
-            const radius = Math.min(20, 6 + m.alerts.length * 2);
+  return (
+    <div className="overflow-hidden rounded-2xl bg-white" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
+      {/* Filtres par type */}
+      <div className="flex items-center gap-1.5 overflow-x-auto px-3 py-2.5 scrollbar-hide" style={{ borderBottom: '1px solid var(--lokadia-gray-100)' }}>
+        <button
+          onClick={() => setTypeFilter(null)}
+          className="flex-shrink-0 rounded-full px-3 py-1 text-[11px] font-bold transition-colors"
+          style={{ background: typeFilter === null ? 'var(--lokadia-primary)' : 'var(--lokadia-gray-100)', color: typeFilter === null ? 'white' : 'var(--lokadia-gray-700)' }}
+        >
+          Tout ({snapshot.alerts.length})
+        </button>
+        {presentTypes.map((t) => {
+          const meta = ALERT_TYPE_META[t];
+          const count = snapshot.stats[t] ?? 0;
+          const active = typeFilter === t;
+          return (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(active ? null : t)}
+              className="flex-shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold transition-colors"
+              style={{ background: active ? meta.color : `${meta.color}15`, color: active ? 'white' : meta.color }}
+            >
+              <span>{meta.emoji}</span> {meta.label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="relative" style={{ height: '440px' }}>
+        <MapContainer center={[25, 15]} zoom={2} minZoom={2} maxZoom={7} scrollWheelZoom={false} worldCopyJump style={{ height: '100%', width: '100%', background: '#f1f5f9' }} attributionControl={false}>
+          <MapResizer />
+          <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap &copy; CARTO" subdomains="abcd" />
+
+          {located.map((a, i) => {
+            const meta = ALERT_TYPE_META[a.type] ?? ALERT_TYPE_META.other;
+            const isRed = a.severity === 'red';
+            const radius = isRed ? 9 : 7;
+            const destinations = a.countryIso ? ISO_TO_DESTINATIONS.get(a.countryIso) ?? [] : [];
             return (
               <CircleMarker
-                key={m.iso}
-                center={[m.lat, m.lon]}
+                key={`${a.source}-${i}`}
+                center={[a.lat!, a.lon!]}
                 radius={radius}
                 pathOptions={{
-                  color: isRed ? '#dc2626' : '#f59e0b',
-                  fillColor: isRed ? '#ef4444' : '#fbbf24',
-                  fillOpacity: 0.75,
-                  weight: 2,
+                  color: isRed ? '#dc2626' : meta.color,
+                  fillColor: meta.color,
+                  fillOpacity: 0.7,
+                  weight: isRed ? 2.5 : 1.5,
                 }}
               >
-                <Popup maxWidth={260} className="lokadia-alert-popup">
-                  <div className="text-sm" style={{ minWidth: '220px' }}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xl">{isoToFlag(m.iso)}</span>
-                      <div className="flex-1">
-                        <p className="font-black" style={{ color: 'var(--lokadia-gray-900)' }}>
-                          {m.name}
+                <Popup maxWidth={260}>
+                  <div className="text-sm" style={{ minWidth: '210px' }}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-lg">{meta.emoji}</span>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: meta.color }}>
+                          {meta.label} {isRed && '· 🚨'}
                         </p>
-                        <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: isRed ? '#dc2626' : '#d97706' }}>
-                          {m.alerts.length} alerte{m.alerts.length > 1 ? 's' : ''} {isRed && '🚨'}
-                        </p>
+                        <p className="text-xs font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{a.countryIso || '—'}</p>
                       </div>
                     </div>
-                    {/* Liste des alertes */}
-                    <ul className="mb-2 space-y-1 max-h-32 overflow-y-auto">
-                      {m.alerts.slice(0, 4).map((a, i) => (
-                        <li
-                          key={i}
-                          className="text-[10px] leading-snug rounded p-1"
-                          style={{
-                            background: a.severity === 'red' ? 'rgba(239, 68, 68, 0.07)' : 'rgba(245, 158, 11, 0.07)',
-                            color: 'var(--lokadia-gray-700)',
-                          }}
-                        >
-                          <span className="font-bold">[{a.source}]</span> {a.description}
-                        </li>
-                      ))}
-                      {m.alerts.length > 4 && (
-                        <li className="text-[10px] italic text-center" style={{ color: 'var(--lokadia-gray-500)' }}>
-                          +{m.alerts.length - 4} autres…
-                        </li>
-                      )}
-                    </ul>
-                    {/* Destinations Lokadia affectées */}
-                    {m.destinations.length > 0 && (
-                      <div className="pt-2 border-t" style={{ borderColor: 'var(--lokadia-gray-100)' }}>
-                        <p className="text-[10px] font-bold mb-1" style={{ color: 'var(--lokadia-gray-600)' }}>
-                          Destinations affectées :
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {m.destinations.slice(0, 3).map((destId) => {
-                            const niceLabel = destId.split('-').slice(0, -1).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-                            return (
-                              <button
-                                key={destId}
-                                onClick={() => navigate(`/destination/${destId}`)}
-                                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
-                                style={{ background: 'var(--lokadia-info-bg)', color: 'var(--lokadia-primary)' }}
-                              >
-                                <MapPin className="h-2.5 w-2.5" />
-                                {niceLabel}
-                              </button>
-                            );
-                          })}
-                        </div>
+                    <p className="text-[11px] leading-snug mb-1.5" style={{ color: 'var(--lokadia-gray-700)' }}>{a.description}</p>
+                    <p className="text-[9px]" style={{ color: 'var(--lokadia-gray-500)' }}>
+                      {a.source} · {new Date(a.detectedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                    </p>
+                    {destinations.length > 0 && (
+                      <div className="mt-2 pt-2 border-t flex flex-wrap gap-1" style={{ borderColor: 'var(--lokadia-gray-100)' }}>
+                        {destinations.slice(0, 3).map((d) => (
+                          <button
+                            key={d}
+                            onClick={() => navigate(`/destination/${d}`)}
+                            className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                            style={{ background: 'var(--lokadia-info-bg)', color: 'var(--lokadia-primary)' }}
+                          >
+                            {niceLabel(d)}
+                          </button>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -206,71 +169,39 @@ export function WorldAlertsMap() {
           })}
         </MapContainer>
 
-        {/* Légende fixe (en bas à gauche) */}
-        <div
-          className="absolute bottom-3 left-3 z-[400] rounded-xl bg-white p-2.5 shadow-md"
-          style={{ border: '1px solid var(--lokadia-gray-100)' }}
-        >
-          <p className="text-[10px] font-black uppercase tracking-wider mb-1.5" style={{ color: 'var(--lokadia-gray-600)' }}>
-            Légende
-          </p>
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="inline-block h-3 w-3 rounded-full" style={{ background: '#ef4444', boxShadow: '0 0 0 1.5px #dc2626' }} />
-            <span className="text-[10px] font-bold" style={{ color: '#991b1b' }}>Alerte rouge (M≥7)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="inline-block h-3 w-3 rounded-full" style={{ background: '#fbbf24', boxShadow: '0 0 0 1.5px #f59e0b' }} />
-            <span className="text-[10px] font-bold" style={{ color: '#92400e' }}>Alerte orange</span>
-          </div>
-        </div>
-
-        {/* Compteur fixe (en haut à droite) */}
-        <div
-          className="absolute top-3 right-3 z-[400] rounded-xl bg-white p-2.5 shadow-md"
-          style={{ border: '1px solid var(--lokadia-gray-100)' }}
-        >
-          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: 'var(--lokadia-gray-600)' }}>
-            En direct
-          </p>
-          <p className="text-xl font-black tabular-nums leading-none mt-0.5" style={{ color: 'var(--lokadia-gray-900)' }}>
-            {markers.length}
-          </p>
+        {/* Compteur live */}
+        <div className="absolute top-3 right-3 z-[400] rounded-xl bg-white p-2.5 shadow-md" style={{ border: '1px solid var(--lokadia-gray-100)' }}>
+          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: 'var(--lokadia-gray-600)' }}>En direct</p>
+          <p className="text-xl font-black tabular-nums leading-none mt-0.5" style={{ color: 'var(--lokadia-gray-900)' }}>{located.length}</p>
           <p className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>
-            pays affectés
+            alertes {redCount > 0 && <span style={{ color: '#dc2626' }}>· {redCount} 🚨</span>}
           </p>
         </div>
 
-        {/* Empty state overlay */}
-        {markers.length === 0 && (
-          <div
-            className="absolute inset-0 z-[300] flex items-center justify-center backdrop-blur-sm"
-            style={{ background: 'rgba(255, 255, 255, 0.85)' }}
-          >
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="absolute bottom-3 right-3 z-[400] flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-md transition-transform active:scale-90"
+          aria-label="Actualiser"
+        >
+          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} style={{ color: 'var(--lokadia-primary)' }} />
+        </button>
+
+        {located.length === 0 && (
+          <div className="absolute inset-0 z-[300] flex items-center justify-center backdrop-blur-sm" style={{ background: 'rgba(255,255,255,0.85)' }}>
             <div className="text-center">
-              <div className="text-5xl mb-2">✅</div>
-              <p className="text-sm font-black" style={{ color: '#15803d' }}>
-                Aucune alerte majeure dans le monde
-              </p>
-              <p className="text-xs mt-1" style={{ color: 'var(--lokadia-gray-600)' }}>
-                Sources : {snapshot.sources.join(' + ')}
+              <div className="text-5xl mb-2">{typeFilter ? '🔍' : '✅'}</div>
+              <p className="text-sm font-black" style={{ color: typeFilter ? 'var(--lokadia-gray-700)' : '#15803d' }}>
+                {typeFilter ? 'Aucune alerte de ce type' : 'Aucune alerte majeure'}
               </p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Footer avec sources + timestamp */}
-      <div
-        className="flex items-center justify-between px-4 py-2 text-[10px]"
-        style={{ background: '#f8fafc', borderTop: '1px solid var(--lokadia-gray-100)', color: 'var(--lokadia-gray-600)' }}
-      >
-        <span className="flex items-center gap-1.5">
-          <AlertTriangle className="h-3 w-3" style={{ color: '#dc2626' }} />
-          <span className="font-bold">Sources :</span> {snapshot.sources.join(' · ')}
-        </span>
-        <span className="font-bold tabular-nums">
-          MAJ {new Date(snapshot.lastFetch).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
-        </span>
+      <div className="flex items-center justify-between px-4 py-2 text-[10px]" style={{ background: '#f8fafc', borderTop: '1px solid var(--lokadia-gray-100)', color: 'var(--lokadia-gray-600)' }}>
+        <span className="font-bold">Sources : {snapshot.sources.join(' · ')}</span>
+        <span className="font-bold tabular-nums">MAJ {new Date(snapshot.lastFetch).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}</span>
       </div>
     </div>
   );
