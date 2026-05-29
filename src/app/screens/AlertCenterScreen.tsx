@@ -159,6 +159,50 @@ export function AlertCenterScreen() {
 
   const FilterPanel = () => (
     <div className="space-y-6">
+      {/* ─── Filtre DESTINATION — en haut et à part ─── */}
+      {uniqueDestinations.length > 0 && (
+        <div className="rounded-2xl border-2 p-4" style={{ borderColor: "var(--lokadia-primary)", background: "var(--lokadia-info-bg)" }}>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-sm font-black" style={{ color: "var(--lokadia-primary)" }}>
+              <MapPin className="h-4 w-4" />
+              Destination
+            </h3>
+            {selectedDestination !== "all" && (
+              <button onClick={() => setSelectedDestination("all")} className="text-xs font-bold" style={{ color: "var(--lokadia-primary)" }}>
+                Effacer
+              </button>
+            )}
+          </div>
+          <div className="max-h-64 space-y-2 overflow-auto pr-1">
+            <button
+              onClick={() => setSelectedDestination("all")}
+              className="w-full rounded-xl border px-3 py-2 text-left text-sm font-bold"
+              style={{
+                background: selectedDestination === "all" ? "var(--lokadia-primary)" : "white",
+                borderColor: selectedDestination === "all" ? "var(--lokadia-primary)" : "var(--lokadia-gray-100)",
+                color: selectedDestination === "all" ? "white" : "var(--lokadia-gray-700)",
+              }}
+            >
+              Toutes les destinations
+            </button>
+            {uniqueDestinations.map((destination) => (
+              <button
+                key={destination}
+                onClick={() => setSelectedDestination(destination)}
+                className="w-full rounded-xl border px-3 py-2 text-left text-sm font-bold"
+                style={{
+                  background: selectedDestination === destination ? "var(--lokadia-primary)" : "white",
+                  borderColor: selectedDestination === destination ? "var(--lokadia-primary)" : "var(--lokadia-gray-100)",
+                  color: selectedDestination === destination ? "white" : "var(--lokadia-gray-700)",
+                }}
+              >
+                {destination}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-sm font-black" style={{ color: "var(--lokadia-gray-900)" }}>
@@ -223,41 +267,6 @@ export function AlertCenterScreen() {
         </div>
       </div>
 
-      {uniqueDestinations.length > 0 && (
-        <div>
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-black" style={{ color: "var(--lokadia-gray-900)" }}>
-            <MapPin className="h-4 w-4" />
-            Destination
-          </h3>
-          <div className="max-h-64 space-y-2 overflow-auto pr-1">
-            <button
-              onClick={() => setSelectedDestination("all")}
-              className="w-full rounded-xl border px-3 py-2 text-left text-sm font-bold"
-              style={{
-                background: selectedDestination === "all" ? "var(--lokadia-info-bg)" : "white",
-                borderColor: selectedDestination === "all" ? "var(--lokadia-primary)" : "var(--lokadia-gray-100)",
-                color: selectedDestination === "all" ? "var(--lokadia-primary)" : "var(--lokadia-gray-700)",
-              }}
-            >
-              Toutes
-            </button>
-            {uniqueDestinations.map((destination) => (
-              <button
-                key={destination}
-                onClick={() => setSelectedDestination(destination)}
-                className="w-full rounded-xl border px-3 py-2 text-left text-sm font-bold"
-                style={{
-                  background: selectedDestination === destination ? "var(--lokadia-info-bg)" : "white",
-                  borderColor: selectedDestination === destination ? "var(--lokadia-primary)" : "var(--lokadia-gray-100)",
-                  color: selectedDestination === destination ? "var(--lokadia-primary)" : "var(--lokadia-gray-700)",
-                }}
-              >
-                {destination}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 
