@@ -96,6 +96,30 @@ const GEOPOLITICAL: Array<{ iso: string; type: AlertType; severity: Severity; ti
 
 const clamp = (n: number) => Math.max(0, Math.min(100, n));
 
+// ─── Fraîcheur : on ne compte PAS les infos trop datées (jours max par type) ──
+const FRESHNESS_DAYS: Record<AlertType, number> = {
+  earthquake: 7,    // un séisme n'est "actif" que quelques jours
+  cyclone: 10,
+  flood: 21,
+  wildfire: 14,
+  volcano: 45,
+  drought: 120,     // phénomène lent
+  epidemic: 90,
+  humanitarian: 90,
+  war: 99999,       // structurel (curé, toujours courant)
+  political: 99999,
+  other: 30,
+};
+
+/** True si l'alerte est encore fraîche selon son type */
+function isFresh(type: AlertType, dateIso: string): boolean {
+  const maxDays = FRESHNESS_DAYS[type] ?? 30;
+  if (maxDays >= 99999) return true;
+  const t = new Date(dateIso).getTime();
+  if (!t || Number.isNaN(t)) return true; // pas de date → on garde
+  return Date.now() - t <= maxDays * 24 * 3600 * 1000;
+}
+
 // ─── Parsers ────────────────────────────────────────────────────────────────
 function gdacsType(t: string): AlertType {
   switch (t) {
@@ -279,16 +303,19 @@ serve(async (req) => {
   }
 
   const sources: string[] = [];
-  const all: WorldAlert[] = [];
+  const raw: WorldAlert[] = [];
 
   const [gd, us, rw, who] = await Promise.allSettled([fetchGDACS(), fetchUSGS(), fetchReliefWeb(), fetchWHO()]);
-  if (gd.status === 'fulfilled') { sources.push('GDACS'); all.push(...gd.value); }
-  if (us.status === 'fulfilled') { sources.push('USGS'); all.push(...us.value); }
-  if (rw.status === 'fulfilled') { sources.push('ReliefWeb'); all.push(...rw.value); }
-  if (who.status === 'fulfilled') { sources.push('OMS'); all.push(...who.value); }
-  // Couche géopolitique (toujours présente)
+  if (gd.status === 'fulfilled') { sources.push('GDACS'); raw.push(...gd.value); }
+  if (us.status === 'fulfilled') { sources.push('USGS'); raw.push(...us.value); }
+  if (rw.status === 'fulfilled') { sources.push('ReliefWeb'); raw.push(...rw.value); }
+  if (who.status === 'fulfilled') { sources.push('OMS'); raw.push(...who.value); }
+  // Couche géopolitique (toujours présente, structurelle)
   sources.push('Advisories');
-  all.push(...geopoliticalAlerts());
+  raw.push(...geopoliticalAlerts());
+
+  // ─── Filtre fraîcheur : on exclut les infos trop datées ───
+  const all: WorldAlert[] = raw.filter((a) => isFresh(a.type, a.date));
 
   // Stats par type
   const stats: Record<string, number> = {};

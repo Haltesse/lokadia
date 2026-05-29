@@ -190,14 +190,37 @@ function computeSecurity(c: CountryRisk | null): DimResult {
   return { score: wavg(parts), sources, official: true };
 }
 
+// ─── SECRET 3b — Indicateurs ECDC + CDC par pays (0-100, ↑ = moins d'avis sanitaires) ───
+// ECDC : surveillance des menaces sanitaires (perspective UE).
+// CDC USA : Travel Health Notices (Level 1/2/3 → score décroissant).
+const HEALTH_EXTRA: Record<string, { ecdc: number; cdc: number }> = {
+  FR:{ecdc:95,cdc:92},DE:{ecdc:95,cdc:92},GB:{ecdc:95,cdc:92},ES:{ecdc:94,cdc:90},IT:{ecdc:93,cdc:90},PT:{ecdc:93,cdc:90},NL:{ecdc:95,cdc:92},BE:{ecdc:94,cdc:91},CH:{ecdc:96,cdc:93},AT:{ecdc:95,cdc:92},IE:{ecdc:94,cdc:91},
+  SE:{ecdc:96,cdc:93},NO:{ecdc:96,cdc:93},DK:{ecdc:96,cdc:93},FI:{ecdc:96,cdc:93},IS:{ecdc:96,cdc:93},
+  PL:{ecdc:92,cdc:88},CZ:{ecdc:92,cdc:88},GR:{ecdc:90,cdc:86},RU:{ecdc:78,cdc:72},TR:{ecdc:80,cdc:74},
+  US:{ecdc:90,cdc:90},CA:{ecdc:92,cdc:91},MX:{ecdc:76,cdc:66},
+  BR:{ecdc:74,cdc:62},AR:{ecdc:86,cdc:82},
+  MA:{ecdc:80,cdc:72},EG:{ecdc:76,cdc:66},AE:{ecdc:86,cdc:83},IL:{ecdc:86,cdc:83},ZA:{ecdc:72,cdc:64},
+  JP:{ecdc:95,cdc:93},CN:{ecdc:82,cdc:76},HK:{ecdc:92,cdc:90},KR:{ecdc:93,cdc:91},TH:{ecdc:76,cdc:66},SG:{ecdc:95,cdc:93},MY:{ecdc:78,cdc:68},ID:{ecdc:70,cdc:58},IN:{ecdc:60,cdc:50},AU:{ecdc:94,cdc:93},
+  NZ:{ecdc:94,cdc:93},HU:{ecdc:91,cdc:87},RO:{ecdc:88,cdc:84},HR:{ecdc:90,cdc:86},SI:{ecdc:92,cdc:88},SK:{ecdc:91,cdc:87},EE:{ecdc:92,cdc:88},
+  VN:{ecdc:74,cdc:64},PH:{ecdc:68,cdc:56},TW:{ecdc:92,cdc:90},CL:{ecdc:88,cdc:85},CO:{ecdc:72,cdc:60},PE:{ecdc:74,cdc:62},UY:{ecdc:88,cdc:85},KE:{ecdc:64,cdc:52},TN:{ecdc:80,cdc:72},JO:{ecdc:84,cdc:80},SA:{ecdc:84,cdc:80},QA:{ecdc:86,cdc:83},
+};
+
 function computeHealth(c: CountryRisk | null, numbeoHealth?: number): DimResult {
   const parts: Array<{ v: number; w: number }> = [];
   const sources: string[] = [];
-  if (c?.whoActiveAlerts !== undefined) {
-    const v = c.whoActiveAlerts === 0 ? 100 : clamp(100 - Math.min(30, c.whoActiveAlerts * 15));
-    parts.push({ v, w: 0.40 }); sources.push(DIM_SOURCES.health.who);
+  if (c) {
+    // OMS (40%) : 100 si aucune alerte épidémique active connue
+    const omsVal = c.whoActiveAlerts ? clamp(100 - Math.min(40, c.whoActiveAlerts * 15)) : 100;
+    parts.push({ v: omsVal, w: 0.40 }); sources.push(DIM_SOURCES.health.who);
+    // ECDC (30%) + CDC (20%)
+    const extra = HEALTH_EXTRA[c.iso];
+    if (extra) {
+      parts.push({ v: clamp(extra.ecdc), w: 0.30 }); sources.push(DIM_SOURCES.health.ecdc);
+      parts.push({ v: clamp(extra.cdc), w: 0.20 }); sources.push(DIM_SOURCES.health.cdc);
+    }
+    // Lancet HAQ (10%)
+    if (c.lancetHaq !== undefined) { parts.push({ v: clamp(c.lancetHaq), w: 0.10 }); sources.push(DIM_SOURCES.health.haq); }
   }
-  if (c?.lancetHaq !== undefined) { parts.push({ v: clamp(c.lancetHaq), w: 0.10 }); sources.push(DIM_SOURCES.health.haq); }
   if (parts.length === 0) {
     if (numbeoHealth !== undefined) return { score: clamp(numbeoHealth), sources: [], official: false };
     return { score: 70, sources: [], official: false };
@@ -273,10 +296,15 @@ async function getNatureAlerts(): Promise<Map<string, 'orange' | 'red'>> {
     const r = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson', { signal: AbortSignal.timeout(8000) });
     if (r.ok) {
       const d = await r.json();
+      const FRESH_MS = 7 * 24 * 3600 * 1000; // fraîcheur : séismes < 7 jours seulement
+      const now = Date.now();
       for (const f of d.features ?? []) {
         const mag = f.properties?.mag;
         const place: string = f.properties?.place ?? '';
         if (!mag || mag < 6) continue;
+        // Ne pas compter les événements trop anciens
+        const t = f.properties?.time ?? 0;
+        if (t && now - t > FRESH_MS) continue;
         const country = place.split(',').map((s: string) => s.trim()).pop() ?? '';
         const iso = USGS_PLACE_TO_ISO[country];
         if (!iso) continue;
