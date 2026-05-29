@@ -1,253 +1,161 @@
 /**
- * useLokascore (Lokascore) — hook unifié de score de sécurité
+ * useLokascore — hook de score de sécurité.
  *
- * Retourne le Lokascore composite [0;100] modulé par le profil de voyage
- * sélectionné dans l'app (via TravelProfileContext). Le calcul agrège les
- * 4 dimensions Sécurité / Santé / Nature / Infrastructure selon la matrice
- * de pondération officielle (cf. lib/lokascore.ts).
- *
- * Pendant le MVP, les 4 dimensions sont approximées à partir des sous-indices
- * Numbeo (safetyIndex, healthCareIndex, pollutionIndex, qualityOfLifeIndex).
- *
- * Le hook reste rétro-compatible : la prop `score` continue d'exposer un seul
- * nombre 0-100 utilisable directement par tous les composants existants.
- * Les nouvelles props (`dimensions`, `rawSecurityScore`, `level`) sont disponibles
- * pour les composants qui veulent afficher le détail (breakdown 4 dimensions,
- * niveau 5-tiers Lokascore, etc.).
+ * Le calcul (formule, pondérations, matrice profil, dataset curé) est
+ * désormais ENTIÈREMENT côté serveur (Edge Function `lokascore-compute`).
+ * Ce hook ne fait qu'appeler l'API et exposer le résultat à l'UI.
+ * Aucune pondération ni formule ne réside dans le bundle JS.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  getLokascoreFromCache,
-  getLokascoreLastUpdate,
-  getLokascoreOnDemand,
-  getStaleLokascoreFromCache,
-  getDimensionsFromCache,
-  getStaleDimensionsFromCache,
-  getDimensionsOnDemand,
-  getSourceTraceFromCache,
-  initializeLokascoresCache,
-  isCacheRecent,
-  subscribeToScoreUpdates,
-  subscribeToDimensionsUpdate,
-} from '../services/lokascoreUpdateService';
-import {
-  computeLokascore,
   getLokascoreLevel,
   toLegacySafetyLevel,
   type LokascoreDimensions,
   type LokascoreLevelConfig,
   type LegacySafetyLevel,
 } from '../lib/lokascore';
-import type { LokascoreSourceTrace } from '../lib/lokascoreSources';
+import { fetchLokascore, getCachedLokascore } from '../lib/lokascoreApi';
+import { getAlertsForCountry, type LiveAlert } from '../lib/liveAlertsService';
+import { DESTINATION_TO_COUNTRY_ISO } from '../data/countryRiskData';
 import { useTravelProfile } from '../context/TravelProfileContext';
 
+/** Sources par dimension (noms uniquement — pas de valeurs/poids) */
+export interface DimensionSources {
+  security: string[];
+  health: string[];
+  nature: string[];
+  infrastructure: string[];
+}
+
 interface UseLokascoreResult {
-  /** Lokascore composite modulé par profil (rétro-compat avec ancien Lokascore) */
   score: number | null;
-  /** Mapping legacy 3-niveaux (rétro-compat) */
   safetyLevel: LegacySafetyLevel;
-  /** Niveau Lokascore officiel 5-tiers (couleur, label, description, plage) */
   level: LokascoreLevelConfig;
-  /** Trace des sources officielles utilisées (Phase 3) — null tant que pas chargé */
-  sourceTrace: LokascoreSourceTrace | null;
+  dimensions: LokascoreDimensions | null;
+  sources: DimensionSources | null;
+  hasOfficialSource: boolean;
+  usedLiveAdvisories: boolean;
+  /** Alertes catastrophes live pour le pays (USGS/ReliefWeb, données publiques) */
+  liveAlerts: LiveAlert[];
   loading: boolean;
   lastUpdate: string;
   refresh: () => void;
-  /** Détail des 4 dimensions agrégées (null tant que pas chargé) */
-  dimensions: LokascoreDimensions | null;
-  /** Score brut Sécurité (Numbeo Safety Index) — utile pour comparaison */
-  rawSecurityScore: number | null;
 }
 
-// Anti-double-init au sein de la session
-let isInitialized = false;
-const SCORE_REFRESH_INTERVAL = 5 * 60 * 1000;
+const REFRESH_INTERVAL = 10 * 60 * 1000;
 
-function formatLastUpdate(timestamp: number | null): string {
-  if (!timestamp) return 'Actualisation...';
-  return new Date(timestamp).toLocaleString('fr-FR', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+function fmt(iso: string | undefined): string {
+  if (!iso) return 'Actualisation...';
+  return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-export function useLokascore(destinationId: string | undefined): UseLokascoreResult {
+/**
+ * @param destinationId
+ * @param opts.live  true sur la fiche destination (advisories temps réel)
+ */
+export function useLokascore(
+  destinationId: string | undefined,
+  opts: { live?: boolean } = {}
+): UseLokascoreResult {
+  const live = opts.live ?? false;
   const { profile } = useTravelProfile();
-  const [rawSecurityScore, setRawSecurityScore] = useState<number | null>(null);
+
+  const [score, setScore] = useState<number | null>(null);
   const [dimensions, setDimensions] = useState<LokascoreDimensions | null>(null);
+  const [sources, setSources] = useState<DimensionSources | null>(null);
+  const [hasOfficialSource, setHasOfficialSource] = useState(false);
+  const [usedLiveAdvisories, setUsedLiveAdvisories] = useState(false);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState('Chargement...');
 
-  const loadScore = useCallback(async (forceRefresh: boolean = false) => {
+  const load = useCallback(async (forceRefresh = false) => {
     if (!destinationId) {
-      setRawSecurityScore(null);
-      setDimensions(null);
-      setLastUpdate('Indisponible');
-      setLoading(false);
+      setScore(null); setDimensions(null); setSources(null);
+      setLastUpdate('Indisponible'); setLoading(false);
       return;
     }
 
-    // 1. Cache lookup ultra-rapide (mémoire + sessionStorage hydraté)
-    const cachedDims = forceRefresh ? null : getDimensionsFromCache(destinationId);
-    const cachedScore = forceRefresh ? null : getLokascoreFromCache(destinationId);
-    if (cachedDims !== null) {
-      setDimensions(cachedDims);
-      setRawSecurityScore(cachedScore ?? Math.round(cachedDims.security));
-      setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId)));
+    // 1. Cache synchrone (instantané)
+    const cached = getCachedLokascore(destinationId, profile, live);
+    if (cached && !forceRefresh) {
+      setScore(cached.score);
+      setDimensions(cached.dimensions);
+      setSources(cached.sources);
+      setHasOfficialSource(cached.hasOfficialSource);
+      setUsedLiveAdvisories(cached.usedLiveAdvisories);
+      setLastUpdate(fmt(cached.lastUpdate));
       setLoading(false);
-      return;
-    }
-    if (cachedScore !== null) {
-      setRawSecurityScore(cachedScore);
-      setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId)));
-      setLoading(false);
-      return;
-    }
-
-    // 2. Stale data en attendant le fetch frais
-    const staleDims = getStaleDimensionsFromCache(destinationId);
-    const staleScore = getStaleLokascoreFromCache(destinationId);
-    if (staleDims !== null) {
-      setDimensions(staleDims);
-      setRawSecurityScore(staleScore ?? Math.round(staleDims.security));
-      setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId)));
-    } else if (staleScore !== null) {
-      setRawSecurityScore(staleScore);
-      setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId)));
+      // On rafraîchit quand même en arrière-plan si live (advisories peuvent bouger)
+      if (!live) return;
     } else {
-      setRawSecurityScore(null);
-      setDimensions(null);
-      setLastUpdate('Actualisation...');
       setLoading(true);
     }
 
-    // 3. Fetch frais — un seul appel, qui remplit dimensionsCache (effet de bord
-    // de fetchLokascoreForDestination). getDimensionsOnDemand lit le cache et
-    // déclenche un re-fetch seulement si nécessaire.
-    try {
-      const newScore = await getLokascoreOnDemand(destinationId, forceRefresh);
-      const newDims = await getDimensionsOnDemand(destinationId, false);
-      if (newDims !== null) setDimensions(newDims);
-      if (newScore !== null) {
-        setRawSecurityScore(newScore);
-        setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId) ?? Date.now()));
-      } else if (newDims !== null) {
-        // Pas de score Numbeo mais on a les dimensions officielles : OK, affichage live
-        setLastUpdate(formatLastUpdate(Date.now()));
-      } else if (staleScore === null && staleDims === null) {
-        setRawSecurityScore(null);
-        setLastUpdate('Indisponible');
-      }
-    } catch (error) {
-      console.error('❌ Erreur chargement score:', error);
-      if (staleScore === null && staleDims === null) {
-        setRawSecurityScore(null);
-        setLastUpdate('Indisponible');
-      }
+    // 2. Fetch backend
+    const result = await fetchLokascore(destinationId, profile, { live, forceRefresh });
+    if (result && result.available) {
+      setScore(result.score);
+      setDimensions(result.dimensions);
+      setSources(result.sources);
+      setHasOfficialSource(result.hasOfficialSource);
+      setUsedLiveAdvisories(result.usedLiveAdvisories);
+      setLastUpdate(fmt(result.lastUpdate));
+    } else if (!cached) {
+      setScore(null);
+      setDimensions(null);
+      setSources(null);
+      setLastUpdate('Indisponible');
     }
     setLoading(false);
-  }, [destinationId]);
+  }, [destinationId, profile, live]);
 
   useEffect(() => {
-    loadScore();
-    if (!destinationId) return;
-    const unsubScore = subscribeToScoreUpdates((id, score) => {
-      if (id === destinationId) {
-        setRawSecurityScore(score);
-        setLastUpdate(formatLastUpdate(getLokascoreLastUpdate(destinationId)));
-        setLoading(false);
-      }
-    });
-    const unsubDims = subscribeToDimensionsUpdate((id, dims) => {
-      if (id === destinationId) {
-        setDimensions(dims);
-      }
-    });
-    return () => {
-      unsubScore();
-      unsubDims();
-    };
-  }, [destinationId, loadScore]);
+    load();
+  }, [load]);
 
+  // Rafraîchissement périodique + au retour sur l'onglet
   useEffect(() => {
     if (!destinationId) return;
-    const interval = window.setInterval(() => loadScore(true), SCORE_REFRESH_INTERVAL);
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') loadScore(true);
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
+    const interval = window.setInterval(() => load(true), REFRESH_INTERVAL);
+    const onVisible = () => { if (document.visibilityState === 'visible') load(false); };
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
       window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibility);
+      document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [destinationId, loadScore]);
-
-  // ─── Calcul du Lokascore modulé par profil ───
-  // Si on a les 4 dimensions → on applique la matrice de pondération profil.
-  // Sinon (fallback MVP) → on retourne juste le security score brut.
-  const score = useMemo<number | null>(() => {
-    if (dimensions) return computeLokascore(dimensions, profile);
-    return rawSecurityScore;
-  }, [dimensions, rawSecurityScore, profile]);
+  }, [destinationId, load]);
 
   const level = useMemo(() => getLokascoreLevel(score), [score]);
   const safetyLevel = useMemo<LegacySafetyLevel>(() => toLegacySafetyLevel(score), [score]);
 
-  // Trace des sources officielles (Phase 3) — re-lu à chaque update du score
-  const sourceTrace = useMemo<LokascoreSourceTrace | null>(
-    () => (destinationId ? getSourceTraceFromCache(destinationId) : null),
-    // dimensions sert de signal de changement (la trace est stockée en même temps)
-    [destinationId, dimensions]
-  );
+  // Alertes live pour le pays (données publiques, côté client — pour l'UI détail)
+  const liveAlerts = useMemo<LiveAlert[]>(() => {
+    if (!destinationId) return [];
+    const iso = DESTINATION_TO_COUNTRY_ISO[destinationId];
+    return iso ? getAlertsForCountry(iso) : [];
+  }, [destinationId, score]);
 
-  const refresh = useCallback(async () => {
-    console.log('🔄 Rafraîchissement manuel du Lokascore...');
+  const refresh = useCallback(() => {
     if (!destinationId) return;
     setLoading(true);
-    await loadScore(true);
-  }, [destinationId, loadScore]);
+    load(true);
+  }, [destinationId, load]);
 
   return {
-    score,
-    safetyLevel,
-    level,
-    sourceTrace,
-    loading,
-    lastUpdate,
-    refresh,
-    dimensions,
-    rawSecurityScore,
+    score, safetyLevel, level, dimensions, sources,
+    hasOfficialSource, usedLiveAdvisories, liveAlerts,
+    loading, lastUpdate, refresh,
   };
 }
 
 /**
- * Hook pour initialiser le cache au démarrage de l'application
- * À appeler une seule fois dans App.tsx
+ * Initialise les systèmes au démarrage de l'app (alertes live publiques).
+ * Le calcul des scores est désormais entièrement côté serveur.
  */
 export function useLokascoreCacheInitializer() {
   const [isReady, setIsReady] = useState(false);
-
   useEffect(() => {
-    if (isInitialized) {
-      setIsReady(true);
-      return;
-    }
-    console.log('🌟 Page ouverte - Initialisation du cache Lokascore...');
-    const initialize = async () => {
-      try {
-        await initializeLokascoresCache();
-        isInitialized = true;
-        setIsReady(true);
-        console.log('✅ Cache Lokascore actualisé avec succès');
-      } catch (error) {
-        console.error('❌ Erreur lors de l\'initialisation du cache:', error);
-        setIsReady(true);
-      }
-    };
-    initialize();
+    setIsReady(true);
   }, []);
-
-  return { isReady, isCacheRecent: isCacheRecent() };
+  return { isReady, isCacheRecent: true };
 }

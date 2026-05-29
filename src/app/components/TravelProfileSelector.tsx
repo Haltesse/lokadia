@@ -35,7 +35,6 @@ export function TravelProfileSelector({ variant = 'list', onSelect }: TravelProf
     <div className={containerClass}>
       {PROFILE_ORDER.map((id) => {
         const meta = PROFILE_META[id];
-        const weights = PROFILE_WEIGHTS[id];
         const isSelected = current === id;
         return (
           <button

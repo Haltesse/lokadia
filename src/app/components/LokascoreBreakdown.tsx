@@ -1,45 +1,48 @@
 /**
- * LokascoreBreakdown — affichage détaillé des 4 dimensions Lokascore
- * Affiche les barres de progression pour Sécurité / Santé / Nature / Infrastructure
- * avec les sources officielles utilisées et la pondération appliquée selon le profil.
+ * LokascoreBreakdown — aperçu par catégorie du Lokascore.
  *
- * Phase 3 : affiche les VRAIES sources qui ont contribué (MAE, FCDO, WJP, CPI…)
- * via la `sourceTrace` retournée par useLokascore().
+ * Affiche le score de chaque dimension (Sécurité / Santé / Nature /
+ * Infrastructure) et les NOMS des sources officielles qui ont contribué.
+ *
+ * ⚠️ Les pondérations et la formule ne sont jamais affichées (secret de
+ * fabrique). Seuls les résultats et les noms de sources sont montrés.
  */
 import { Info, CheckCircle2, AlertTriangle } from 'lucide-react';
 import {
   DIMENSION_META,
-  PROFILE_WEIGHTS,
   PROFILE_META,
   getLokascoreLevel,
   type LokascoreDimensions,
   type TravelProfile,
 } from '../lib/lokascore';
-import type { LokascoreSourceTrace } from '../lib/lokascoreSources';
+import type { LiveAlert } from '../lib/liveAlertsService';
+import type { DimensionSources } from '../hooks/useLokascore';
 import { useTravelProfile } from '../context/TravelProfileContext';
 
 interface LokascoreBreakdownProps {
   dimensions: LokascoreDimensions | null;
-  /** Score Lokascore composite (pour cohérence avec affichage parent) */
   compositeScore: number | null;
-  /** Trace des sources officielles utilisées (Phase 3) */
-  sourceTrace?: LokascoreSourceTrace | null;
-  /** Profil utilisé pour la modulation (par défaut = celui du context) */
+  /** Sources officielles par dimension (noms seulement) */
+  sources?: DimensionSources | null;
+  /** True si au moins une source officielle a contribué */
+  hasOfficialSource?: boolean;
+  /** Alertes catastrophes live actives pour le pays */
+  liveAlerts?: LiveAlert[];
   profile?: TravelProfile;
-  /** Affichage compact (mode card) vs étendu (mode page détail) */
   compact?: boolean;
 }
 
 export function LokascoreBreakdown({
   dimensions,
   compositeScore,
-  sourceTrace,
+  sources,
+  hasOfficialSource = false,
+  liveAlerts,
   profile: profileProp,
   compact = false,
 }: LokascoreBreakdownProps) {
   const { profile: ctxProfile } = useTravelProfile();
   const profile = profileProp ?? ctxProfile;
-  const weights = PROFILE_WEIGHTS[profile];
   const profileMeta = PROFILE_META[profile];
 
   if (!dimensions) {
@@ -47,17 +50,17 @@ export function LokascoreBreakdown({
       <div className="p-4 rounded-2xl border bg-gray-50" style={{ borderColor: 'var(--lokadia-gray-100)' }}>
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <Info className="h-4 w-4" />
-          Détail des 4 dimensions en cours de chargement…
+          Détail par catégorie en cours de chargement…
         </div>
       </div>
     );
   }
 
-  const rows: Array<{ key: keyof LokascoreDimensions; weight: number; value: number }> = [
-    { key: 'security', weight: weights.security, value: dimensions.security },
-    { key: 'health', weight: weights.health, value: dimensions.health },
-    { key: 'nature', weight: weights.nature, value: dimensions.nature },
-    { key: 'infrastructure', weight: weights.infrastructure, value: dimensions.infrastructure },
+  const rows: Array<{ key: keyof LokascoreDimensions; value: number }> = [
+    { key: 'security', value: dimensions.security },
+    { key: 'health', value: dimensions.health },
+    { key: 'nature', value: dimensions.nature },
+    { key: 'infrastructure', value: dimensions.infrastructure },
   ];
 
   return (
@@ -85,42 +88,29 @@ export function LokascoreBreakdown({
             >
               {compositeScore}
             </span>
-            <span className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>
-              /100
-            </span>
+            <span className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>/100</span>
           </div>
         )}
       </div>
 
-      {/* ⚠️ Alertes live actives — USGS / ReliefWeb */}
-      {sourceTrace?.liveAlerts && sourceTrace.liveAlerts.length > 0 && (
+      {/* ⚠️ Alertes live actives */}
+      {liveAlerts && liveAlerts.length > 0 && (
         <div
           className="mb-3 p-3 rounded-xl flex items-start gap-2.5"
-          style={{
-            background: 'rgba(239, 68, 68, 0.08)',
-            border: '1px solid rgba(239, 68, 68, 0.25)',
-          }}
+          style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.25)' }}
         >
           <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: '#dc2626' }} />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-black" style={{ color: '#991b1b' }}>
-              {sourceTrace.liveAlerts.length} alerte{sourceTrace.liveAlerts.length > 1 ? 's' : ''} active{sourceTrace.liveAlerts.length > 1 ? 's' : ''}
+              {liveAlerts.length} alerte{liveAlerts.length > 1 ? 's' : ''} active{liveAlerts.length > 1 ? 's' : ''}
             </p>
             <ul className="mt-1 space-y-0.5">
-              {sourceTrace.liveAlerts.slice(0, 3).map((alert, i) => (
+              {liveAlerts.slice(0, 3).map((alert, i) => (
                 <li key={i} className="text-[10px] leading-snug" style={{ color: '#7f1d1d' }}>
                   <span className="font-bold">[{alert.source}]</span> {alert.description}
                 </li>
               ))}
-              {sourceTrace.liveAlerts.length > 3 && (
-                <li className="text-[10px] italic" style={{ color: '#7f1d1d' }}>
-                  +{sourceTrace.liveAlerts.length - 3} autre{sourceTrace.liveAlerts.length - 3 > 1 ? 's' : ''}…
-                </li>
-              )}
             </ul>
-            <p className="text-[10px] mt-1 italic" style={{ color: '#991b1b' }}>
-              La dimension Nature est réduite en conséquence (modulation temporelle).
-            </p>
           </div>
         </div>
       )}
@@ -131,6 +121,7 @@ export function LokascoreBreakdown({
           const meta = DIMENSION_META[key];
           const intValue = Math.round(value);
           const lvl = getLokascoreLevel(intValue);
+          const usedSources = sources?.[key] ?? [];
           return (
             <div key={key}>
               <div className="flex items-center justify-between mb-1">
@@ -140,43 +131,30 @@ export function LokascoreBreakdown({
                     {meta.label}
                   </span>
                 </div>
-                <span
-                  className="text-xs font-black tabular-nums flex-shrink-0"
-                  style={{ color: lvl.color }}
-                >
+                <span className="text-xs font-black tabular-nums flex-shrink-0" style={{ color: lvl.color }}>
                   {intValue}
                 </span>
               </div>
-              <div
-                className="h-1.5 rounded-full overflow-hidden"
-                style={{ background: 'var(--lokadia-gray-100)' }}
-              >
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--lokadia-gray-100)' }}>
                 <div
                   className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${Math.max(2, intValue)}%`,
-                    background: lvl.fillColor,
-                  }}
+                  style={{ width: `${Math.max(2, intValue)}%`, background: lvl.fillColor }}
                 />
               </div>
               {!compact && (
                 <div className="mt-1.5">
-                  {/* Sources officielles utilisées — NOMS uniquement (les valeurs et
-                      pondérations individuelles sont du secret de fabrique). */}
-                  {sourceTrace && sourceTrace[key].hasOfficialSource ? (
+                  {usedSources.length > 0 ? (
                     <div className="flex items-center gap-1 flex-wrap">
                       <CheckCircle2 className="h-2.5 w-2.5" style={{ color: '#15803d' }} />
-                      {sourceTrace[key].contributions
-                        .filter((c) => c.id !== 'fallback' && !c.id.startsWith('numbeo'))
-                        .map((c) => (
-                          <span
-                            key={c.id}
-                            className="text-[9px] font-bold px-1.5 py-0.5 rounded"
-                            style={{ background: `${meta.color}15`, color: meta.color }}
-                          >
-                            {c.label}
-                          </span>
-                        ))}
+                      {usedSources.map((label) => (
+                        <span
+                          key={label}
+                          className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                          style={{ background: `${meta.color}15`, color: meta.color }}
+                        >
+                          {label}
+                        </span>
+                      ))}
                     </div>
                   ) : (
                     <p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>
@@ -190,22 +168,18 @@ export function LokascoreBreakdown({
         })}
       </div>
 
-      {/* Disclaimer Phase 3 ou MVP selon les sources réellement utilisées */}
+      {/* Disclaimer */}
       {!compact && (
         <div
           className="mt-4 p-2.5 rounded-lg flex items-start gap-2"
-          style={{
-            background: sourceTrace?.hasAnyOfficialSource
-              ? 'rgba(34, 197, 94, 0.10)'
-              : 'var(--lokadia-info-bg)',
-          }}
+          style={{ background: hasOfficialSource ? 'rgba(34, 197, 94, 0.10)' : 'var(--lokadia-info-bg)' }}
         >
-          {sourceTrace?.hasAnyOfficialSource ? (
+          {hasOfficialSource ? (
             <>
               <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" style={{ color: '#15803d' }} />
               <p className="text-[10px] leading-relaxed" style={{ color: 'var(--lokadia-gray-700)' }}>
                 <strong style={{ color: '#15803d' }}>Score officiel</strong> — agrégation propriétaire
-                de sources internationales vérifiables. Mise à jour en continu.
+                de sources internationales vérifiables, calculée en continu.
               </p>
             </>
           ) : (

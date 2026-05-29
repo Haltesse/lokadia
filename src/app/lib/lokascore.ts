@@ -1,24 +1,16 @@
 /**
- * Lokascore — Méthodologie officielle (Memoire methodologique v1.0)
+ * Lokascore — métadonnées d'affichage (PUBLIC).
  *
- * Score composite [0;100] = w_S × S + w_H × H + w_N × N + w_I × I
- * Les poids dépendent du profil de voyage déclaré par l'utilisateur.
+ * ⚠️ Ce fichier ne contient QUE des données d'affichage publiques :
+ * libellés, couleurs, niveaux, noms de catégories, noms de profils.
  *
- * Sources officielles cibles (4 dimensions) :
- *   S (Sécurité, 40%)        : MAE France · UK FCDO · US State · AU DFAT
- *   H (Santé, 25%)           : OMS · ECDC · CDC USA · Lancet HAQ
- *   N (Nature/Catastrophes,  : GDACS · ReliefWeb · NASA EONET · EM-DAT
- *      20%)
- *   I (Infrastructure, 15%)  : World Justice Project · Transparency
- *                              International · WHO Road · World Bank · GSMA
- *
- * Pendant la phase de lancement (MVP), les 4 dimensions sont approximées à
- * partir des indices Numbeo disponibles (safetyIndex, healthCareIndex,
- * qualityOfLifeIndex, pollutionIndex). L'intégration progressive des sources
- * officielles citées remplacera ces approximations dimension par dimension.
+ * La formule de calcul, les pondérations sectorielles et la matrice de
+ * modulation par profil sont des SECRETS DE FABRIQUE. Ils vivent
+ * exclusivement côté serveur (Edge Function `lokascore-compute`) et ne sont
+ * jamais inclus dans le bundle JavaScript.
  */
 
-// ─── Profils de voyage ──────────────────────────────────────────────────────
+// ─── Profils de voyage (identifiants + métadonnées d'affichage) ──────────────
 
 export type TravelProfile =
   | 'default'
@@ -30,30 +22,6 @@ export type TravelProfile =
   | 'business'
   | 'humanitarian'
   | 'vacation';
-
-export interface LokascoreWeights {
-  /** Sécurité */
-  security: number;
-  /** Santé (Health) */
-  health: number;
-  /** Nature / catastrophes */
-  nature: number;
-  /** Infrastructure et état de droit */
-  infrastructure: number;
-}
-
-/** Matrice de pondération par profil (somme = 1.00) */
-export const PROFILE_WEIGHTS: Record<TravelProfile, LokascoreWeights> = {
-  default:        { security: 0.40, health: 0.25, nature: 0.20, infrastructure: 0.15 },
-  studies:        { security: 0.45, health: 0.20, nature: 0.15, infrastructure: 0.20 },
-  'remote-work':  { security: 0.35, health: 0.20, nature: 0.15, infrastructure: 0.30 },
-  backpack:       { security: 0.45, health: 0.30, nature: 0.15, infrastructure: 0.10 },
-  family:         { security: 0.35, health: 0.35, nature: 0.20, infrastructure: 0.10 },
-  senior:         { security: 0.30, health: 0.40, nature: 0.20, infrastructure: 0.10 },
-  business:       { security: 0.45, health: 0.20, nature: 0.10, infrastructure: 0.25 },
-  humanitarian:   { security: 0.60, health: 0.20, nature: 0.10, infrastructure: 0.10 },
-  vacation:       { security: 0.40, health: 0.25, nature: 0.20, infrastructure: 0.15 },
-};
 
 export interface TravelProfileMeta {
   id: TravelProfile;
@@ -322,53 +290,11 @@ export function getLokascoreLevel(score: number | null | undefined): LokascoreLe
   return LOKASCORE_LEVELS.forbidden;
 }
 
-// ─── Calcul du score ────────────────────────────────────────────────────────
+// ─── NOTE : le calcul du score (formule + pondérations + matrice profil)
+//     n'est PAS dans le frontend. Il est exécuté côté serveur par l'Edge
+//     Function `lokascore-compute`. Voir src/app/lib/lokascoreApi.ts.
 
-/**
- * Calcule le Lokascore pondéré à partir des 4 dimensions et d'un profil.
- * Retourne un entier arrondi entre 0 et 100.
- */
-export function computeLokascore(
-  dimensions: LokascoreDimensions,
-  profile: TravelProfile = 'default'
-): number {
-  const w = PROFILE_WEIGHTS[profile] ?? PROFILE_WEIGHTS.default;
-  const raw =
-    dimensions.security * w.security +
-    dimensions.health * w.health +
-    dimensions.nature * w.nature +
-    dimensions.infrastructure * w.infrastructure;
-  return Math.max(0, Math.min(100, Math.round(raw)));
-}
-
-/**
- * Reconstruit les 4 dimensions à partir d'un index Numbeo brut.
- * Pendant le MVP : approximation utilisant les sous-indices Numbeo disponibles.
- *
- * - security      ← safetyIndex
- * - health        ← healthCareIndex (fallback 70 si manquant)
- * - nature        ← 100 - pollutionIndex (fallback 70 si manquant)
- * - infrastructure ← qualityOfLifeIndex (fallback 70 si manquant)
- *
- * Le fallback à 70 est volontairement neutre (niveau "vigilance haute") afin
- * de ne pas fausser le score quand une dimension n'est pas encore branchée.
- */
-export function buildDimensionsFromNumbeo(numbeo: {
-  safetyIndex: number;
-  healthCareIndex?: number;
-  qualityOfLifeIndex?: number;
-  pollutionIndex?: number;
-}): LokascoreDimensions {
-  const clamp = (n: number) => Math.max(0, Math.min(100, n));
-  return {
-    security: clamp(numbeo.safetyIndex),
-    health: numbeo.healthCareIndex !== undefined ? clamp(numbeo.healthCareIndex) : 70,
-    nature: numbeo.pollutionIndex !== undefined ? clamp(100 - numbeo.pollutionIndex) : 70,
-    infrastructure: numbeo.qualityOfLifeIndex !== undefined ? clamp(numbeo.qualityOfLifeIndex) : 70,
-  };
-}
-
-// ─── Backward-compat ────────────────────────────────────────────────────────
+// ─── Mapping niveau legacy (affichage uniquement) ────────────────────────────
 // L'ancien type `safetyLevel` ('safe' | 'vigilance' | 'danger') reste exposé
 // pour les composants qui n'ont pas encore migré vers les 5 niveaux.
 

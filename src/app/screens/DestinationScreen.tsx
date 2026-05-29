@@ -81,7 +81,8 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
   const [canScrollRight, setCanScrollRight] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
-  // Récupérer le Lokascore (modulé par profil) en temps réel
+  // Récupérer le Lokascore (modulé par profil) en temps réel.
+  // live: true → la fiche détail enrichit avec les advisories temps réel.
   const {
     score: lokascore,
     safetyLevel,
@@ -89,8 +90,10 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
     loading: scoreLoading,
     lastUpdate: scoreLastUpdate,
     dimensions,
-    sourceTrace,
-  } = useLokascore(destination.id);
+    sources: lokascoreSources,
+    hasOfficialSource,
+    liveAlerts,
+  } = useLokascore(destination.id, { live: true });
 
   const displayedScore = lokascore;
   const displayedSafetyLevel = safetyLevel;
@@ -346,12 +349,13 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
           </button>
         </div>
 
-        {/* Breakdown 4 dimensions Lokascore (Sécurité / Santé / Nature / Infrastructure)
-            + sources officielles réellement utilisées (Phase 3) */}
+        {/* Aperçu par catégorie + sources officielles utilisées + alertes live */}
         <LokascoreBreakdown
           dimensions={dimensions}
           compositeScore={displayedScore}
-          sourceTrace={sourceTrace}
+          sources={lokascoreSources}
+          hasOfficialSource={hasOfficialSource}
+          liveAlerts={liveAlerts}
         />
       </div>
 
@@ -657,7 +661,6 @@ function SafetyTab({ destination }: { destination: DestinationDetails }) {
     loading: lokascoreLoading,
     lastUpdate: lokascoreLastUpdate,
     level: lokascoreLevel,
-    dimensions,
   } = useLokascore(destination.id);
   const displayedLokascore = liveLokascore;
   // Mapping Lokascore 5-tiers → variant Badge legacy

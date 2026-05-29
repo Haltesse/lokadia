@@ -37,25 +37,14 @@ if (typeof window !== 'undefined') {
   const missingMappings = checkMissingMappings();
   console.log('\n===========================================\n');
   
-  // Exposer une fonction globale pour forcer le rechargement des scores
-  (window as any).refreshAllLokascores = async () => {
-    console.log('🔄 RECHARGEMENT MANUEL FORCÉ de tous les scores Lokascore...');
-    const { refreshLokascoresCache } = await import('./services/lokascoreUpdateService');
-    const { invalidateNumbeoCache } = await import('./services/numbeoService');
-    
-    // Invalider tous les caches
-    invalidateNumbeoCache();
-    
-    // Forcer le rechargement
-    await refreshLokascoresCache();
-    console.log('✅ Rechargement terminé !');
+  // Vider le cache de scores (les scores sont calculés côté serveur ;
+  // ici on ne fait que purger le cache de session local pour reforcer un fetch)
+  (window as any).refreshAllLokascores = () => {
+    try {
+      sessionStorage.removeItem('lokadia_lokascore_api_v1');
+      console.log('✅ Cache Lokascore local vidé. Rechargez la page pour refetch.');
+    } catch { /* ignore */ }
   };
-  
-  console.log('💡 TIP: Pour forcer un rechargement manuel, tapez: refreshAllLokascores()');
-
-  // (Helper debug interne retiré — il exposait les valeurs et pondérations
-  // détaillées en console publique. Pour debug local, utiliser le mode dev
-  // Vite et les outils internes.)
 }
 
 // Error Boundary Component

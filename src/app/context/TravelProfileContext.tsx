@@ -7,7 +7,7 @@
  */
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { TravelProfile } from '../lib/lokascore';
-import { PROFILE_WEIGHTS } from '../lib/lokascore';
+import { PROFILE_META } from '../lib/lokascore';
 
 const STORAGE_KEY = 'lokadia_travel_profile';
 const PROFILE_EVENT = 'lokadia_travel_profile_change';
@@ -17,7 +17,7 @@ type ProfileEventDetail = { profile: TravelProfile };
 function readStoredProfile(): TravelProfile {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved && saved in PROFILE_WEIGHTS) {
+    if (saved && saved in PROFILE_META) {
       return saved as TravelProfile;
     }
   } catch {
@@ -47,14 +47,14 @@ export function TravelProfileProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<ProfileEventDetail>).detail;
-      if (detail?.profile && detail.profile in PROFILE_WEIGHTS) {
+      if (detail?.profile && detail.profile in PROFILE_META) {
         setProfileState(detail.profile);
       }
     };
     window.addEventListener(PROFILE_EVENT, handler);
     // Cross-tab sync via storage event
     const storageHandler = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && e.newValue && e.newValue in PROFILE_WEIGHTS) {
+      if (e.key === STORAGE_KEY && e.newValue && e.newValue in PROFILE_META) {
         setProfileState(e.newValue as TravelProfile);
       }
     };
@@ -66,7 +66,7 @@ export function TravelProfileProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setProfile = useCallback((next: TravelProfile) => {
-    if (!(next in PROFILE_WEIGHTS)) {
+    if (!(next in PROFILE_META)) {
       console.warn(`[TravelProfile] Profil inconnu ignoré: ${next}`);
       return;
     }

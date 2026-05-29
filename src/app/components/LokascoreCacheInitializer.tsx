@@ -1,35 +1,19 @@
 import { useEffect } from 'react';
 import { useLokascoreCacheInitializer } from '../hooks/useLokascore';
-import {
-  startLiveAlertsPolling,
-  subscribeToLiveAlerts,
-} from '../lib/liveAlertsService';
-import { invalidateAllDimensions } from '../services/lokascoreUpdateService';
+import { startLiveAlertsPolling } from '../lib/liveAlertsService';
 
 /**
- * Initialise le cache Lokascore + démarre le polling des alertes live
- * (USGS earthquakes + ReliefWeb disasters).
+ * Démarre le polling des alertes live publiques (USGS earthquakes +
+ * ReliefWeb disasters) utilisées par la carte mondiale et la bannière.
+ * Le calcul des Lokascore est exécuté côté serveur (Edge Function).
  */
 export function LokascoreCacheInitializer() {
   const { isReady } = useLokascoreCacheInitializer();
 
   useEffect(() => {
     if (!isReady) return;
-    console.log('✅ Système Lokascore prêt (4 dimensions + sources officielles + alertes live)');
-
-    // Démarre le polling des alertes live (USGS + ReliefWeb)
+    console.log('✅ Système Lokascore prêt (calcul serveur sécurisé)');
     startLiveAlertsPolling();
-
-    // Quand de nouvelles alertes arrivent, on invalide les dimensions
-    // cachées pour forcer un recalcul (avec la pénalité live appliquée).
-    const unsub = subscribeToLiveAlerts((snap) => {
-      if (snap.byCountry.size > 0) {
-        console.log(`🔄 Live alerts mises à jour : invalidation des dimensions pour recalcul`);
-        invalidateAllDimensions();
-      }
-    });
-
-    return () => unsub();
   }, [isReady]);
 
   return null;
