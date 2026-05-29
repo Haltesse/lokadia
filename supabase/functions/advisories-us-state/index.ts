@@ -3,15 +3,14 @@
  *
  * Endpoint : GET /functions/v1/advisories-us-state?country={iso2}
  *
- * Le State Department publie un flux JSON consolidé (geojson + advisories
- * structurés). On peut le scrape avec une URL stable :
- *   https://travel.state.gov/_res/rss/TAsTWs.xml
+ * Stratégie 2026 : on parse le flux RSS officiel qui contient toutes les
+ * advisories actives pour tous les pays en un seul appel.
  *
- * Mais le format le plus pratique est la page HTML qui contient un Level 1-4
- * standardisé par pays.
+ * Format des items :
+ *   <title>{Country Name} - Level X: {Description}</title>
  *
- * Exemple : /functions/v1/advisories-us-state?country=JP
- *   → { "level": 1, "summary": "Exercise normal precautions", ... }
+ * On extrait le niveau (1-4) depuis le titre, qui est beaucoup plus fiable
+ * que le scraping HTML (qui est rendu côté client en SPA).
  *
  * Déploiement :
  *   supabase functions deploy advisories-us-state --no-verify-jwt
@@ -28,40 +27,56 @@ interface UsStateResponse {
   level: 1 | 2 | 3 | 4 | null;
   summary: string;
   countryIso: string;
+  countryName: string;
   lastUpdate: string;
   source: string;
 }
 
-// Mapping ISO2 → slug travel.state.gov
-const ISO_TO_SLUG: Record<string, string> = {
-  JP: 'japan', FR: 'france', GB: 'united-kingdom', DE: 'germany', ES: 'spain',
-  IT: 'italy', PT: 'portugal', NL: 'netherlands', BE: 'belgium', CH: 'switzerland',
-  AT: 'austria', IE: 'ireland', SE: 'sweden', NO: 'norway', DK: 'denmark',
-  FI: 'finland', IS: 'iceland', PL: 'poland', CZ: 'czech-republic', GR: 'greece',
-  RU: 'russia', TR: 'turkey', CA: 'canada', MX: 'mexico', BR: 'brazil',
-  AR: 'argentina', MA: 'morocco', EG: 'egypt', AE: 'united-arab-emirates',
-  IL: 'israel', ZA: 'south-africa', CN: 'china', HK: 'hong-kong', KR: 'korea',
-  TH: 'thailand', SG: 'singapore', MY: 'malaysia', ID: 'indonesia', IN: 'india',
-  AU: 'australia',
+// Mapping ISO2 → nom anglais utilisé dans le titre du RSS feed
+const ISO_TO_NAME: Record<string, string> = {
+  JP: 'Japan', FR: 'France', GB: 'United Kingdom', DE: 'Germany', ES: 'Spain',
+  IT: 'Italy', PT: 'Portugal', NL: 'Netherlands', BE: 'Belgium', CH: 'Switzerland',
+  AT: 'Austria', IE: 'Ireland', SE: 'Sweden', NO: 'Norway', DK: 'Denmark',
+  FI: 'Finland', IS: 'Iceland', PL: 'Poland', CZ: 'Czechia', GR: 'Greece',
+  RU: 'Russia', TR: 'Turkey', CA: 'Canada', MX: 'Mexico', BR: 'Brazil',
+  AR: 'Argentina', MA: 'Morocco', EG: 'Egypt', AE: 'United Arab Emirates',
+  IL: 'Israel', ZA: 'South Africa', CN: 'China', HK: 'Hong Kong',
+  KR: 'Korea, Republic of', TH: 'Thailand', SG: 'Singapore', MY: 'Malaysia',
+  ID: 'Indonesia', IN: 'India', AU: 'Australia', NZ: 'New Zealand',
+  VN: 'Vietnam', PH: 'Philippines', TW: 'Taiwan', CL: 'Chile',
+  CO: 'Colombia', PE: 'Peru', UY: 'Uruguay', KE: 'Kenya', TN: 'Tunisia',
+  JO: 'Jordan', SA: 'Saudi Arabia', QA: 'Qatar', HU: 'Hungary',
+  RO: 'Romania', HR: 'Croatia', SI: 'Slovenia', SK: 'Slovakia', EE: 'Estonia',
 };
 
-/** Détecte le Level 1-4 dans le HTML travel.state.gov */
-function detectUsLevel(html: string): UsStateResponse['level'] {
-  // Cherche le pattern "Travel Advisory Level X"
-  const match = html.match(/Travel\s+Advisory\s+Level\s+(\d)/i);
-  if (match) {
-    const lvl = parseInt(match[1], 10);
-    if (lvl >= 1 && lvl <= 4) return lvl as 1 | 2 | 3 | 4;
+// Cache en mémoire du RSS feed (1 fetch toutes les 30min, partagé entre invocations)
+let cachedFeed: { items: Array<{ title: string; pubDate: string }>; ts: number } | null = null;
+const CACHE_DURATION = 30 * 60 * 1000;
+
+async function getRssItems(): Promise<Array<{ title: string; pubDate: string }>> {
+  if (cachedFeed && Date.now() - cachedFeed.ts < CACHE_DURATION) {
+    return cachedFeed.items;
   }
-  // Fallback : cherche les phrases standard
-  if (/exercise\s+normal\s+precautions/i.test(html)) return 1;
-  if (/exercise\s+increased\s+caution/i.test(html)) return 2;
-  if (/reconsider\s+travel/i.test(html)) return 3;
-  if (/do\s+not\s+travel/i.test(html)) return 4;
-  return null;
+  const url = 'https://travel.state.gov/_res/rss/TAsTWs.xml';
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Lokadia Lokascore aggregator)' },
+  });
+  if (!res.ok) throw new Error(`US State RSS returned ${res.status}`);
+  const xml = await res.text();
+  const items: Array<{ title: string; pubDate: string }> = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  let m: RegExpExecArray | null;
+  while ((m = itemRegex.exec(xml)) !== null) {
+    const block = m[1];
+    const title = (block.match(/<title>(.*?)<\/title>/)?.[1] ?? '').trim();
+    const pubDate = block.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] ?? '';
+    if (title) items.push({ title, pubDate });
+  }
+  cachedFeed = { items, ts: Date.now() };
+  return items;
 }
 
-function levelToSummary(level: UsStateResponse['level']): string {
+function levelToSummary(level: 1 | 2 | 3 | 4 | null): string {
   switch (level) {
     case 1: return 'Exercise normal precautions';
     case 2: return 'Exercise increased caution';
@@ -86,8 +101,8 @@ serve(async (req) => {
     });
   }
 
-  const slug = ISO_TO_SLUG[countryIso];
-  if (!slug) {
+  const countryName = ISO_TO_NAME[countryIso];
+  if (!countryName) {
     return new Response(JSON.stringify({ error: `Country ${countryIso} not mapped`, level: null }), {
       status: 404,
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
@@ -95,27 +110,31 @@ serve(async (req) => {
   }
 
   try {
-    const usUrl = `https://travel.state.gov/content/travel/en/traveladvisories/traveladvisories/${slug}-travel-advisory.html`;
-    const res = await fetch(usUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Lokadia Lokascore aggregator)' },
+    const items = await getRssItems();
+
+    // Chercher l'item dont le titre commence par le nom du pays
+    const matchingItem = items.find((it) => {
+      const lower = it.title.toLowerCase();
+      const target = countryName.toLowerCase();
+      return lower.startsWith(target + ' -') || lower.startsWith(target + ',');
     });
 
-    if (!res.ok) {
-      return new Response(
-        JSON.stringify({ error: `US State returned ${res.status}`, countryIso, level: null }),
-        { status: 502, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
-      );
+    let level: UsStateResponse['level'] = null;
+    if (matchingItem) {
+      const m = matchingItem.title.match(/Level\s+(\d)/i);
+      if (m) {
+        const lvl = parseInt(m[1], 10);
+        if (lvl >= 1 && lvl <= 4) level = lvl as 1 | 2 | 3 | 4;
+      }
     }
-
-    const html = await res.text();
-    const level = detectUsLevel(html);
 
     const response: UsStateResponse = {
       level,
       summary: levelToSummary(level),
       countryIso,
+      countryName,
       lastUpdate: new Date().toISOString(),
-      source: 'US Department of State · travel.state.gov',
+      source: 'US Department of State · travel.state.gov RSS feed',
     };
 
     return new Response(JSON.stringify(response), {
@@ -129,7 +148,7 @@ serve(async (req) => {
   } catch (e) {
     return new Response(
       JSON.stringify({ error: String(e), countryIso, level: null }),
-      { status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
     );
   }
 });

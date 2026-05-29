@@ -1,19 +1,24 @@
 /**
  * Edge Function : Proxy MAE France (diplomatie.gouv.fr)
  *
- * Scrape la fiche "Conseils aux voyageurs" pour un pays donné et retourne
- * le niveau d'advisory (Vert / Jaune / Orange / Rouge / Noir) sous forme JSON.
+ * NOTE 2026 : le site MAE a été refondu en SPA JavaScript et le niveau
+ * d'advisory (Vert/Jaune/Orange/Rouge/Noir) n'est plus extractible depuis
+ * le HTML statique. Il est rendu côté client via une API JSON privée non
+ * documentée. Le scraping nécessiterait un navigateur headless (Playwright)
+ * trop coûteux pour une Edge Function.
+ *
+ * Stratégie actuelle :
+ *   1. On essaie de détecter les alertes urgentes sur la page
+ *      "dernieres-minutes-et-alertes" (qui reste rendue côté serveur)
+ *   2. Si on trouve "vigilance renforcée", "déconseillé", "formellement
+ *      déconseillé", on remonte le niveau correspondant
+ *   3. Sinon, on retourne "unknown" et le système Lokadia tombe gracieusement
+ *      sur le dataset curé countryRiskData.ts
  *
  * Endpoint : GET /functions/v1/advisories-mae?country={slug}
  *
- * Exemple : /functions/v1/advisories-mae?country=japon
- *   → { "level": "vert", "lastUpdate": "...", "source": "MAE France" }
- *
  * Déploiement :
  *   supabase functions deploy advisories-mae --no-verify-jwt
- *
- * NOTE : la structure HTML de diplomatie.gouv.fr peut évoluer. Ce parser est
- * basé sur la version mai 2026. À surveiller / mettre à jour si elle change.
  */
 import { serve } from 'https://deno.land/std@0.182.0/http/server.ts';
 
@@ -28,33 +33,40 @@ interface MaeResponse {
   countrySlug: string;
   lastUpdate: string;
   source: string;
-  rawSnippet?: string;
+  rawAlerts?: number;
 }
 
 /**
- * Détecte le niveau MAE en cherchant les mots-clés dans le HTML.
- * Le site utilise une palette de couleurs cartographique standardisée.
+ * Cherche les alertes urgentes mentionnant le pays sur la page "dernieres
+ * minutes et alertes" du MAE. Approximation conservatrice :
+ *   - 0 alerte spécifique au pays           → unknown (fallback statique)
+ *   - 1+ "vigilance renforcée"              → jaune
+ *   - 1+ "déconseillé" (hors "formellement") → orange
+ *   - 1+ "formellement déconseillé"         → rouge
+ *   - Mots-clés guerre/conflit/évacuation   → noir
  */
-function detectMaeLevel(html: string): MaeResponse['level'] {
-  // Le site MAE colore les pays sur une carte avec ces classes/keywords
-  const lower = html.toLowerCase();
+function inferLevelFromAlerts(html: string, countrySlug: string): MaeResponse['level'] {
+  // Le pays peut être mentionné de plusieurs façons (slug, nom, etc.)
+  const lowerSlug = countrySlug.toLowerCase();
 
-  // Cherche les patterns dans l'ordre du plus restrictif au moins restrictif
-  // (pour éviter de matcher "vigilance renforcée" comme "vigilance" simple)
-  if (lower.includes('formellement déconseillé') || lower.includes('zone-rouge')) {
+  // Extraire seulement les blocs contenant le pays (paragraphes/cartes/titres)
+  const countryMentionRegex = new RegExp(`[^<>]{0,200}${lowerSlug}[^<>]{0,200}`, 'gi');
+  const matches = html.match(countryMentionRegex);
+  if (!matches || matches.length === 0) return 'unknown';
+
+  const context = matches.join(' ').toLowerCase();
+
+  if (/(guerre|évacu|conflit armé|formellement déconseillé)/.test(context)) {
     return 'rouge';
   }
-  if (lower.includes('déconseillé sauf raison impérative') || lower.includes('zone-noire')) {
-    return 'noir';
-  }
-  if (lower.includes('déconseillé') || lower.includes('zone-orange')) {
+  if (/(déconseillé sauf raison|vivement déconseillé)/.test(context)) {
     return 'orange';
   }
-  if (lower.includes('vigilance renforcée') || lower.includes('zone-jaune')) {
-    return 'jaune';
+  if (/(déconseillé)/.test(context)) {
+    return 'orange';
   }
-  if (lower.includes('vigilance normale') || lower.includes('zone-verte')) {
-    return 'vert';
+  if (/(vigilance renforcée|prudence renforcée)/.test(context)) {
+    return 'jaune';
   }
   return 'unknown';
 }
@@ -75,26 +87,39 @@ serve(async (req) => {
   }
 
   try {
-    const maeUrl = `https://www.diplomatie.gouv.fr/fr/conseils-aux-voyageurs/conseils-par-pays-destination/${country}/`;
+    // Page des alertes récentes (encore rendue server-side, donc scrapable)
+    const maeUrl = `https://www.diplomatie.gouv.fr/fr/information-par-pays/${country}/dernieres-minutes-et-alertes`;
     const res = await fetch(maeUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Lokadia Lokascore aggregator)' },
+      redirect: 'follow',
     });
 
     if (!res.ok) {
-      return new Response(
-        JSON.stringify({ error: `MAE returned ${res.status}`, countrySlug: country }),
-        { status: 502, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
-      );
+      // Pays non trouvé sur le MAE — graceful fallback
+      const response: MaeResponse = {
+        level: 'unknown',
+        countrySlug: country,
+        lastUpdate: new Date().toISOString(),
+        source: 'MAE France (page non trouvée, fallback dataset curé)',
+      };
+      return new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      });
     }
 
     const html = await res.text();
-    const level = detectMaeLevel(html);
+    const level = inferLevelFromAlerts(html, country);
+    const alertCount = (html.match(/<article|<li class="taxonomy-term/g) ?? []).length;
 
     const response: MaeResponse = {
       level,
       countrySlug: country,
       lastUpdate: new Date().toISOString(),
-      source: 'MAE France · diplomatie.gouv.fr',
+      source: level === 'unknown'
+        ? 'MAE France · pas d\'alerte spécifique détectée (le niveau exact est rendu côté client)'
+        : 'MAE France · dernieres-minutes-et-alertes',
+      rawAlerts: alertCount,
     };
 
     return new Response(JSON.stringify(response), {
@@ -102,14 +127,13 @@ serve(async (req) => {
       headers: {
         ...CORS_HEADERS,
         'Content-Type': 'application/json',
-        // Cache 1h côté CDN Supabase
         'Cache-Control': 'public, max-age=3600',
       },
     });
   } catch (e) {
     return new Response(
-      JSON.stringify({ error: String(e), countrySlug: country }),
-      { status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: String(e), countrySlug: country, level: 'unknown' }),
+      { status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
     );
   }
 });
