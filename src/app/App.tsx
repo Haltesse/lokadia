@@ -53,19 +53,9 @@ if (typeof window !== 'undefined') {
   
   console.log('💡 TIP: Pour forcer un rechargement manuel, tapez: refreshAllLokascores()');
 
-  // Debug : inspecter les sources utilisées pour une destination
-  (window as any).debugLokascore = async (destinationId: string) => {
-    const { getLokascoreOnDemand, getSourceTraceFromCache } = await import('./services/lokascoreUpdateService');
-    const { getCountryRiskForDestination, DESTINATION_TO_COUNTRY_ISO } = await import('./data/countryRiskData');
-    console.log(`\n🔍 === DEBUG ${destinationId} ===\n`);
-    console.log('ISO pays:', DESTINATION_TO_COUNTRY_ISO[destinationId] ?? '(non mappé)');
-    console.log('Données pays curées:', getCountryRiskForDestination(destinationId));
-    const score = await getLokascoreOnDemand(destinationId, true);
-    console.log('Score Lokascore composite:', score);
-    console.log('Trace sources:', getSourceTraceFromCache(destinationId));
-    console.log('===========================\n');
-  };
-  console.log('💡 TIP: Pour debug une destination, tapez: debugLokascore("paris-france")');
+  // (Helper debug interne retiré — il exposait les valeurs et pondérations
+  // détaillées en console publique. Pour debug local, utiliser le mode dev
+  // Vite et les outils internes.)
 }
 
 // Error Boundary Component

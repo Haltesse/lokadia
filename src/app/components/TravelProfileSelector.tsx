@@ -9,7 +9,7 @@
  */
 import { Check } from 'lucide-react';
 import { useTravelProfile } from '../context/TravelProfileContext';
-import { PROFILE_META, PROFILE_ORDER, PROFILE_WEIGHTS, type TravelProfile } from '../lib/lokascore';
+import { PROFILE_META, PROFILE_ORDER, type TravelProfile } from '../lib/lokascore';
 
 interface TravelProfileSelectorProps {
   /** Affichage compact en grille 2 cols (pour modale) vs liste (pour profil) */
@@ -79,32 +79,6 @@ export function TravelProfileSelector({ variant = 'list', onSelect }: TravelProf
                 <p className="text-xs mt-0.5 leading-snug" style={{ color: 'var(--lokadia-gray-600)' }}>
                   {meta.description}
                 </p>
-                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                  <span
-                    className="text-[10px] font-bold tabular-nums px-2 py-0.5 rounded-full"
-                    style={{ background: 'rgba(30, 64, 175, 0.1)', color: '#1E40AF' }}
-                  >
-                    S {Math.round(weights.security * 100)}%
-                  </span>
-                  <span
-                    className="text-[10px] font-bold tabular-nums px-2 py-0.5 rounded-full"
-                    style={{ background: 'rgba(109, 40, 217, 0.1)', color: '#6D28D9' }}
-                  >
-                    H {Math.round(weights.health * 100)}%
-                  </span>
-                  <span
-                    className="text-[10px] font-bold tabular-nums px-2 py-0.5 rounded-full"
-                    style={{ background: 'rgba(146, 64, 14, 0.1)', color: '#92400E' }}
-                  >
-                    N {Math.round(weights.nature * 100)}%
-                  </span>
-                  <span
-                    className="text-[10px] font-bold tabular-nums px-2 py-0.5 rounded-full"
-                    style={{ background: 'rgba(4, 120, 87, 0.1)', color: '#047857' }}
-                  >
-                    I {Math.round(weights.infrastructure * 100)}%
-                  </span>
-                </div>
               </div>
             </div>
           </button>
@@ -121,7 +95,6 @@ export function TravelProfileSelector({ variant = 'list', onSelect }: TravelProf
 export function ActiveProfileBadge({ onEdit }: { onEdit?: () => void }) {
   const { profile } = useTravelProfile();
   const meta = PROFILE_META[profile];
-  const weights = PROFILE_WEIGHTS[profile];
 
   return (
     <button
@@ -136,9 +109,6 @@ export function ActiveProfileBadge({ onEdit }: { onEdit?: () => void }) {
       <span aria-hidden="true">{meta.emoji}</span>
       <span className="text-xs font-bold" style={{ color: 'var(--lokadia-gray-800)' }}>
         {meta.label}
-      </span>
-      <span className="text-[10px] tabular-nums" style={{ color: 'var(--lokadia-gray-500)' }}>
-        ({Math.round(weights.security * 100)}/{Math.round(weights.health * 100)}/{Math.round(weights.nature * 100)}/{Math.round(weights.infrastructure * 100)})
       </span>
       {onEdit && (
         <span className="text-[10px] font-bold" style={{ color: 'var(--lokadia-primary)' }}>

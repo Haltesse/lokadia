@@ -1,7 +1,18 @@
 /**
- * Page Méthodologie Lokascore (anciennement Lokascore).
- * Reflète fidèlement la méthodologie officielle décrite dans le mémoire
- * méthodologique v1.0 déposé en enveloppe e-Soleau INPI.
+ * Page Méthodologie Lokascore — version publique.
+ *
+ * IMPORTANT : la formule exacte de calcul, les pondérations sectorielles
+ * et la matrice de modulation par profil de voyage sont des secrets de
+ * fabrique de Lokadia (déposés en enveloppe e-Soleau INPI). Elles ne sont
+ * PAS exposées sur cette page.
+ *
+ * Ce qui reste public :
+ *   - Le fait que le score est sur 0-100
+ *   - Les 5 niveaux et leur signification
+ *   - Les 4 dimensions évaluées (catégories, pas les poids)
+ *   - La liste des sources officielles utilisées (pour la confiance)
+ *   - Le pipeline général (sans les détails algorithmiques)
+ *   - Les 9 profils de voyage (noms seulement, pas les pondérations)
  */
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
@@ -13,6 +24,7 @@ import {
   ExternalLink,
   Globe,
   Heart,
+  Lock,
   Shield,
   Zap,
   Sparkles,
@@ -22,50 +34,45 @@ import {
   LOKASCORE_LEVELS_ORDER,
   PROFILE_META,
   PROFILE_ORDER,
-  PROFILE_WEIGHTS,
 } from "../lib/lokascore";
 
 export default function LokascorePage() {
   const navigate = useNavigate();
 
-  // Les 4 dimensions documentées (sources officielles cibles)
+  // Les 4 dimensions — on liste les sources cibles SANS révéler les poids
   const dimensions = [
     {
       meta: DIMENSION_META.security,
-      weight: 40,
       detail: "Mesure le niveau de menace pesant sur la personne : terrorisme, criminalité, troubles civils, conflits armés.",
-      breakdown: "MAE France 45% · UK FCDO 25% · US State 20% · AU DFAT 10%",
+      sources: "MAE France · UK FCDO · US State Dept · AU DFAT",
       Icon: Shield,
     },
     {
       meta: DIMENSION_META.health,
-      weight: 25,
       detail: "Mesure les risques sanitaires : épidémies, maladies endémiques, qualité du système de soins.",
-      breakdown: "OMS 40% · ECDC 30% · CDC USA 20% · Lancet HAQ 10%",
+      sources: "OMS · ECDC · CDC USA · Lancet HAQ",
       Icon: Heart,
     },
     {
       meta: DIMENSION_META.nature,
-      weight: 20,
       detail: "Mesure le risque actuel et structurel face aux catastrophes naturelles : séismes, cyclones, inondations.",
-      breakdown: "GDACS 50% · ReliefWeb 30% · NASA EONET 20% · EM-DAT (structurel)",
+      sources: "GDACS · ReliefWeb · NASA EONET · EM-DAT · USGS",
       Icon: AlertTriangle,
     },
     {
       meta: DIMENSION_META.infrastructure,
-      weight: 15,
       detail: "Mesure les conditions logistiques et institutionnelles : état de droit, corruption, sécurité routière, connectivité.",
-      breakdown: "WJP 30% · Transparency Int. 25% · WHO Road 20% · World Bank 15% · GSMA 10%",
+      sources: "WJP · Transparency International · WHO · World Bank · GSMA",
       Icon: Database,
     },
   ];
 
-  // Les étapes du pipeline de calcul
+  // Pipeline conceptuel (sans détails sensibles)
   const pipelineSteps = [
     {
       n: "1",
       title: "Collecte multi-sources",
-      desc: "Récupération des flux temps réel des sources officielles (11+ sources), avec respect des CGU. Stockage en raw dans la table sources_raw.",
+      desc: "Récupération en temps réel des flux de 16+ sources officielles internationales.",
     },
     {
       n: "2",
@@ -74,22 +81,22 @@ export default function LokascorePage() {
     },
     {
       n: "3",
-      title: "Agrégation dimensionnelle",
-      desc: "Calcul de chaque indice S, H, N, I par moyenne pondérée des indicateurs sources internes à la dimension.",
+      title: "Agrégation propriétaire",
+      desc: "Calcul de chaque indice de risque selon l'algorithme Lokadia (méthodologie déposée INPI).",
     },
     {
       n: "4",
-      title: "Composition pondérée par profil",
-      desc: "Lokascore = w_S × S + w_H × H + w_N × N + w_I × I — les poids dépendent du profil de voyage déclaré.",
+      title: "Personnalisation profil",
+      desc: "Le score est adapté au type de voyage que vous préparez, sans collecter de données personnelles.",
     },
     {
       n: "5",
-      title: "Modulation événements critiques",
-      desc: "Application des pénalités temporelles (attentat, PHEIC, catastrophe) avec décroissance exponentielle.",
+      title: "Modulation événementielle",
+      desc: "Pénalité temporaire en cas d'événement critique (attentat, PHEIC, catastrophe rouge).",
     },
   ];
 
-  // Toutes les sources documentées
+  // Sources officielles — afficher TOUTES, c'est notre crédibilité
   const officialSources = [
     { name: "MAE France", full: "Conseils aux voyageurs", url: "https://www.diplomatie.gouv.fr/fr/conseils-aux-voyageurs/", dim: "Sécurité", color: "#1E40AF", bg: "#DBEAFE", Icon: Shield },
     { name: "UK FCDO", full: "Foreign Office Travel Advice", url: "https://www.gov.uk/foreign-travel-advice", dim: "Sécurité", color: "#1E40AF", bg: "#DBEAFE", Icon: Shield },
@@ -101,14 +108,13 @@ export default function LokascorePage() {
     { name: "Lancet HAQ", full: "Healthcare Access & Quality", url: "https://www.healthdata.org/research-analysis/library/measuring-performance-healthcare-access-and-quality-index-195", dim: "Santé", color: "#6D28D9", bg: "#EDE9FE", Icon: Heart },
     { name: "GDACS", full: "Global Disaster Alert (UE+ONU)", url: "https://www.gdacs.org/", dim: "Nature", color: "#92400E", bg: "#FEF3C7", Icon: AlertTriangle },
     { name: "ReliefWeb", full: "OCHA - Humanitarian alerts", url: "https://reliefweb.int/", dim: "Nature", color: "#92400E", bg: "#FEF3C7", Icon: AlertTriangle },
-    { name: "NASA EONET", full: "Natural Event Tracker", url: "https://eonet.gsfc.nasa.gov/", dim: "Nature", color: "#92400E", bg: "#FEF3C7", Icon: AlertTriangle },
+    { name: "USGS", full: "Earthquakes feed", url: "https://earthquake.usgs.gov/", dim: "Nature", color: "#92400E", bg: "#FEF3C7", Icon: AlertTriangle },
     { name: "EM-DAT", full: "Emergency Events Database", url: "https://www.emdat.be/", dim: "Nature", color: "#92400E", bg: "#FEF3C7", Icon: AlertTriangle },
     { name: "WJP", full: "World Justice Project Rule of Law", url: "https://worldjusticeproject.org/rule-of-law-index/", dim: "Infra", color: "#047857", bg: "#D1FAE5", Icon: Database },
     { name: "Transparency Int.", full: "Corruption Perception Index", url: "https://www.transparency.org/en/cpi", dim: "Infra", color: "#047857", bg: "#D1FAE5", Icon: Database },
     { name: "WHO Road Safety", full: "Global Status Report", url: "https://www.who.int/teams/social-determinants-of-health/safety-and-mobility", dim: "Infra", color: "#047857", bg: "#D1FAE5", Icon: Database },
     { name: "World Bank WGI", full: "Worldwide Governance Indicators", url: "https://databank.worldbank.org/source/worldwide-governance-indicators", dim: "Infra", color: "#047857", bg: "#D1FAE5", Icon: Database },
     { name: "GSMA", full: "Mobile Connectivity Index", url: "https://www.mobileconnectivityindex.com/", dim: "Infra", color: "#047857", bg: "#D1FAE5", Icon: Database },
-    { name: "Numbeo", full: "Crime & Safety Index (MVP)", url: "https://www.numbeo.com/crime/", dim: "MVP", color: "#0F4C81", bg: "#DBEAFE", Icon: Database },
   ];
 
   return (
@@ -135,8 +141,8 @@ export default function LokascorePage() {
               Un Nutri-Score du voyage international, en temps réel.
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8 text-white/90">
-              Un seul chiffre <strong>0-100</strong> qui agrège 4 dimensions (sécurité, santé, catastrophes, infrastructure)
-              à partir de 16 sources officielles internationales. Modulé selon votre profil de voyage.
+              Un seul chiffre <strong>0-100</strong> qui agrège <strong>16 sources officielles internationales</strong>
+              {' '}(sécurité, santé, catastrophes, infrastructure). Adapté à votre profil de voyage.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <button
@@ -200,7 +206,7 @@ export default function LokascorePage() {
 
           <div className="grid grid-cols-3 gap-3">
             {[
-              { icon: Zap, title: "Temps réel", desc: "Toutes les 4h" },
+              { icon: Zap, title: "Temps réel", desc: "Mise à jour continue" },
               { icon: Globe, title: "Sources", desc: "16 officielles" },
               { icon: CheckCircle2, title: "Profils", desc: "9 types voyage" },
             ].map((item) => {
@@ -217,7 +223,7 @@ export default function LokascorePage() {
         </div>
       </section>
 
-      {/* ─── 4 DIMENSIONS ─── */}
+      {/* ─── 4 DIMENSIONS (sans poids visibles) ─── */}
       <section className="mx-auto mt-10 max-w-7xl px-5 lg:px-0">
         <p className="text-xs font-black uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
           Architecture
@@ -226,9 +232,8 @@ export default function LokascorePage() {
           Les 4 dimensions du Lokascore
         </h2>
         <p className="mt-2 text-sm max-w-3xl" style={{ color: "var(--lokadia-gray-600)" }}>
-          Le score final est la moyenne pondérée de 4 indices dimensionnels eux-mêmes
-          calculés à partir d'indicateurs sources officiels. Pondérations par défaut :
-          <strong> 40 / 25 / 20 / 15</strong> — modulables selon le profil de voyage.
+          Le score final agrège ces quatre indices à partir de sources officielles vérifiables. L'algorithme
+          de pondération est propriétaire et adapté à chaque profil de voyage.
         </p>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -240,35 +245,27 @@ export default function LokascorePage() {
                 className="rounded-3xl bg-white p-5"
                 style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="flex h-11 w-11 items-center justify-center rounded-xl"
-                      style={{ background: `${dim.meta.color}15` }}
-                    >
-                      <Icon className="h-5 w-5" style={{ color: dim.meta.color }} />
-                    </span>
-                    <div>
-                      <h3 className="font-black" style={{ color: "var(--lokadia-gray-900)" }}>
-                        {dim.meta.label}
-                      </h3>
-                      <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: dim.meta.color }}>
-                        Indice {dim.meta.short}
-                      </p>
-                    </div>
-                  </div>
+                <div className="flex items-start gap-3 mb-3">
                   <span
-                    className="rounded-full px-3 py-1 text-sm font-black text-white tabular-nums"
-                    style={{ background: dim.meta.color }}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl"
+                    style={{ background: `${dim.meta.color}15` }}
                   >
-                    {dim.weight}%
+                    <Icon className="h-5 w-5" style={{ color: dim.meta.color }} />
                   </span>
+                  <div>
+                    <h3 className="font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                      {dim.meta.label}
+                    </h3>
+                    <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: dim.meta.color }}>
+                      Sources officielles
+                    </p>
+                  </div>
                 </div>
                 <p className="text-sm leading-relaxed mb-2" style={{ color: "var(--lokadia-gray-700)" }}>
                   {dim.detail}
                 </p>
                 <p className="text-[11px] font-semibold" style={{ color: "var(--lokadia-gray-500)" }}>
-                  {dim.breakdown}
+                  {dim.sources}
                 </p>
               </div>
             );
@@ -276,33 +273,40 @@ export default function LokascorePage() {
         </div>
       </section>
 
-      {/* ─── FORMULE OFFICIELLE ─── */}
+      {/* ─── PROPRIÉTÉ INTELLECTUELLE — remplace l'ancienne formule ─── */}
       <section className="mx-auto mt-10 max-w-7xl px-5 lg:px-0">
         <div
           className="rounded-[32px] p-6 lg:p-8"
           style={{ background: "var(--gradient-primary)", color: "white" }}
         >
-          <p className="text-xs font-black uppercase tracking-wide opacity-80">
-            Formule officielle
-          </p>
-          <h2 className="mt-2 text-3xl font-black tracking-tight">
-            Lokascore(d, p, t)
-          </h2>
-          <div className="mt-6 rounded-2xl bg-white/10 backdrop-blur p-5 font-mono text-sm md:text-base overflow-x-auto">
-            <code className="block whitespace-nowrap">
-              Lokascore = w<sub>S</sub>(p) × S(d,t) + w<sub>H</sub>(p) × H(d,t) + w<sub>N</sub>(p) × N(d,t) + w<sub>I</sub>(p) × I(d,t)
-            </code>
-          </div>
-          <div className="mt-4 grid gap-2 text-sm opacity-90">
-            <p><strong>d</strong> : destination géographique (pays, région, ville)</p>
-            <p><strong>p</strong> : type de voyage déclaré par l'utilisateur (8 profils)</p>
-            <p><strong>t</strong> : instant de calcul (mise à jour toutes les 4 heures)</p>
-            <p><strong>w<sub>X</sub>(p)</strong> : pondération sectorielle modulée par profil</p>
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
+              <Lock className="h-6 w-6" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-black uppercase tracking-wide opacity-80">
+                Algorithme propriétaire
+              </p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight lg:text-3xl">
+                Méthodologie déposée à l'INPI
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed opacity-95 max-w-3xl">
+                La formule exacte de calcul, les pondérations sectorielles, la matrice de modulation par profil
+                de voyage et les algorithmes de normalisation sont des <strong>secrets de fabrique</strong> de
+                Lokadia. Ils sont protégés par un dépôt e-Soleau INPI ainsi que par des mécanismes
+                contractuels de cession de droits.
+              </p>
+              <p className="mt-3 text-xs leading-relaxed opacity-80 max-w-3xl">
+                Les <strong>sources publiques</strong> que nous agrégeons restent évidemment vérifiables ci-dessous —
+                c'est l'agrégation, la pondération et la modulation contextuelle qui constituent la valeur
+                ajoutée propriétaire de Lokadia.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ─── PIPELINE 5 ÉTAPES ─── */}
+      {/* ─── PIPELINE conceptuel ─── */}
       <section className="mx-auto mt-10 grid max-w-7xl gap-6 px-5 lg:grid-cols-[0.95fr_1.05fr] lg:px-0">
         <div
           className="rounded-[32px] bg-white p-6 lg:p-8"
@@ -312,7 +316,7 @@ export default function LokascorePage() {
             Pipeline
           </p>
           <h2 className="mt-2 text-3xl font-black tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
-            Comment le score est calculé
+            Comment le score est produit
           </h2>
           <div className="mt-6 space-y-4">
             {pipelineSteps.map((step) => (
@@ -340,7 +344,7 @@ export default function LokascorePage() {
           </div>
         </div>
 
-        {/* ─── PROFILS DE VOYAGE ─── */}
+        {/* ─── PROFILS DE VOYAGE (noms seulement, pas les pondérations) ─── */}
         <div
           className="rounded-[32px] bg-white p-6 lg:p-8"
           style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}
@@ -352,32 +356,27 @@ export default function LokascorePage() {
             9 profils de voyage
           </h2>
           <p className="mt-2 text-sm" style={{ color: "var(--lokadia-gray-600)" }}>
-            Les pondérations w<sub>S</sub>, w<sub>H</sub>, w<sub>N</sub>, w<sub>I</sub> dépendent
-            du profil de voyage. <strong>Aucune donnée personnelle n'est demandée</strong> (Privacy by
-            Design, RGPD art. 25).
+            Le calcul du score est adapté au type de voyage que vous préparez.
+            <strong> Aucune donnée personnelle n'est demandée</strong> (Privacy by Design, RGPD art. 25).
           </p>
 
           <div className="mt-5 space-y-2">
             {PROFILE_ORDER.map((id) => {
               const meta = PROFILE_META[id];
-              const w = PROFILE_WEIGHTS[id];
               return (
                 <div
                   key={id}
-                  className="flex items-center justify-between gap-3 rounded-2xl border p-3"
+                  className="flex items-center gap-3 rounded-2xl border p-3"
                   style={{ borderColor: "var(--lokadia-gray-100)" }}
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span aria-hidden="true">{meta.emoji}</span>
-                    <span className="text-sm font-black truncate" style={{ color: "var(--lokadia-gray-900)" }}>
+                  <span className="text-lg flex-shrink-0" aria-hidden="true">{meta.emoji}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-black" style={{ color: "var(--lokadia-gray-900)" }}>
                       {meta.label}
-                    </span>
-                  </div>
-                  <div className="flex gap-1 flex-shrink-0">
-                    <span className="text-[10px] font-black tabular-nums px-1.5 py-0.5 rounded" style={{ background: "rgba(30, 64, 175, 0.1)", color: "#1E40AF" }}>S{Math.round(w.security * 100)}</span>
-                    <span className="text-[10px] font-black tabular-nums px-1.5 py-0.5 rounded" style={{ background: "rgba(109, 40, 217, 0.1)", color: "#6D28D9" }}>H{Math.round(w.health * 100)}</span>
-                    <span className="text-[10px] font-black tabular-nums px-1.5 py-0.5 rounded" style={{ background: "rgba(146, 64, 14, 0.1)", color: "#92400E" }}>N{Math.round(w.nature * 100)}</span>
-                    <span className="text-[10px] font-black tabular-nums px-1.5 py-0.5 rounded" style={{ background: "rgba(4, 120, 87, 0.1)", color: "#047857" }}>I{Math.round(w.infrastructure * 100)}</span>
+                    </p>
+                    <p className="text-[11px] leading-snug" style={{ color: "var(--lokadia-gray-600)" }}>
+                      {meta.description}
+                    </p>
                   </div>
                 </div>
               );
@@ -394,18 +393,17 @@ export default function LokascorePage() {
         </div>
       </section>
 
-      {/* ─── SOURCES OFFICIELLES ─── */}
+      {/* ─── SOURCES OFFICIELLES (visibles pour la confiance) ─── */}
       <section className="mx-auto mt-10 max-w-7xl px-5 lg:px-0">
         <p className="text-xs font-black uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
           Sources vérifiables
         </p>
         <h2 className="mt-2 text-3xl font-black tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
-          16+ organismes officiels accessibles
+          17 organismes officiels accessibles
         </h2>
         <p className="mt-2 text-sm max-w-3xl" style={{ color: "var(--lokadia-gray-600)" }}>
-          Chaque source est librement consultable. Le multi-sourcing systématique
-          (au minimum 3 sources alternatives par catégorie) est une règle d'architecture
-          non négociable, documentée dans le dossier Protection &amp; Résilience.
+          Chaque source est librement consultable et vérifiable. Le multi-sourcing systématique est une règle
+          d'architecture qui garantit la robustesse du Lokascore en cas d'indisponibilité d'une source.
         </p>
 
         <div className="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -433,37 +431,11 @@ export default function LokascorePage() {
                   {source.full}
                 </p>
                 <p className="mt-1.5 text-[10px] font-bold" style={{ color: "var(--lokadia-gray-500)" }}>
-                  Dim. {source.dim}
+                  Catégorie {source.dim}
                 </p>
               </a>
             );
           })}
-        </div>
-      </section>
-
-      {/* ─── DISCLAIMER MVP ─── */}
-      <section className="mx-auto mt-10 max-w-7xl px-5 lg:px-0">
-        <div
-          className="rounded-3xl p-5"
-          style={{
-            background: "var(--lokadia-info-bg)",
-            border: "1px solid var(--lokadia-gray-100)",
-          }}
-        >
-          <div className="flex items-start gap-3">
-            <Sparkles className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: "var(--lokadia-primary)" }} />
-            <div>
-              <h3 className="text-sm font-black mb-1" style={{ color: "var(--lokadia-gray-900)" }}>
-                MVP en cours — intégration progressive des sources
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: "var(--lokadia-gray-700)" }}>
-                Pendant la phase de lancement, les 4 dimensions sont actuellement approximées via les sous-indices Numbeo
-                (safetyIndex, healthCareIndex, pollutionIndex, qualityOfLifeIndex). L'architecture multi-sources documentée
-                (MAE, OMS, GDACS, WJP…) est en cours d'intégration dimension par dimension. La méthodologie complète est déposée
-                en enveloppe e-Soleau INPI.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
     </main>

@@ -323,7 +323,7 @@ async function fetchLokascoreForDestination(destinationId: string): Promise<numb
       else if (trace.hasAnyOfficialSource) badge = `🟢 officielles uniquement${live}`;
       else if (numbeoOk) badge = '🔵 Numbeo uniquement';
       else badge = '⚠️ fallback estimation';
-      console.log(`✅ Lokascore ${destinationId} [${badge}]: ${compositeScore}/100 (S=${Math.round(dims.security)} H=${Math.round(dims.health)} N=${Math.round(dims.nature)} I=${Math.round(dims.infrastructure)})`);
+      console.log(`✅ Lokascore ${destinationId} [${badge}]: ${compositeScore}/100`);
 
       return compositeScore;
     } catch (error) {

@@ -69,7 +69,7 @@ export function LokascoreBreakdown({
       <div className="flex items-start justify-between mb-4 gap-3">
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: 'var(--lokadia-primary)' }}>
-            Décomposition Lokascore
+            Aperçu par catégorie
           </p>
           <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--lokadia-gray-600)' }}>
             <span className="font-bold">{profileMeta.emoji} {profileMeta.label}</span>
@@ -127,10 +127,9 @@ export function LokascoreBreakdown({
 
       {/* Barres par dimension */}
       <div className="space-y-2.5">
-        {rows.map(({ key, weight, value }) => {
+        {rows.map(({ key, value }) => {
           const meta = DIMENSION_META[key];
           const intValue = Math.round(value);
-          const intWeight = Math.round(weight * 100);
           const lvl = getLokascoreLevel(intValue);
           return (
             <div key={key}>
@@ -139,12 +138,6 @@ export function LokascoreBreakdown({
                   <span className="text-xs" aria-hidden="true">{meta.emoji}</span>
                   <span className="text-xs font-bold truncate" style={{ color: 'var(--lokadia-gray-700)' }}>
                     {meta.label}
-                  </span>
-                  <span
-                    className="text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-full flex-shrink-0"
-                    style={{ background: 'var(--lokadia-gray-100)', color: 'var(--lokadia-gray-600)' }}
-                  >
-                    {intWeight}%
                   </span>
                 </div>
                 <span
@@ -168,24 +161,26 @@ export function LokascoreBreakdown({
               </div>
               {!compact && (
                 <div className="mt-1.5">
-                  {/* Phase 3 : sources réellement utilisées vs cibles */}
+                  {/* Sources officielles utilisées — NOMS uniquement (les valeurs et
+                      pondérations individuelles sont du secret de fabrique). */}
                   {sourceTrace && sourceTrace[key].hasOfficialSource ? (
                     <div className="flex items-center gap-1 flex-wrap">
                       <CheckCircle2 className="h-2.5 w-2.5" style={{ color: '#15803d' }} />
-                      {sourceTrace[key].contributions.map((c) => (
-                        <span
-                          key={c.id}
-                          className="text-[9px] font-bold tabular-nums px-1.5 py-0.5 rounded"
-                          style={{ background: `${meta.color}15`, color: meta.color }}
-                          title={`${c.label} : ${Math.round(c.value)}/100 (poids ${Math.round(c.weight * 100)}%)`}
-                        >
-                          {c.label} · {Math.round(c.value)}
-                        </span>
-                      ))}
+                      {sourceTrace[key].contributions
+                        .filter((c) => c.id !== 'fallback' && !c.id.startsWith('numbeo'))
+                        .map((c) => (
+                          <span
+                            key={c.id}
+                            className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                            style={{ background: `${meta.color}15`, color: meta.color }}
+                          >
+                            {c.label}
+                          </span>
+                        ))}
                     </div>
                   ) : (
                     <p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>
-                      Sources cibles : {meta.sources.join(' · ')}
+                      Sources : {meta.sources.join(' · ')}
                     </p>
                   )}
                 </div>
@@ -209,19 +204,16 @@ export function LokascoreBreakdown({
             <>
               <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" style={{ color: '#15803d' }} />
               <p className="text-[10px] leading-relaxed" style={{ color: 'var(--lokadia-gray-700)' }}>
-                <strong style={{ color: '#15803d' }}>Phase 3 active :</strong> le Lokascore de cette destination utilise
-                des sources officielles réelles (MAE France, UK FCDO, US State, Lancet HAQ,
-                WJP Rule of Law, Transparency CPI, World Bank Stability, EM-DAT…). Snapshot mis à jour trimestriellement
-                pour les advisories.
+                <strong style={{ color: '#15803d' }}>Score officiel</strong> — agrégation propriétaire
+                de sources internationales vérifiables. Mise à jour en continu.
               </p>
             </>
           ) : (
             <>
               <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--lokadia-primary)' }} />
               <p className="text-[10px] leading-relaxed" style={{ color: 'var(--lokadia-gray-700)' }}>
-                <strong>Fallback Numbeo :</strong> ce pays n'est pas encore dans la base de données
-                officielle Phase 3. Le score est estimé via les sous-indices Numbeo
-                (safety, healthcare, pollution, quality of life).
+                <strong>Score estimé</strong> — cette destination n'est pas encore dans notre catalogue
+                de pays curés. La fiche complète arrive bientôt.
               </p>
             </>
           )}

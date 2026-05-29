@@ -227,7 +227,7 @@ export async function fetchNumbeoSafety(destinationId: string): Promise<NumbeoSa
     }
 
     const data: NumbeoApiResponse = await response.json();
-    console.log("📦 Données JSON reçues:", data);
+    // (log JSON brut retiré pour ne pas exposer les indices en console publique)
 
     // Transformer les données Numbeo en format interne
     const safetyIndex = data.safety_index ?? data.safety_scale;
@@ -237,14 +237,8 @@ export async function fetchNumbeoSafety(destinationId: string): Promise<NumbeoSa
 
     const crimeIndex = data.crime_index ?? (100 - safetyIndex);
 
-    console.log('📊 Données brutes Numbeo:', {
-      safety_index: data.safety_index,
-      safety_scale: data.safety_scale,
-      crime_index: data.crime_index,
-      safetyIndex_calculated: safetyIndex,
-      crimeIndex_calculated: crimeIndex,
-      source: data.source || 'unknown',
-    });
+    // Logs détaillés retirés en production pour ne pas exposer les indices
+    // bruts source qui font partie de la méthodologie propriétaire.
 
     const safetyData: NumbeoSafetyData = {
       cityName: cityData.city,
