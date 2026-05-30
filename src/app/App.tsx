@@ -16,6 +16,8 @@ import LandingScreen from "./screens/LandingScreen";
 import LokascorePage from "./screens/LokascorePage";
 import ProPage from "./screens/ProPage";
 import ProDemoScreen from "./screens/ProDemoScreen";
+import BookingScreen from "./screens/BookingScreen";
+import CheckoutScreen from "./screens/CheckoutScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
 import { FavoritesScreen } from "./screens/FavoritesScreen";
 import { AllDestinationsScreen } from "./screens/AllDestinationsScreen";
@@ -25,6 +27,7 @@ import { CurrencyProvider } from "./context/CurrencyContext";
 import { AuthProvider } from "./context/AuthContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { TravelProfileProvider } from "./context/TravelProfileContext";
+import { CartProvider } from "./lib/cart";
 import { AutoTranslate } from "./components/AutoTranslate";
 import { TranslationIndicator } from "./components/TranslationIndicator";
 import { LokascoreCacheInitializer } from "./components/LokascoreCacheInitializer";
@@ -108,6 +111,7 @@ function App() {
           <LanguageProvider>
             <CurrencyProvider>
             <TravelProfileProvider>
+            <CartProvider>
               {/* Traduction automatique de toute l'application */}
               <AutoTranslate />
               <TranslationIndicator />
@@ -131,6 +135,8 @@ function App() {
                 <Route path="/lokascore" element={<LokascorePage />} />
                 <Route path="/pro" element={<ProPage />} />
                 <Route path="/pro/demo" element={<ProDemoScreen />} />
+                <Route path="/booking/:destinationId" element={<BookingScreen />} />
+                <Route path="/checkout" element={<CheckoutScreen />} />
                 <Route path="/global-home" element={<GlobalHome />} />
                 <Route path="/search" element={<SearchScreen />} />
                 <Route path="/destination-count" element={<DestinationCountScreen />} />
@@ -152,6 +158,7 @@ function App() {
                 </Route>
               </Routes>
             </MemoryRouter>
+            </CartProvider>
             </TravelProfileProvider>
             </CurrencyProvider>
           </LanguageProvider>

@@ -326,6 +326,14 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
               ✓
             </button>
           </div>
+          {/* Réservation in-app : vol, hôtel, train, e-SIM, assurance, activités */}
+          <button
+            onClick={() => navigate(`/booking/${destination.id}`)}
+            className="w-full mb-3 py-3 rounded-xl font-bold text-white transition-transform active:scale-98 flex items-center justify-center gap-2"
+            style={{ background: "linear-gradient(135deg, #10B981, #059669)" }}
+          >
+            🧳 Réserver tout mon voyage
+          </button>
           <button
             onClick={handleDownload}
             disabled={downloadProgress !== null}
