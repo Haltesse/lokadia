@@ -16,7 +16,12 @@ import { processPayment, type PaymentDetails } from '../lib/paymentService';
 export default function CheckoutScreen() {
   const navigate = useNavigate();
   const { items, remove, setQty, clear, total, count } = useCart();
-  const [details, setDetails] = useState<PaymentDetails>({ fullName: '', email: '', cardNumber: '', expiry: '', cvc: '' });
+  // Pré-rempli avec une carte de test pour une démo investisseur fluide
+  // (carte ne finissant pas par 0000 → paiement accepté en simulation).
+  const [details, setDetails] = useState<PaymentDetails>({
+    fullName: 'Tanguy Fillon', email: 'demo@lokadia.fr',
+    cardNumber: '4242 4242 4242 4242', expiry: '12/28', cvc: '123',
+  });
   const [status, setStatus] = useState<'idle' | 'paying' | 'success' | 'error'>('idle');
   const [error, setError] = useState('');
   const [reference, setReference] = useState('');
@@ -143,7 +148,7 @@ export default function CheckoutScreen() {
 
           <div className="flex items-center justify-center gap-1.5 text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>
             <ShieldCheck className="h-3.5 w-3.5" style={{ color: '#059669' }} />
-            Paiement sécurisé · démo (aucun débit réel)
+            Paiement sécurisé · mode démo (carte de test pré-remplie, aucun débit réel)
           </div>
         </aside>
       </div>
