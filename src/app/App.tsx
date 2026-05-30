@@ -129,6 +129,7 @@ function App() {
                 <Route path="/" element={<LandingScreen />} />
                 <Route path="/lokascore" element={<LokascorePage />} />
                 <Route path="/pro" element={<ProPage />} />
+                <Route path="/pro/demo" element={<ProDemoScreen />} />
                 <Route path="/global-home" element={<GlobalHome />} />
                 <Route path="/search" element={<SearchScreen />} />
                 <Route path="/destination-count" element={<DestinationCountScreen />} />

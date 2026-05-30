@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { useNavigate } from "react-router";
 import {
   ArrowRight,
   Briefcase,
@@ -7,6 +8,7 @@ import {
   CheckCircle2,
   GraduationCap,
   Heart,
+  LayoutDashboard,
   Mail,
   Plane,
   Shield,
@@ -14,6 +16,7 @@ import {
 import { registerLandingSignup } from "../lib/landingSignupService";
 
 export default function ProPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -173,6 +176,14 @@ export default function ProPage() {
               <p className="mt-5 max-w-2xl text-base leading-7 text-white/90 lg:text-lg">
                 Les offres Pro existantes, réorganisées pour un usage ordinateur : navigation latérale, détail plein écran et prise de contact toujours visible.
               </p>
+              <button
+                onClick={() => navigate("/pro/demo")}
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-black shadow-lg transition-transform hover:-translate-y-0.5"
+                style={{ color: "var(--lokadia-primary)" }}
+              >
+                <LayoutDashboard className="h-4 w-4" /> Voir la démo du tableau de bord Pro
+                <ArrowRight className="h-4 w-4" />
+              </button>
               <div className="mt-8 grid max-w-2xl grid-cols-3 gap-3">
                 {[
                   { label: "Offres", value: offers.length },
@@ -304,10 +315,18 @@ export default function ProPage() {
                     className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-black text-white"
                     style={{ background: "var(--gradient-primary)" }}
                   >
-                    {status === "loading" ? "Envoi..." : "Demander une démo"}
+                    {status === "loading" ? "Envoi..." : "Être recontacté"}
                     {status !== "loading" && <ArrowRight className="h-4 w-4" />}
                   </button>
                   {status === "error" && <p className="text-sm font-semibold text-red-600">Erreur, réessaie dans un instant.</p>}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/pro/demo")}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 py-4 text-sm font-black"
+                    style={{ borderColor: "var(--lokadia-primary)", color: "var(--lokadia-primary)" }}
+                  >
+                    <LayoutDashboard className="h-4 w-4" /> Explorer la démo maintenant
+                  </button>
                 </form>
               )}
             </aside>
