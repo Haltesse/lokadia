@@ -24,6 +24,7 @@ export default function ProPage() {
 
   const offers = [
     {
+      id: "univ",
       icon: GraduationCap,
       title: "Écoles & universités",
       price: "500 - 2 000 €",
@@ -38,6 +39,7 @@ export default function ProPage() {
       bg: "rgba(10, 132, 255, 0.08)",
     },
     {
+      id: "ngo",
       icon: Heart,
       title: "ONG & humanitaires",
       price: "1 500 - 4 000 €",
@@ -52,6 +54,7 @@ export default function ProPage() {
       bg: "rgba(239, 68, 68, 0.08)",
     },
     {
+      id: "insurer",
       icon: Building2,
       title: "Assureurs (API white-label)",
       price: "5 000 - 20 000 €",
@@ -67,6 +70,7 @@ export default function ProPage() {
       featured: true,
     },
     {
+      id: "airline",
       icon: Plane,
       title: "Compagnies aériennes",
       price: "8 000 - 25 000 €",
@@ -81,6 +85,7 @@ export default function ProPage() {
       bg: "rgba(245, 158, 11, 0.08)",
     },
     {
+      id: "mice",
       icon: Briefcase,
       title: "MICE & voyages affaires",
       price: "2 000 - 6 000 €",
@@ -177,7 +182,7 @@ export default function ProPage() {
                 Les offres Pro existantes, réorganisées pour un usage ordinateur : navigation latérale, détail plein écran et prise de contact toujours visible.
               </p>
               <button
-                onClick={() => navigate("/pro/demo")}
+                onClick={() => navigate(`/pro/demo?offer=${activeOffer.id}`)}
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-black shadow-lg transition-transform hover:-translate-y-0.5"
                 style={{ color: "var(--lokadia-primary)" }}
               >
@@ -230,6 +235,17 @@ export default function ProPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Démo dédiée à l'offre sélectionnée */}
+              <button
+                onClick={() => navigate(`/pro/demo?offer=${activeOffer.id}`)}
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-black text-white transition-transform hover:-translate-y-0.5"
+                style={{ background: activeOffer.color }}
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                Voir la démo « {activeOffer.title} »
+                <ArrowRight className="h-4 w-4" />
+              </button>
 
               <div className="mt-6 overflow-hidden rounded-2xl border" style={{ borderColor: "var(--lokadia-gray-100)" }}>
                 <div className="grid grid-cols-[1.2fr_0.8fr_0.8fr] bg-gray-50 px-4 py-3 text-xs font-black uppercase tracking-wide" style={{ color: "var(--lokadia-gray-500)" }}>
@@ -321,11 +337,11 @@ export default function ProPage() {
                   {status === "error" && <p className="text-sm font-semibold text-red-600">Erreur, réessaie dans un instant.</p>}
                   <button
                     type="button"
-                    onClick={() => navigate("/pro/demo")}
+                    onClick={() => navigate(`/pro/demo?offer=${activeOffer.id}`)}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 py-4 text-sm font-black"
                     style={{ borderColor: "var(--lokadia-primary)", color: "var(--lokadia-primary)" }}
                   >
-                    <LayoutDashboard className="h-4 w-4" /> Explorer la démo maintenant
+                    <LayoutDashboard className="h-4 w-4" /> Explorer la démo « {activeOffer.title} »
                   </button>
                 </form>
               )}
