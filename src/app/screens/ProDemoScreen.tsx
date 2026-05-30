@@ -22,6 +22,7 @@ import {
   Siren, Smartphone, Sparkles, TrendingUp, Users, Zap,
 } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { ProDemoMap, type DemoMapPoint } from '../components/ProDemoMap';
 import { fetchLokascore, type LokascoreApiResult } from '../lib/lokascoreApi';
 import { getLokascoreLevel, type TravelProfile } from '../lib/lokascore';
 import {
@@ -267,6 +268,22 @@ export default function ProDemoScreen() {
     return { total, groups, atRisk };
   }, [offer, scores, sim]);
 
+  // Points carte : agrégation par destination (effectif, noms, score, alerte)
+  const mapPoints = useMemo<DemoMapPoint[]>(() => {
+    const byDest = new Map<string, { city: string; count: number; names: string[] }>();
+    for (const p of allPeople) {
+      const e = byDest.get(p.destinationId) ?? { city: p.city, count: 0, names: [] };
+      e.count += p.count ?? 1;
+      e.names.push(p.name);
+      byDest.set(p.destinationId, e);
+    }
+    return [...byDest.entries()].map(([destinationId, e]) => ({
+      destinationId, city: e.city, count: e.count, names: e.names,
+      score: displayScore(destinationId),
+      affected: sim?.destinationId === destinationId,
+    }));
+  }, [allPeople, scores, sim]);
+
   // Flux d'alertes : simulation en tête, puis alertes réelles du périmètre
   const feed = useMemo(() => {
     const isos = new Set(allPeople.map((p) => DESTINATION_TO_COUNTRY_ISO[p.destinationId]).filter(Boolean));
@@ -403,6 +420,15 @@ export default function ProDemoScreen() {
               <p className="text-[11px] font-semibold" style={{ color: 'var(--lokadia-gray-500)' }}>{k.label}</p>
             </div>
           ))}
+        </div>
+
+        {/* ─── CARTE MONDIALE (salle de contrôle) ─── */}
+        <div className="mt-6">
+          <h2 className="mb-3 flex items-center gap-2 text-lg font-black" style={{ color: 'var(--lokadia-gray-900)' }}>
+            <MapPin className="h-5 w-5" style={{ color: offer.color }} /> Carte de suivi mondiale
+            {sim && <span className="rounded-full px-2 py-0.5 text-[10px] font-black text-white animate-pulse" style={{ background: '#dc2626' }}>CRISE EN COURS</span>}
+          </h2>
+          <ProDemoMap points={mapPoints} accent={offer.color} />
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
