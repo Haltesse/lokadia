@@ -15,6 +15,7 @@ import { Premium } from "./screens/Premium";
 import LandingScreen from "./screens/LandingScreen";
 import LokascorePage from "./screens/LokascorePage";
 import ProPage from "./screens/ProPage";
+import ProDemoScreen from "./screens/ProDemoScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
 import { FavoritesScreen } from "./screens/FavoritesScreen";
 import { AllDestinationsScreen } from "./screens/AllDestinationsScreen";
