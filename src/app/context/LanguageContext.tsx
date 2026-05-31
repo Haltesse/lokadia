@@ -48,12 +48,34 @@ const saveCacheToStorage = () => {
   }
 };
 
+// Sauvegarde débouncée (évite d'écrire localStorage à chaque mot traduit)
+let saveCacheTimer: ReturnType<typeof setTimeout> | null = null;
+const scheduleSaveCache = () => {
+  if (saveCacheTimer) return;
+  saveCacheTimer = setTimeout(() => {
+    saveCacheTimer = null;
+    saveCacheToStorage();
+  }, 1500);
+};
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // Version du cache pour forcer les re-renders
   const [cacheVersion, setCacheVersion] = useState(0);
-  
+
   const [language, setLanguageState] = useState<Language>('fr');
   const [isTranslating, setIsTranslating] = useState(false);
+
+  // Débounce du bump de cacheVersion : au lieu de re-rendre toute l'app à
+  // CHAQUE mot traduit (cause du freeze), on ne re-rend qu'une fois par salve
+  // (toutes les ~600 ms max). Borne le nombre de re-renders globaux.
+  const cacheBumpTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleCacheBump = React.useCallback(() => {
+    if (cacheBumpTimer.current) return;
+    cacheBumpTimer.current = setTimeout(() => {
+      cacheBumpTimer.current = null;
+      setCacheVersion((v) => v + 1);
+    }, 600);
+  }, []);
   
   // Initialiser la langue et charger le cache au montage
   useEffect(() => {
@@ -147,9 +169,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
           const translated = data.responseData.translatedText;
           console.log('✅ Traduit:', text.substring(0, 30), '→', translated.substring(0, 30));
           translationCache.set(cacheKey, translated);
-          saveCacheToStorage();
-          // Incrémenter la version du cache pour forcer les re-renders
-          setCacheVersion(prev => prev + 1);
+          scheduleSaveCache();
+          // Bump débouncé (1 re-render par salve, pas par mot)
+          scheduleCacheBump();
         } else if (data.responseStatus === 403) {
           console.warn('⚠️ Limite API atteinte, réessayera plus tard');
           translationCache.delete(cacheKey);
