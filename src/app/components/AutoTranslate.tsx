@@ -1,182 +1,102 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useLanguageSafe } from '../context/LanguageContext';
+import { translateBatch } from '../lib/translationService';
 
 /**
- * Composant qui traduit automatiquement TOUT le contenu texte de l'application
- * Scanne le DOM et traduit tous les textes visibles via l'API MyMemory
+ * AutoTranslate — traduit le texte visible de la page dans la langue choisie.
+ *
+ * Corrections clés vs version précédente (qui faisait planter la page) :
+ *   1. ANTI-BOUCLE : on déconnecte le MutationObserver pendant qu'on écrit
+ *      dans le DOM, et chaque nœud traduit est marqué (WeakSet) pour ne
+ *      jamais être re-traité → plus de boucle infinie.
+ *   2. CONCURRENCE LIMITÉE : translateBatch utilise un pool (max 4 req/s) au
+ *      lieu de 200 requêtes parallèles.
+ *   3. DEBOUNCE robuste : un seul timer partagé, ré-armé proprement.
+ *   4. Cache persistant (localStorage) côté service.
  */
 export function AutoTranslate() {
-  const context = useLanguageSafe();
-  
-  // Si le contexte n'est pas disponible (hot-reload), ne rien faire
-  if (!context) return null;
-  
-  const { language, translate, cacheVersion } = context;
-  
-  const translatedNodes = useRef(new Set<Node>());
-  const originalTexts = useRef(new Map<Node, string>());
-  const observerRef = useRef<MutationObserver | null>(null);
-  const translateCountRef = useRef(0);
+  const { language } = useLanguageSafe();
 
   useEffect(() => {
-    console.log('🌍 AutoTranslate: Langue changée →', language);
-    
-    if (language === 'fr') {
-      // Si français, restaurer les textes originaux
-      console.log('🇫🇷 Restauration des textes originaux français');
-      originalTexts.current.forEach((originalText, node) => {
-        if (node.nodeType === Node.TEXT_NODE && node.textContent !== originalText) {
-          node.textContent = originalText;
-        }
-      });
-      translatedNodes.current.clear();
-      translateCountRef.current = 0;
-      return;
-    }
+    if (language === 'fr') return; // langue source, rien à traduire
 
-    translateCountRef.current = 0;
+    let cancelled = false;
+    let debounceTimer: number | null = null;
+    let running = false;
+    // Nœuds déjà traduits (ou en cours) → jamais re-traités
+    const handled = new WeakSet<Node>();
+    const SELECTOR = 'h1,h2,h3,h4,h5,h6,p,a,button,label,li';
 
-    // Fonction pour traduire un nœud de texte
-    const translateTextNode = (node: Node) => {
-      if (node.nodeType !== Node.TEXT_NODE) return;
-      
-      const text = node.textContent?.trim();
-      if (!text || text.length < 2) return;
-      
-      // Ignorer UNIQUEMENT les textes qui sont juste des chiffres/symboles purs
-      if (/^[\d\s.,!?;:()\-'"%€$£¥@#&*+=/<>[\]{}|\\^~`]+$/.test(text)) return;
-      
-      // Sauvegarder le texte original si pas déjà fait
-      if (!originalTexts.current.has(node)) {
-        originalTexts.current.set(node, text);
-      }
-      
-      // Marquer comme détecté
-      translateCountRef.current++;
-      
-      // Traduire immédiatement (la fonction translate gère le cache)
-      const translated = translate(text);
-      
-      // Mettre à jour le DOM si la traduction est différente
-      if (translated !== text && node.textContent !== translated) {
-        node.textContent = translated;
-        translatedNodes.current.add(node);
-        console.log('📝 Texte traduit:', text.substring(0, 30), '→', translated.substring(0, 30));
-      }
-    };
+    let observer: MutationObserver | null = null;
 
-    // Fonction pour parcourir récursivement tous les nœuds de texte
-    const walkAndTranslate = (node: Node) => {
-      // Ignorer certains éléments
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const element = node as Element;
-        const tagName = element.tagName?.toLowerCase();
-        
-        // Ignorer les scripts, styles, et éléments de code
-        if (['script', 'style', 'code', 'pre', 'svg', 'path'].includes(tagName)) {
-          return;
-        }
-        
-        // Ignorer les input/textarea values (géré différemment)
-        if (['input', 'textarea'].includes(tagName)) {
-          const input = element as HTMLInputElement;
-          if (input.placeholder) {
-            const translated = translate(input.placeholder);
-            if (translated !== input.placeholder) {
-              input.placeholder = translated;
+    async function translateNewText() {
+      if (cancelled || running) return;
+      running = true;
+      try {
+        // 1. Collecte des nœuds texte non encore traités
+        const elements = Array.from(document.querySelectorAll(SELECTOR));
+        const pending: { node: Node; text: string }[] = [];
+        for (const el of elements) {
+          // Ignore les zones à ne pas traduire (code, champs de saisie, etc.)
+          if ((el as HTMLElement).closest('[data-no-translate],input,textarea,code,pre')) continue;
+          for (const node of Array.from(el.childNodes)) {
+            if (node.nodeType !== Node.TEXT_NODE || handled.has(node)) continue;
+            const text = node.textContent?.trim();
+            if (text && text.length > 1 && !/^[\d\s€$£%.,:/-]+$/.test(text)) {
+              handled.add(node); // marqué AVANT l'appel réseau → pas de doublon
+              pending.push({ node, text });
             }
           }
-          return;
         }
-      }
+        if (pending.length === 0) return;
 
-      // Traduire les nœuds de texte directs
-      if (node.nodeType === Node.TEXT_NODE) {
-        translateTextNode(node);
-      } else if (node.childNodes.length > 0) {
-        // Parcourir les enfants
-        Array.from(node.childNodes).forEach(walkAndTranslate);
-      }
-    };
+        // 2. Traduction par lots de 60 (le service gère la concurrence interne)
+        const LOT = 60;
+        for (let i = 0; i < pending.length; i += LOT) {
+          if (cancelled) return;
+          const slice = pending.slice(i, i + LOT);
+          const translations = await translateBatch(slice.map((s) => s.text), language);
+          if (cancelled) return;
 
-    // Traduire tout le document
-    const translateAll = () => {
-      const root = document.getElementById('root');
-      if (root) {
-        walkAndTranslate(root);
-        console.log(`📝 ${translateCountRef.current} textes détectés pour traduction`);
-      }
-    };
-
-    // Traduction initiale
-    translateAll();
-
-    // Observer les changements DOM pour traduire le nouveau contenu
-    observerRef.current = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        // Traduire les nouveaux nœuds ajoutés
-        mutation.addedNodes.forEach((node) => {
-          walkAndTranslate(node);
-        });
-        
-        // Traduire les nœuds modifiés
-        if (mutation.type === 'characterData') {
-          translateTextNode(mutation.target);
+          // 3. Écriture DOM avec observer débranché (sinon boucle infinie)
+          observer?.disconnect();
+          slice.forEach((item, idx) => {
+            const tr = translations[idx];
+            if (tr && tr !== item.text) item.node.textContent = tr;
+          });
+          if (!cancelled) reconnectObserver();
         }
-      });
+      } finally {
+        running = false;
+      }
+    }
+
+    function scheduleTranslate(delay: number) {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(translateNewText, delay);
+    }
+
+    function reconnectObserver() {
+      observer?.observe(document.body, { childList: true, subtree: true });
+    }
+
+    // Observer : ne déclenche qu'un re-scan debouncé des NOUVEAUX nœuds
+    observer = new MutationObserver((mutations) => {
+      // On ignore les mutations purement textuelles (characterData) provoquées
+      // par notre propre écriture — on ne réagit qu'à l'ajout d'éléments.
+      const hasNewNodes = mutations.some((m) => m.addedNodes.length > 0);
+      if (hasNewNodes) scheduleTranslate(800);
     });
 
-    const root = document.getElementById('root');
-    if (root) {
-      observerRef.current.observe(root, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-      });
-    }
+    scheduleTranslate(400);
+    reconnectObserver();
 
     return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
+      cancelled = true;
+      if (debounceTimer) clearTimeout(debounceTimer);
+      observer?.disconnect();
     };
-  }, [language, translate]);
+  }, [language]);
 
-  // Re-traduire quand le cache change (nouvelles traductions disponibles)
-  useEffect(() => {
-    if (language === 'fr') return;
-    
-    // Nettoyer le set pour retraduire avec les nouvelles traductions du cache
-    translatedNodes.current.clear();
-    
-    const root = document.getElementById('root');
-    if (root) {
-      const walkAndTranslate = (node: Node) => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          const element = node as Element;
-          const tagName = element.tagName?.toLowerCase();
-          
-          if (['script', 'style', 'code', 'pre', 'svg', 'path'].includes(tagName)) {
-            return;
-          }
-        }
-
-        if (node.nodeType === Node.TEXT_NODE) {
-          const text = originalTexts.current.get(node);
-          if (text) {
-            const translated = translate(text);
-            if (translated !== text && node.textContent !== translated) {
-              node.textContent = translated;
-            }
-          }
-        } else if (node.childNodes.length > 0) {
-          Array.from(node.childNodes).forEach(walkAndTranslate);
-        }
-      };
-      
-      walkAndTranslate(root);
-    }
-  }, [cacheVersion, language, translate]);
-
-  return null; // Ce composant ne rend rien
+  return null;
 }
