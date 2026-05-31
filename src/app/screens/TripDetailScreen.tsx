@@ -100,6 +100,7 @@ export default function TripDetailScreen() {
 
   const tabOptions: Array<{ id: TabType; label: string }> = [
     { id: 'overview', label: 'Aperçu' },
+    { id: 'booking', label: 'Réserver' },
     { id: 'preparation', label: 'Avant le départ' },
     { id: 'location', label: 'Pendant' },
     { id: 'itinerary', label: 'Itinéraire / Carte' },
