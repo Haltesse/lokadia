@@ -6,15 +6,19 @@
  * référence de commande. Le panier est vidé après succès.
  */
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import {
   ArrowLeft, Lock, Trash2, CheckCircle2, ShoppingCart, ShieldCheck, Plus, Minus,
 } from 'lucide-react';
 import { useCart, CATEGORY_META } from '../lib/cart';
 import { processPayment, type PaymentDetails } from '../lib/paymentService';
+import { saveTripBooking } from '../lib/tripBookings';
 
 export default function CheckoutScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // tripId transmis par l'onglet "Réserver" pour finaliser CE voyage
+  const tripId = (location.state as { tripId?: string } | null)?.tripId ?? null;
   const { items, remove, setQty, clear, total, count } = useCart();
   // Pré-rempli avec une carte de test pour une démo investisseur fluide
   // (carte ne finissant pas par 0000 → paiement accepté en simulation).
@@ -32,9 +36,20 @@ export default function CheckoutScreen() {
 
   async function pay() {
     setStatus('paying'); setError('');
+    const snapshot = [...items];
     const res = await processPayment(grand, items, details);
-    if (res.ok) { setReference(res.reference!); setStatus('success'); clear(); }
-    else { setError(res.error ?? 'Erreur de paiement'); setStatus('error'); }
+    if (res.ok) {
+      // Rattache la réservation finalisée au voyage (si on vient d'un voyage)
+      if (tripId) {
+        saveTripBooking({
+          tripId, items: snapshot, total: grand,
+          reference: res.reference!, bookedAt: new Date().toISOString(),
+        });
+      }
+      setReference(res.reference!); setStatus('success'); clear();
+    } else {
+      setError(res.error ?? 'Erreur de paiement'); setStatus('error');
+    }
   }
 
   // ─── Confirmation ───
@@ -53,8 +68,8 @@ export default function CheckoutScreen() {
             <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--lokadia-gray-500)' }}>Référence</p>
             <p className="text-lg font-black" style={{ color: 'var(--lokadia-primary)' }}>{reference}</p>
           </div>
-          <button onClick={() => navigate('/trips')} className="w-full rounded-2xl py-3.5 text-sm font-black text-white" style={{ background: 'var(--gradient-primary)' }}>
-            Voir mes voyages
+          <button onClick={() => navigate(tripId ? `/trips/${tripId}` : '/trips')} className="w-full rounded-2xl py-3.5 text-sm font-black text-white" style={{ background: 'var(--gradient-primary)' }}>
+            {tripId ? 'Voir mon voyage finalisé' : 'Voir mes voyages'}
           </button>
           <button onClick={() => navigate('/global-home')} className="mt-2 w-full rounded-2xl py-3 text-sm font-bold" style={{ color: 'var(--lokadia-gray-600)' }}>
             Retour à l'accueil

@@ -10,14 +10,15 @@
  *
  * Tout est pré-rempli avec les dates / voyageurs / destination du voyage.
  */
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import {
   Plane, Building2, Train, Wifi, ShieldCheck, Ticket, Home,
   Check, Plus, Star, ShoppingCart, Clock, ChevronRight, ArrowLeft,
-  Trash2, Sparkles,
+  Trash2, Sparkles, CheckCircle2, RotateCcw,
 } from 'lucide-react';
 import type { TripWithChecklist } from '../lib/tripService';
+import { getTripBooking, clearTripBooking, type TripBooking } from '../lib/tripBookings';
 import { generateFlightOffers, generateHotelOffers } from '../lib/travelOffers';
 import {
   generateStayOffers, generateEsimOffers, generateInsuranceOffers,
@@ -45,6 +46,18 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
   const navigate = useNavigate();
   const { items, add, remove, has, count, total } = useCart();
   const [view, setView] = useState<CartCategory | null>(null);
+
+  // Réservation déjà finalisée pour ce voyage ?
+  const [booking, setBooking] = useState<TripBooking | null>(() => getTripBooking(trip.id));
+  useEffect(() => {
+    const refresh = () => setBooking(getTripBooking(trip.id));
+    window.addEventListener('lokadia_trip_booking_change', refresh);
+    window.addEventListener('focus', refresh);
+    return () => {
+      window.removeEventListener('lokadia_trip_booking_change', refresh);
+      window.removeEventListener('focus', refresh);
+    };
+  }, [trip.id]);
 
   const destinationId = trip.destinationId;
   const destName = trip.destinationName;
@@ -81,6 +94,67 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
   const essentialBooked = CATEGORIES.filter((c) => c.essential && (itemsByCat[c.id]?.length ?? 0) > 0).length;
 
   const addCatalog = (o: CatalogOffer) => add({ id: o.id, category: o.category, title: o.title, subtitle: o.subtitle, price: o.price, meta: o.meta, destinationId });
+
+  // Vers le checkout en transmettant le voyage à finaliser
+  const goCheckout = () => navigate('/checkout', { state: { tripId: trip.id } });
+
+  // ─── ÉTAT : VOYAGE DÉJÀ FINALISÉ ───
+  if (booking && !view) {
+    const cats = new Map<string, { label: string; emoji: string; items: typeof booking.items }>();
+    for (const it of booking.items) {
+      const m = CATEGORY_META[it.category];
+      const e = cats.get(it.category) ?? { label: m.label, emoji: m.emoji, items: [] };
+      e.items.push(it);
+      cats.set(it.category, e);
+    }
+    return (
+      <div className="space-y-5 pb-12">
+        <div className="overflow-hidden rounded-3xl text-white" style={{ background: 'linear-gradient(135deg,#059669,#10B981)' }}>
+          <div className="p-6 text-center">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/20">
+              <CheckCircle2 className="h-8 w-8" />
+            </div>
+            <h2 className="text-xl font-black">Voyage finalisé 🎉</h2>
+            <p className="mt-1 text-sm text-white/85">Tout est réservé pour {destName}</p>
+            <div className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-bold">
+              Réf. {booking.reference}
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl bg-white p-5" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
+          <h3 className="mb-3 text-base font-black" style={{ color: 'var(--lokadia-gray-900)' }}>Votre voyage réservé</h3>
+          <div className="space-y-3">
+            {[...cats.entries()].map(([cat, group]) => (
+              <div key={cat}>
+                <div className="mb-1 flex items-center gap-1.5">
+                  <span>{group.emoji}</span>
+                  <span className="text-xs font-black uppercase tracking-wide" style={{ color: CATEGORY_META[cat as CartCategory].color }}>{group.label}</span>
+                </div>
+                {group.items.map((it) => (
+                  <div key={it.id} className="flex items-center gap-2 pl-6">
+                    <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0" style={{ color: '#059669' }} />
+                    <span className="text-sm flex-1 truncate" style={{ color: 'var(--lokadia-gray-700)' }}>{it.title}</span>
+                    <span className="text-xs font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>{fmt(it.price * it.qty)}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center justify-between border-t pt-3" style={{ borderColor: 'var(--lokadia-gray-100)' }}>
+            <span className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-600)' }}>Total payé</span>
+            <span className="text-xl font-black" style={{ color: '#059669' }}>{fmt(booking.total)}</span>
+          </div>
+        </div>
+
+        <button onClick={() => { clearTripBooking(trip.id); setBooking(null); }}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 py-3 text-sm font-bold"
+          style={{ borderColor: 'var(--lokadia-gray-200)', color: 'var(--lokadia-gray-600)' }}>
+          <RotateCcw className="h-4 w-4" /> Modifier mes réservations
+        </button>
+      </div>
+    );
+  }
 
   // ─────────────────────────────────────────────────────────────────────────
   //  VUE DÉTAIL D'UNE CATÉGORIE
@@ -139,7 +213,7 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
         {view === 'insurance' && insurances.map((i) => <Row key={i.id} o={i} added={has(i.id)} onToggle={() => has(i.id) ? remove(i.id) : addCatalog(i)} Icon={ShieldCheck} />)}
         {view === 'activity' && activities.map((a) => <Row key={a.id} o={a} added={has(a.id)} onToggle={() => has(a.id) ? remove(a.id) : addCatalog(a)} Icon={Ticket} />)}
 
-        {count > 0 && <CartBar count={count} total={total} fmt={fmt} onClick={() => navigate('/checkout')} />}
+        {count > 0 && <CartBar count={count} total={total} fmt={fmt} onClick={goCheckout} />}
       </div>
     );
   }
@@ -260,7 +334,7 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
         </div>
       )}
 
-      {count > 0 && <CartBar count={count} total={total} fmt={fmt} onClick={() => navigate('/checkout')} />}
+      {count > 0 && <CartBar count={count} total={total} fmt={fmt} onClick={goCheckout} />}
     </div>
   );
 }
@@ -275,7 +349,7 @@ function CartBar({ count, total, fmt, onClick }: { count: number; total: number;
           <p className="text-xl font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(total)}</p>
         </div>
         <button onClick={onClick} className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-black text-white" style={{ background: 'var(--gradient-primary)' }}>
-          <ShoppingCart className="h-4 w-4" /> Finaliser & payer
+          <CheckCircle2 className="h-4 w-4" /> Finaliser le voyage
         </button>
       </div>
     </div>
