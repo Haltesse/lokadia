@@ -37,7 +37,7 @@ import { generateFlightOffers, generateHotelOffers, computeBudgetEstimate, estim
 import { getCoherentCountries } from '../data/countryNeighbors';
 import { STOP_CITIES, type StopCity } from '../data/stopCities';
 import { TripMap, type TripMapPoint } from '../components/TripMap';
-import { Plane, Train, Bus, Map as MapIcon } from 'lucide-react';
+import { Plane, Train, Bus, Map as MapIcon, CheckCircle2 } from 'lucide-react';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -49,6 +49,9 @@ export default function TripWizardScreen() {
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [creating, setCreating] = useState(false);
   const [loading, setLoading] = useState(false);
+  // ID du voyage créé → déclenche l'écran de succès avec choix de navigation
+  const [createdTripId, setCreatedTripId] = useState<string | null>(null);
+  const [createdTripName, setCreatedTripName] = useState('');
   const isEditMode = !!tripId;
 
   // Récupérer la destination passée depuis DestinationScreen
@@ -231,7 +234,9 @@ export default function TripWizardScreen() {
         }
 
         console.log('✅ Voyage créé avec succès:', trip.id);
-        navigate(`/trips/${trip.id}`);
+        // Écran de succès avec choix : voir le voyage OU aller à mes voyages
+        setCreatedTripName(allDestinations[arrivalCity]?.name || 'votre destination');
+        setCreatedTripId(trip.id);
       }
     } catch (error) {
       console.error('Erreur création/modification voyage:', error);
@@ -311,6 +316,44 @@ export default function TripWizardScreen() {
           <p style={{ color: 'var(--lokadia-gray-600)' }} className="font-medium">
             Chargement du voyage...
           </p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ─── Écran de succès après création ───
+  if (createdTripId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-5" style={{ background: 'var(--lokadia-background)' }}>
+        <motion.div
+          className="w-full max-w-md rounded-3xl bg-white p-8 text-center"
+          style={{ boxShadow: 'var(--shadow-xl)' }}
+          initial={{ opacity: 0, scale: 0.95, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+        >
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full" style={{ background: 'rgba(16,185,129,0.12)' }}>
+            <CheckCircle2 className="h-9 w-9" style={{ color: '#059669' }} />
+          </div>
+          <h1 className="text-2xl font-black" style={{ color: 'var(--lokadia-gray-900)' }}>Voyage créé 🎉</h1>
+          <p className="mt-2 text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
+            Votre voyage vers <strong>{createdTripName}</strong> est prêt. Réservez vos hébergements,
+            vols et e-SIM dans l'onglet « Réserver ».
+          </p>
+          <button
+            onClick={() => navigate(`/trips/${createdTripId}`)}
+            className="mt-6 w-full rounded-2xl py-3.5 text-sm font-black text-white"
+            style={{ background: 'var(--gradient-primary)' }}
+          >
+            Voir mon voyage
+          </button>
+          <button
+            onClick={() => navigate('/trips')}
+            className="mt-2 w-full rounded-2xl border-2 py-3 text-sm font-black"
+            style={{ borderColor: 'var(--lokadia-primary)', color: 'var(--lokadia-primary)' }}
+          >
+            Aller à mes voyages
+          </button>
         </motion.div>
       </div>
     );
