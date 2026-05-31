@@ -1,95 +1,171 @@
 import { useEffect } from 'react';
 import { useLanguageSafe } from '../context/LanguageContext';
-import { translateBatch } from '../lib/translationService';
+import { translateBatch, translateText } from '../lib/translationService';
 
 /**
- * AutoTranslate — traduit le texte visible de la page dans la langue choisie.
+ * AutoTranslate — traduit TOUT le texte visible de la page.
  *
- * Corrections clés vs version précédente (qui faisait planter la page) :
- *   1. ANTI-BOUCLE : on déconnecte le MutationObserver pendant qu'on écrit
- *      dans le DOM, et chaque nœud traduit est marqué (WeakSet) pour ne
- *      jamais être re-traité → plus de boucle infinie.
- *   2. CONCURRENCE LIMITÉE : translateBatch utilise un pool (max 4 req/s) au
- *      lieu de 200 requêtes parallèles.
- *   3. DEBOUNCE robuste : un seul timer partagé, ré-armé proprement.
- *   4. Cache persistant (localStorage) côté service.
+ * Approche : un TreeWalker parcourt l'intégralité des nœuds texte du DOM
+ * (exhaustif, indépendant des balises) + les placeholders d'input. C'est ce
+ * qui garantit que rien n'est oublié, contrairement à un sélecteur de tags.
+ *
+ * Protections anti-freeze (le bug précédent) :
+ *   1. WeakSet : chaque nœud n'est traité qu'une fois.
+ *   2. Observer débranché pendant l'écriture DOM → pas de boucle infinie.
+ *   3. Pool de concurrence (service) → pas 200 requêtes en parallèle.
+ *   4. Debounce des re-scans.
+ *   5. Restauration de l'original quand on repasse en français.
  */
+
+const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'CODE', 'PRE', 'SVG', 'PATH', 'NOSCRIPT', 'TEXTAREA', 'INPUT']);
+// Texte purement numérique / symbolique → on ne traduit pas
+const SKIP_TEXT = /^[\d\s.,!?;:()\-'"%€$£¥@#&*+=/<>[\]{}|\\^~`²°…–—·•✓✔️🔴🟠🟡🟢⚫️🌍]+$/u;
+
 export function AutoTranslate() {
   const { language } = useLanguageSafe();
 
   useEffect(() => {
-    if (language === 'fr') return; // langue source, rien à traduire
+    if (typeof window === 'undefined') return;
+
+    // Mémorise le texte FR original de chaque nœud (pour restauration + re-traduction)
+    const originals = new WeakMap<Node, string>();
+    const originalPlaceholders = new WeakMap<Element, string>();
+    // Nœuds dont la traduction est déjà posée pour la langue courante
+    const doneForLang = new WeakSet<Node>();
 
     let cancelled = false;
     let debounceTimer: number | null = null;
     let running = false;
-    // Nœuds déjà traduits (ou en cours) → jamais re-traités
-    const handled = new WeakSet<Node>();
-    const SELECTOR = 'h1,h2,h3,h4,h5,h6,p,a,button,label,li';
-
     let observer: MutationObserver | null = null;
 
-    async function translateNewText() {
+    function isSkippable(el: Element | null): boolean {
+      let cur: Element | null = el;
+      while (cur) {
+        if (SKIP_TAGS.has(cur.tagName)) return true;
+        if (cur.hasAttribute('data-no-translate')) return true;
+        cur = cur.parentElement;
+      }
+      return false;
+    }
+
+    /** Collecte tous les nœuds texte pertinents non encore traités. */
+    function collectTextNodes(): Node[] {
+      const root = document.getElementById('root') ?? document.body;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          const text = node.textContent?.trim() ?? '';
+          if (text.length < 2 || SKIP_TEXT.test(text)) return NodeFilter.FILTER_REJECT;
+          if (isSkippable(node.parentElement)) return NodeFilter.FILTER_REJECT;
+          if (doneForLang.has(node)) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      });
+      const nodes: Node[] = [];
+      let n = walker.nextNode();
+      while (n) { nodes.push(n); n = walker.nextNode(); }
+      return nodes;
+    }
+
+    /** Collecte les placeholders d'input/textarea non encore traités. */
+    function collectPlaceholders(): Element[] {
+      const els = Array.from(document.querySelectorAll('input[placeholder],textarea[placeholder]'));
+      return els.filter((el) => {
+        if (isSkippable(el.parentElement)) return false;
+        const ph = (el as HTMLInputElement).placeholder?.trim();
+        return ph && ph.length >= 2 && !SKIP_TEXT.test(ph);
+      });
+    }
+
+    function reconnect() {
+      observer?.observe(document.getElementById('root') ?? document.body, {
+        childList: true, subtree: true, characterData: true,
+      });
+    }
+
+    // ─── Restauration FR ───
+    function restoreFrench() {
+      observer?.disconnect();
+      // On ne peut pas itérer un WeakMap ; on re-walk et on remet l'original si connu.
+      const root = document.getElementById('root') ?? document.body;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let n = walker.nextNode();
+      while (n) {
+        const orig = originals.get(n);
+        if (orig !== undefined && n.textContent !== orig) n.textContent = orig;
+        n = walker.nextNode();
+      }
+      document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach((el) => {
+        const orig = originalPlaceholders.get(el);
+        if (orig !== undefined) (el as HTMLInputElement).placeholder = orig;
+      });
+    }
+
+    if (language === 'fr') {
+      restoreFrench();
+      return () => { cancelled = true; };
+    }
+
+    // ─── Traduction ───
+    async function run() {
       if (cancelled || running) return;
       running = true;
       try {
-        // 1. Collecte des nœuds texte non encore traités
-        const elements = Array.from(document.querySelectorAll(SELECTOR));
-        const pending: { node: Node; text: string }[] = [];
-        for (const el of elements) {
-          // Ignore les zones à ne pas traduire (code, champs de saisie, etc.)
-          if ((el as HTMLElement).closest('[data-no-translate],input,textarea,code,pre')) continue;
-          for (const node of Array.from(el.childNodes)) {
-            if (node.nodeType !== Node.TEXT_NODE || handled.has(node)) continue;
-            const text = node.textContent?.trim();
-            if (text && text.length > 1 && !/^[\d\s€$£%.,:/-]+$/.test(text)) {
-              handled.add(node); // marqué AVANT l'appel réseau → pas de doublon
-              pending.push({ node, text });
-            }
-          }
-        }
-        if (pending.length === 0) return;
+        // 1. Nœuds texte
+        const nodes = collectTextNodes();
+        const texts = nodes.map((n) => {
+          const t = n.textContent ?? '';
+          if (!originals.has(n)) originals.set(n, t); // mémorise le FR original
+          return originals.get(n)!.trim();
+        });
 
-        // 2. Traduction par lots de 60 (le service gère la concurrence interne)
-        const LOT = 60;
-        for (let i = 0; i < pending.length; i += LOT) {
+        const LOT = 50;
+        for (let i = 0; i < nodes.length; i += LOT) {
           if (cancelled) return;
-          const slice = pending.slice(i, i + LOT);
-          const translations = await translateBatch(slice.map((s) => s.text), language);
+          const sliceNodes = nodes.slice(i, i + LOT);
+          const sliceTexts = texts.slice(i, i + LOT);
+          const translations = await translateBatch(sliceTexts, language);
           if (cancelled) return;
-
-          // 3. Écriture DOM avec observer débranché (sinon boucle infinie)
           observer?.disconnect();
-          slice.forEach((item, idx) => {
+          sliceNodes.forEach((node, idx) => {
             const tr = translations[idx];
-            if (tr && tr !== item.text) item.node.textContent = tr;
+            if (tr && tr !== sliceTexts[idx]) node.textContent = tr;
+            doneForLang.add(node);
           });
-          if (!cancelled) reconnectObserver();
+          reconnect();
+        }
+
+        // 2. Placeholders
+        const phEls = collectPlaceholders();
+        for (const el of phEls) {
+          if (cancelled) return;
+          const input = el as HTMLInputElement;
+          const orig = input.placeholder.trim();
+          if (!originalPlaceholders.has(el)) originalPlaceholders.set(el, input.placeholder);
+          const tr = await translateText(orig, language);
+          if (cancelled) return;
+          observer?.disconnect();
+          if (tr && tr !== orig) input.placeholder = tr;
+          reconnect();
         }
       } finally {
         running = false;
       }
     }
 
-    function scheduleTranslate(delay: number) {
+    function schedule(delay: number) {
       if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = window.setTimeout(translateNewText, delay);
+      debounceTimer = window.setTimeout(run, delay);
     }
 
-    function reconnectObserver() {
-      observer?.observe(document.body, { childList: true, subtree: true });
-    }
-
-    // Observer : ne déclenche qu'un re-scan debouncé des NOUVEAUX nœuds
     observer = new MutationObserver((mutations) => {
-      // On ignore les mutations purement textuelles (characterData) provoquées
-      // par notre propre écriture — on ne réagit qu'à l'ajout d'éléments.
-      const hasNewNodes = mutations.some((m) => m.addedNodes.length > 0);
-      if (hasNewNodes) scheduleTranslate(800);
+      // On ne réagit qu'à l'ajout de nœuds (navigation, contenu async).
+      // Les mutations characterData de notre propre écriture sont ignorées
+      // car l'observer est débranché pendant qu'on écrit.
+      if (mutations.some((m) => m.addedNodes.length > 0)) schedule(700);
     });
 
-    scheduleTranslate(400);
-    reconnectObserver();
+    schedule(350);
+    reconnect();
 
     return () => {
       cancelled = true;
