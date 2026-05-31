@@ -102,6 +102,33 @@ export function generateTrainOffers(destinationId: string, countryName: string, 
   }));
 }
 
+// ─── Hébergements alternatifs : appartements & maisons (style Airbnb) ───────
+const STAY_TEMPLATES = [
+  { type: 'Appartement', label: 'Studio cosy centre-ville', base: 75, guests: '1-2 voyageurs' },
+  { type: 'Appartement', label: 'Appartement 2 chambres', base: 110, guests: '2-4 voyageurs' },
+  { type: 'Appartement', label: 'Loft design avec balcon', base: 135, guests: '2-3 voyageurs' },
+  { type: 'Maison', label: 'Maison entière avec jardin', base: 180, guests: '4-6 voyageurs' },
+  { type: 'Maison', label: 'Villa avec terrasse', base: 240, guests: '6-8 voyageurs' },
+];
+export function generateStayOffers(destinationId: string, destinationName: string, startDate: string, endDate: string, travelers: number): CatalogOffer[] {
+  const nights = daysBetween(startDate, endDate);
+  const rng = seeded(`stay-${destinationId}`);
+  const cityFactor = 0.85 + rng() * 0.5; // coût de la vie local
+  return STAY_TEMPLATES.map((s, i) => {
+    const perNight = round(s.base * cityFactor * 5) / 5;
+    return {
+      id: `stay-${destinationId}-${i}`,
+      category: 'hotel' as CartCategory, // même catégorie panier qu'un hébergement
+      title: `${s.type} — ${s.label}`,
+      subtitle: `${destinationName} · ${s.guests} · annulation gratuite`,
+      price: round(perNight * nights),
+      meta: `${nights} nuit${nights > 1 ? 's' : ''} · ${perNight}€/nuit`,
+      badge: i === 0 ? 'Coup de cœur' : i === 3 ? 'Idéal famille' : undefined,
+      destinationId,
+    };
+  });
+}
+
 // ─── Activités (style GetYourGuide) ─────────────────────────────────────────
 const ACTIVITY_TEMPLATES = [
   { t: 'Visite guidée à pied', d: 'Cœur historique avec guide local', base: 22 },

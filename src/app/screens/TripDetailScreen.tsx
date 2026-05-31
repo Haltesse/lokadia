@@ -10,8 +10,9 @@ import TripOverviewTab from '../components/TripOverviewTab';
 import TripPreparationTab from '../components/TripPreparationTab';
 import TripOnLocationTab from '../components/TripOnLocationTab';
 import TripItineraryMapTab from '../components/TripItineraryMapTab';
+import TripBookingTab from '../components/TripBookingTab';
 
-type TabType = 'overview' | 'preparation' | 'location' | 'itinerary';
+type TabType = 'overview' | 'booking' | 'preparation' | 'location' | 'itinerary';
 
 export default function TripDetailScreen() {
   const { tripId } = useParams<{ tripId: string }>();
@@ -166,10 +167,20 @@ export default function TripDetailScreen() {
         >
           Aperçu
           {activeTab === 'overview' && (
-            <div 
+            <div
               className="absolute bottom-0 left-0 right-0 h-1 rounded-t-full"
               style={{ backgroundColor: 'var(--lokadia-primary)' }}
             ></div>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('booking')}
+          className="px-5 py-4 font-semibold text-base whitespace-nowrap relative transition-colors"
+          style={{ color: activeTab === 'booking' ? 'var(--lokadia-primary)' : 'var(--lokadia-gray-600)' }}
+        >
+          Réserver
+          {activeTab === 'booking' && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 rounded-t-full" style={{ backgroundColor: 'var(--lokadia-primary)' }}></div>
           )}
         </button>
         <button
@@ -261,6 +272,7 @@ export default function TripDetailScreen() {
 
         <div className="min-w-0">
           {activeTab === 'overview' && <TripOverviewTab dashboard={dashboard} trip={trip} />}
+          {activeTab === 'booking' && <TripBookingTab trip={trip} />}
           {activeTab === 'preparation' && <TripPreparationTab dashboard={dashboard} />}
           {activeTab === 'location' && <TripOnLocationTab dashboard={dashboard} trip={trip} />}
           {activeTab === 'itinerary' && (
