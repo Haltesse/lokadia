@@ -115,10 +115,10 @@ export default function TripDetailScreen() {
       >
         <button
           onClick={() => navigate('/trips')}
-          className="mb-6 flex items-center gap-2 text-base font-medium text-white/90 hover:text-white lg:hidden"
+          className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30"
         >
-          <ArrowLeft size={22} />
-          <span>Retour</span>
+          <ArrowLeft size={18} />
+          <span>Mes voyages</span>
         </button>
 
         <h1 className="mb-3 text-3xl font-bold lg:text-5xl">{trip.destinationName}</h1>
