@@ -351,17 +351,17 @@ export default function ProDemoScreen() {
         <div className="mb-4 grid grid-cols-1 gap-3 rounded-3xl p-4 sm:grid-cols-3" style={{ background: offer.bg }}>
           <div className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 flex-shrink-0" style={{ color: offer.color }} />
-            <div><p className="text-[10px] font-black uppercase" style={{ color: offer.color }}>Marché</p>
+            <div><p className="text-[10px] font-bold uppercase" style={{ color: offer.color }}>Marché</p>
               <p className="text-xs font-bold" style={{ color: 'var(--lokadia-gray-800)' }}>{offer.market}</p></div>
           </div>
           <div className="flex items-center gap-2">
             <LineChart className="h-5 w-5 flex-shrink-0" style={{ color: offer.color }} />
-            <div><p className="text-[10px] font-black uppercase" style={{ color: offer.color }}>Revenu récurrent</p>
+            <div><p className="text-[10px] font-bold uppercase" style={{ color: offer.color }}>Revenu récurrent</p>
               <p className="text-xs font-bold" style={{ color: 'var(--lokadia-gray-800)' }}>{offer.arr}</p></div>
           </div>
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5 flex-shrink-0" style={{ color: offer.color }} />
-            <div><p className="text-[10px] font-black uppercase" style={{ color: offer.color }}>Réactivité</p>
+            <div><p className="text-[10px] font-bold uppercase" style={{ color: offer.color }}>Réactivité</p>
               <p className="text-xs font-bold" style={{ color: 'var(--lokadia-gray-800)' }}>Alerte &lt; 30 s · MAJ continue</p></div>
           </div>
         </div>
@@ -369,7 +369,7 @@ export default function ProDemoScreen() {
         {/* ─── SIMULATION DE CRISE (la star de la démo) ─── */}
         <div className="mb-4 rounded-3xl p-5" style={{ background: sim ? 'rgba(239,68,68,0.06)' : 'white', border: `2px solid ${sim ? 'rgba(239,68,68,0.4)' : 'var(--lokadia-gray-100)'}` }}>
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 text-lg font-black" style={{ color: sim ? '#dc2626' : 'var(--lokadia-gray-900)' }}>
+            <h2 className="flex items-center gap-2 text-lg font-bold" style={{ color: sim ? '#dc2626' : 'var(--lokadia-gray-900)' }}>
               <Siren className={`h-5 w-5 ${sim ? 'animate-pulse' : ''}`} style={{ color: '#dc2626' }} />
               Simulation de crise
             </h2>
@@ -397,9 +397,9 @@ export default function ProDemoScreen() {
             </>
           ) : (
             <div className="flex items-center gap-3 rounded-2xl bg-white p-3" style={{ border: '1px solid rgba(239,68,68,0.3)' }}>
-              <span className="text-2xl">{ALERT_TYPE_META[sim.type]?.emoji ?? '⚠️'}</span>
+              {(() => { const I = ALERT_TYPE_META[sim.type]?.Icon ?? AlertTriangle; return <I className="h-6 w-6 flex-shrink-0" style={{ color: '#dc2626' }} />; })()}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-black" style={{ color: '#991b1b' }}>🔴 EN COURS : {sim.title}</p>
+                <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: '#991b1b' }}><Siren className="h-4 w-4 flex-shrink-0" /> EN COURS : {sim.title}</p>
                 <p className="text-[11px]" style={{ color: 'var(--lokadia-gray-600)' }}>Le système a basculé la zone en rouge et identifié les personnes concernées.</p>
               </div>
             </div>
@@ -416,7 +416,7 @@ export default function ProDemoScreen() {
           ].map((k) => (
             <div key={k.label} className="rounded-2xl bg-white p-4" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
               <k.Icon className="mb-2 h-5 w-5" style={{ color: k.color }} />
-              <p className="text-2xl font-black tabular-nums" style={{ color: 'var(--lokadia-gray-900)' }}>{k.value}</p>
+              <p className="text-2xl font-bold tabular-nums" style={{ color: 'var(--lokadia-gray-900)' }}>{k.value}</p>
               <p className="text-[11px] font-semibold" style={{ color: 'var(--lokadia-gray-500)' }}>{k.label}</p>
             </div>
           ))}
@@ -424,9 +424,9 @@ export default function ProDemoScreen() {
 
         {/* ─── CARTE MONDIALE (salle de contrôle) ─── */}
         <div className="mt-6">
-          <h2 className="mb-3 flex items-center gap-2 text-lg font-black" style={{ color: 'var(--lokadia-gray-900)' }}>
+          <h2 className="mb-3 flex items-center gap-2 text-lg font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>
             <MapPin className="h-5 w-5" style={{ color: offer.color }} /> Carte de suivi mondiale
-            {sim && <span className="rounded-full px-2 py-0.5 text-[10px] font-black text-white animate-pulse" style={{ background: '#dc2626' }}>CRISE EN COURS</span>}
+            {sim && <span className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white animate-pulse" style={{ background: '#dc2626' }}>CRISE EN COURS</span>}
           </h2>
           <ProDemoMap points={mapPoints} accent={offer.color} />
         </div>
@@ -434,7 +434,7 @@ export default function ProDemoScreen() {
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           {/* ─── GESTION MULTI-GROUPES ─── */}
           <div className="rounded-3xl bg-white p-5" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
-            <h2 className="mb-4 flex items-center gap-2 text-lg font-black" style={{ color: 'var(--lokadia-gray-900)' }}>
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>
               <Users className="h-5 w-5" style={{ color: offer.color }} /> Groupes
               <span className="ml-auto text-xs font-semibold" style={{ color: 'var(--lokadia-gray-500)' }}>{offer.groups.length} groupes · {kpis.total.toLocaleString('fr-FR')} {offer.headLabel}</span>
             </h2>
@@ -451,13 +451,13 @@ export default function ProDemoScreen() {
                         <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} style={{ color: 'var(--lokadia-gray-400)' }} />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{g.name}</p>
-                            {affected && <span className="rounded-full px-2 py-0.5 text-[9px] font-black text-white animate-pulse" style={{ background: '#dc2626' }}>ALERTE</span>}
+                            <p className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{g.name}</p>
+                            {affected && <span className="rounded-full px-2 py-0.5 text-[9px] font-bold text-white animate-pulse" style={{ background: '#dc2626' }}>ALERTE</span>}
                           </div>
                           <p className="text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>{headcount(g.people).toLocaleString('fr-FR')} {offer.headLabel} · {g.people.length} destination{g.people.length > 1 ? 's' : ''}</p>
                         </div>
                         <div className="flex flex-col items-end flex-shrink-0">
-                          <span className="rounded-full px-2.5 py-1 text-xs font-black text-white tabular-nums" style={{ background: lvl.fillColor }}>{loading ? '…' : gs ?? '—'}</span>
+                          <span className="rounded-full px-2.5 py-1 text-xs font-bold text-white tabular-nums" style={{ background: lvl.fillColor }}>{loading ? '…' : gs ?? '—'}</span>
                           <span className="mt-0.5 text-[9px] font-bold" style={{ color: lvl.color }}>{gs != null ? lvl.label : ''}</span>
                         </div>
                       </button>
@@ -482,8 +482,8 @@ export default function ProDemoScreen() {
                                 <p className="text-xs font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{p.name} {p.count ? <span className="font-normal" style={{ color: 'var(--lokadia-gray-400)' }}>· {p.count}</span> : ''}</p>
                                 <p className="text-[10px] truncate" style={{ color: 'var(--lokadia-gray-500)' }}>{p.role} · {p.city} · {p.meta}</p>
                               </div>
-                              {isHit && <span className="text-[9px] font-black" style={{ color: '#dc2626' }}>▼ chute</span>}
-                              <span className="rounded-full px-2 py-0.5 text-[11px] font-black text-white tabular-nums" style={{ background: plvl.fillColor }}>{loading ? '…' : s ?? '—'}</span>
+                              {isHit && <span className="text-[9px] font-bold" style={{ color: '#dc2626' }}>▼ chute</span>}
+                              <span className="rounded-full px-2 py-0.5 text-[11px] font-bold text-white tabular-nums" style={{ background: plvl.fillColor }}>{loading ? '…' : s ?? '—'}</span>
                             </button>
                           );
                         })}
@@ -497,11 +497,11 @@ export default function ProDemoScreen() {
 
           {/* ─── FLUX TEMPS RÉEL ─── */}
           <div className="rounded-3xl bg-white p-5" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
-            <h2 className="mb-4 flex items-center gap-2 text-lg font-black" style={{ color: 'var(--lokadia-gray-900)' }}>
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>
               <Activity className="h-5 w-5" style={{ color: '#dc2626' }} /> Flux temps réel
             </h2>
             {feed.length === 0 ? (
-              <div className="rounded-2xl p-4 text-center text-sm" style={{ background: 'rgba(34,197,94,0.08)', color: '#15803d' }}>✅ Aucune alerte sur votre périmètre</div>
+              <div className="flex items-center justify-center gap-2 rounded-2xl p-4 text-center text-sm" style={{ background: 'rgba(34,197,94,0.08)', color: '#15803d' }}><ShieldCheck className="h-4 w-4 flex-shrink-0" /> Aucune alerte sur votre périmètre</div>
             ) : (
               <div className="space-y-2">
                 {feed.map((a, i) => {
@@ -509,9 +509,9 @@ export default function ProDemoScreen() {
                   return (
                     <div key={i} className="rounded-xl p-2.5" style={{ background: a.sim ? 'rgba(239,68,68,0.1)' : a.severity === 'red' ? 'rgba(239,68,68,0.06)' : 'rgba(245,158,11,0.06)', border: a.sim ? '1px solid rgba(239,68,68,0.4)' : 'none' }}>
                       <div className="flex items-center gap-1.5">
-                        <span>{meta.emoji}</span>
-                        <span className="text-[10px] font-black uppercase tracking-wide" style={{ color: meta.color }}>{meta.label}</span>
-                        {a.sim && <span className="rounded-full px-1.5 py-0.5 text-[8px] font-black text-white" style={{ background: '#dc2626' }}>SIMULATION</span>}
+                        <meta.Icon className="h-3.5 w-3.5" style={{ color: meta.color }} />
+                        <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: meta.color }}>{meta.label}</span>
+                        {a.sim && <span className="rounded-full px-1.5 py-0.5 text-[8px] font-bold text-white" style={{ background: '#dc2626' }}>SIMULATION</span>}
                         <span className="ml-auto">{flagOf(a.iso)}</span>
                       </div>
                       <p className="mt-1 text-[11px] leading-snug" style={{ color: 'var(--lokadia-gray-700)' }}>{a.title}</p>
@@ -524,7 +524,7 @@ export default function ProDemoScreen() {
         </div>
 
         {/* Fonctionnalités incluses */}
-        <h2 className="mt-6 mb-3 text-lg font-black" style={{ color: 'var(--lokadia-gray-900)' }}>Inclus dans cette offre</h2>
+        <h2 className="mt-6 mb-3 text-lg font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>Inclus dans cette offre</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {offer.features.map((f) => (
             <button key={f.key} onClick={() => setFeature(f.key)}
@@ -532,7 +532,7 @@ export default function ProDemoScreen() {
               <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: offer.bg }}>
                 <f.Icon className="h-4 w-4" style={{ color: offer.color }} />
               </div>
-              <p className="text-sm font-black leading-snug" style={{ color: 'var(--lokadia-gray-900)' }}>{f.label}</p>
+              <p className="text-sm font-bold leading-snug" style={{ color: 'var(--lokadia-gray-900)' }}>{f.label}</p>
               <p className="text-[11px] leading-snug" style={{ color: 'var(--lokadia-gray-500)' }}>{f.desc}</p>
               <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold" style={{ color: offer.color }}>Voir la démo <ArrowRight className="h-3 w-3" /></span>
             </button>
@@ -541,9 +541,9 @@ export default function ProDemoScreen() {
 
         {/* CTA */}
         <div className="mt-6 flex flex-col items-center gap-3 rounded-3xl p-6 text-center text-white" style={{ background: offer.color }}>
-          <h3 className="text-xl font-black">Déployez « {offer.title} »</h3>
+          <h3 className="text-xl font-bold">Déployez « {offer.title} »</h3>
           <p className="max-w-xl text-sm text-white/90">{offer.market} — {offer.arr}. Toutes les fonctionnalités ci-dessus incluses.</p>
-          <button onClick={() => navigate('/pro')} className="mt-2 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-black" style={{ color: offer.color }}>
+          <button onClick={() => navigate('/pro')} className="mt-2 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold" style={{ color: offer.color }}>
             Demander un devis <ArrowRight className="h-4 w-4" />
           </button>
         </div>
@@ -558,15 +558,15 @@ export default function ProDemoScreen() {
               « {broadcast.groupName} ».
             </p>
             <div className="rounded-2xl border p-4 text-center" style={{ borderColor: 'var(--lokadia-gray-100)' }}>
-              <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--lokadia-gray-500)' }}>Confirmations de sécurité</p>
-              <p className="my-1 text-4xl font-black tabular-nums" style={{ color: ack >= broadcast.total ? '#15803d' : '#d97706' }}>
+              <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--lokadia-gray-500)' }}>Confirmations de sécurité</p>
+              <p className="my-1 text-4xl font-bold tabular-nums" style={{ color: ack >= broadcast.total ? '#15803d' : '#d97706' }}>
                 {ack.toLocaleString('fr-FR')}<span className="text-lg" style={{ color: 'var(--lokadia-gray-400)' }}> / {broadcast.total.toLocaleString('fr-FR')}</span>
               </p>
               <div className="mt-2 h-2 w-full overflow-hidden rounded-full" style={{ background: 'var(--lokadia-gray-100)' }}>
                 <div className="h-full rounded-full transition-all duration-300" style={{ width: `${(ack / broadcast.total) * 100}%`, background: ack >= broadcast.total ? '#22c55e' : '#f59e0b' }} />
               </div>
               <p className="mt-2 text-xs font-bold" style={{ color: ack >= broadcast.total ? '#15803d' : 'var(--lokadia-gray-600)' }}>
-                {ack >= broadcast.total ? '✅ Toutes les personnes ont confirmé leur sécurité' : 'Réponses en cours…'}
+                {ack >= broadcast.total ? 'Toutes les personnes ont confirmé leur sécurité' : 'Réponses en cours…'}
               </p>
             </div>
             <div className="flex items-start gap-2 rounded-xl p-3" style={{ background: 'var(--lokadia-info-bg)' }}>
@@ -594,7 +594,7 @@ function FeatureModal({ feature, onClose, offer, scores }: { feature: FeatureKey
     'passenger-app': 'Notifications app passager', preflight: 'Information destination pré-vol', 'ops-alerts': 'Alertes opérationnelles', cobranding: 'Co-branding',
     seminars: 'Gestion risque groupes/séminaires', 'employer-compliance': 'Conformité obligation employeur', 'collab-alerts': 'Alertes temps réel collaborateurs', 'hr-dashboard': 'Tableau de bord RH',
   };
-  const ok = (txt: string) => <div className="rounded-xl p-3 text-center text-sm font-bold" style={{ background: 'rgba(16,185,129,0.1)', color: '#059669' }}>{txt}</div>;
+  const ok = (txt: string) => <div className="flex items-center justify-center gap-2 rounded-xl p-3 text-center text-sm font-bold" style={{ background: 'rgba(16,185,129,0.1)', color: '#059669' }}><CheckCircle2 className="h-4 w-4 flex-shrink-0" />{txt}</div>;
   const list = (items: string[]) => (
     <ul className="space-y-2">{items.map((x) => (
       <li key={x} className="flex items-start gap-2 text-sm" style={{ color: 'var(--lokadia-gray-700)' }}>
@@ -605,32 +605,32 @@ function FeatureModal({ feature, onClose, offer, scores }: { feature: FeatureKey
   function content() {
     switch (feature) {
       case 'students': case 'missions': case 'seminars':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Chaque personne est suivie en continu avec localisation et Lokascore temps réel, organisée en groupes.</p>{list(['Localisation et destination', 'Lokascore live + niveau de risque', 'Alerte visuelle si passage en zone rouge', 'Organisation par groupes/cohortes'])}{ok(`✅ Démo — ${offer.groups.length} groupes suivis`)}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Chaque personne est suivie en continu avec localisation et Lokascore temps réel, organisée en groupes.</p>{list(['Localisation et destination', 'Lokascore live + niveau de risque', 'Alerte visuelle si passage en zone rouge', 'Organisation par groupes/cohortes'])}{ok(`Démo — ${offer.groups.length} groupes suivis`)}</div>;
       case 'group-alert': case 'team-alerts': case 'collab-alerts':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Cliquez sur la cloche d'un groupe (panneau Groupes) pour diffuser une alerte et suivre les confirmations de sécurité en direct.</p>{list(['Diffusion push + email + SMS', 'Ciblage par groupe ou par pays', 'Suivi des confirmations en temps réel', 'Archivage horodaté (preuve)'])}{ok('📨 Essayez le bouton cloche d\'un groupe !')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Cliquez sur la cloche d'un groupe (panneau Groupes) pour diffuser une alerte et suivre les confirmations de sécurité en direct.</p>{list(['Diffusion push + email + SMS', 'Ciblage par groupe ou par pays', 'Suivi des confirmations en temps réel', 'Archivage horodaté (preuve)'])}{ok('Essayez le bouton cloche d\'un groupe !')}</div>;
       case 'ri-dashboard': case 'hr-dashboard':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Le tableau de bord que vous consultez <em>est</em> la démo : KPIs, groupes, flux temps réel et simulation de crise.</p>{list(['KPIs consolidés', 'Gestion multi-groupes', 'Flux d\'alertes filtré', 'Simulation et export'])}{ok('📊 Vous y êtes !')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Le tableau de bord que vous consultez <em>est</em> la démo : KPIs, groupes, flux temps réel et simulation de crise.</p>{list(['KPIs consolidés', 'Gestion multi-groupes', 'Flux d\'alertes filtré', 'Simulation et export'])}{ok('Vous y êtes !')}</div>;
       case 'compliance': case 'employer-compliance':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Export attestant du suivi, conforme à l'obligation de sécurité (<strong>art. L4121-1</strong>).</p>{list(['Liste horodatée personnes + destinations', 'Lokascore et évolution', 'Alertes et confirmations de sécurité', 'Preuve de diligence (audit, assurance)'])}{ok('📄 Démo — rapport généré en PDF')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Export attestant du suivi, conforme à l'obligation de sécurité (<strong>art. L4121-1</strong>).</p>{list(['Liste horodatée personnes + destinations', 'Lokascore et évolution', 'Alertes et confirmations de sécurité', 'Preuve de diligence (audit, assurance)'])}{ok('Démo — rapport généré en PDF')}</div>;
       case 'incident-history':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Chaque incident est archivé et analysé.</p><div className="space-y-2">{[{ d: 'Mars 2026', t: 'Manifestation Le Caire', s: 'Équipe confinée 24h, RAS' }, { d: 'Janv. 2026', t: 'Séisme léger Mexico', s: 'Aucun blessé' }, { d: 'Nov. 2025', t: 'Alerte sanitaire Mumbai', s: 'Vaccination renforcée' }].map((i) => (<div key={i.t} className="rounded-xl border p-3" style={{ borderColor: 'var(--lokadia-gray-100)' }}><p className="text-xs font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{i.d} · {i.t}</p><p className="text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>{i.s}</p></div>))}</div>{ok('📈 3 incidents archivés')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Chaque incident est archivé et analysé.</p><div className="space-y-2">{[{ d: 'Mars 2026', t: 'Manifestation Le Caire', s: 'Équipe confinée 24h, RAS' }, { d: 'Janv. 2026', t: 'Séisme léger Mexico', s: 'Aucun blessé' }, { d: 'Nov. 2025', t: 'Alerte sanitaire Mumbai', s: 'Vaccination renforcée' }].map((i) => (<div key={i.t} className="rounded-xl border p-3" style={{ borderColor: 'var(--lokadia-gray-100)' }}><p className="text-xs font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{i.d} · {i.t}</p><p className="text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>{i.s}</p></div>))}</div>{ok('3 incidents archivés')}</div>;
       case 'support':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Astreinte 7j/7 et account manager dédié.</p>{list(['Hotline 24h/24 en crise', 'Account manager nommé', 'Réponse < 1h en urgence', 'Accompagnement gestion de crise'])}{ok('🛟 Support prioritaire inclus')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Astreinte 7j/7 et account manager dédié.</p>{list(['Hotline 24h/24 en crise', 'Account manager nommé', 'Réponse < 1h en urgence', 'Accompagnement gestion de crise'])}{ok('Support prioritaire inclus')}</div>;
       case 'api':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Intégrez le Lokascore via une API REST.</p><div className="overflow-x-auto rounded-xl p-3 font-mono text-xs" style={{ background: '#0f172a', color: '#e2e8f0' }}><div style={{ color: '#94a3b8' }}># Score d'une destination</div><div><span style={{ color: '#7dd3fc' }}>GET</span> /v1/lokascore?destination=bangkok-thailand</div><div className="mt-2">{'{ "score": 78, "level": "vigilance", ... }'}</div></div>{ok('🔌 Clé API après contrat')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Intégrez le Lokascore via une API REST.</p><div className="overflow-x-auto rounded-xl p-3 font-mono text-xs" style={{ background: '#0f172a', color: '#e2e8f0' }}><div style={{ color: '#94a3b8' }}># Score d'une destination</div><div><span style={{ color: '#7dd3fc' }}>GET</span> /v1/lokascore?destination=bangkok-thailand</div><div className="mt-2">{'{ "score": 78, "level": "vigilance", ... }'}</div></div>{ok('Clé API après contrat')}</div>;
       case 'risk-pricing': {
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>La prime s'ajuste au risque pays : plus le score baisse, plus elle reflète le risque.</p><div className="overflow-hidden rounded-xl border" style={{ borderColor: 'var(--lokadia-gray-100)' }}><div className="grid grid-cols-[1fr_auto_auto] gap-2 bg-gray-50 px-3 py-2 text-[10px] font-black uppercase" style={{ color: 'var(--lokadia-gray-500)' }}><span>Destination</span><span>Score</span><span>Prime</span></div>{allPeople.map((p) => { const score = scores[p.destinationId]?.score; const base = parseInt(p.meta.replace(/\D/g, '') || '80', 10); const adj = score != null ? Math.round(base * (1 + (100 - score) / 100)) : null; return (<div key={p.name} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 border-t px-3 py-2 text-xs" style={{ borderColor: 'var(--lokadia-gray-100)' }}><span className="truncate" style={{ color: 'var(--lokadia-gray-700)' }}>{p.city}</span><span className="font-black tabular-nums" style={{ color: getLokascoreLevel(score ?? null).color }}>{score ?? '…'}</span><span className="font-black tabular-nums" style={{ color: 'var(--lokadia-gray-900)' }}>{adj ? `${adj} €` : '…'}</span></div>); })}</div>{ok('💶 Tarification dynamique au risque réel')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>La prime s'ajuste au risque pays : plus le score baisse, plus elle reflète le risque.</p><div className="overflow-hidden rounded-xl border" style={{ borderColor: 'var(--lokadia-gray-100)' }}><div className="grid grid-cols-[1fr_auto_auto] gap-2 bg-gray-50 px-3 py-2 text-[10px] font-bold uppercase" style={{ color: 'var(--lokadia-gray-500)' }}><span>Destination</span><span>Score</span><span>Prime</span></div>{allPeople.map((p) => { const score = scores[p.destinationId]?.score; const base = parseInt(p.meta.replace(/\D/g, '') || '80', 10); const adj = score != null ? Math.round(base * (1 + (100 - score) / 100)) : null; return (<div key={p.name} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 border-t px-3 py-2 text-xs" style={{ borderColor: 'var(--lokadia-gray-100)' }}><span className="truncate" style={{ color: 'var(--lokadia-gray-700)' }}>{p.city}</span><span className="font-bold tabular-nums" style={{ color: getLokascoreLevel(score ?? null).color }}>{score ?? '…'}</span><span className="font-bold tabular-nums" style={{ color: 'var(--lokadia-gray-900)' }}>{adj ? `${adj} €` : '…'}</span></div>); })}</div>{ok('Tarification dynamique au risque réel')}</div>;
       }
       case 'white-label': case 'cobranding':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Le Lokascore aux couleurs de votre marque.</p><div className="rounded-2xl p-4" style={{ border: `2px solid ${offer.color}` }}><div className="mb-3 flex items-center gap-2"><div className="h-6 w-6 rounded" style={{ background: offer.color }} /><span className="text-sm font-black" style={{ color: offer.color }}>VotreMarque · Sécurité voyage</span></div><div className="flex items-center justify-between rounded-xl p-3" style={{ background: offer.bg }}><span className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-700)' }}>Bangkok, Thaïlande</span><span className="rounded-full px-3 py-1 text-sm font-black text-white" style={{ background: offer.color }}>78/100</span></div></div>{ok('🎨 Rendu à vos couleurs')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Le Lokascore aux couleurs de votre marque.</p><div className="rounded-2xl p-4" style={{ border: `2px solid ${offer.color}` }}><div className="mb-3 flex items-center gap-2"><div className="h-6 w-6 rounded" style={{ background: offer.color }} /><span className="text-sm font-bold" style={{ color: offer.color }}>VotreMarque · Sécurité voyage</span></div><div className="flex items-center justify-between rounded-xl p-3" style={{ background: offer.bg }}><span className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-700)' }}>Bangkok, Thaïlande</span><span className="rounded-full px-3 py-1 text-sm font-bold text-white" style={{ background: offer.color }}>78/100</span></div></div>{ok('Rendu à vos couleurs')}</div>;
       case 'sla':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Engagement de disponibilité contractuel.</p><div className="grid grid-cols-3 gap-2 text-center">{[{ k: 'Uptime', v: '99,9 %' }, { k: 'Latence', v: '< 200 ms' }, { k: 'Support', v: 'Prioritaire' }].map((s) => (<div key={s.k} className="rounded-xl p-3" style={{ background: offer.bg }}><p className="text-lg font-black" style={{ color: offer.color }}>{s.v}</p><p className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>{s.k}</p></div>))}</div>{ok('🟢 Tous services opérationnels')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Engagement de disponibilité contractuel.</p><div className="grid grid-cols-3 gap-2 text-center">{[{ k: 'Uptime', v: '99,9 %' }, { k: 'Latence', v: '< 200 ms' }, { k: 'Support', v: 'Prioritaire' }].map((s) => (<div key={s.k} className="rounded-xl p-3" style={{ background: offer.bg }}><p className="text-lg font-bold" style={{ color: offer.color }}>{s.v}</p><p className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>{s.k}</p></div>))}</div>{ok('Tous services opérationnels')}</div>;
       case 'passenger-app':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Le Lokascore dans votre app passager.</p><div className="mx-auto w-48 rounded-3xl border-4 p-3" style={{ borderColor: 'var(--lokadia-gray-200)' }}><div className="rounded-xl p-3" style={{ background: offer.bg }}><p className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>Votre vol AF276</p><p className="text-sm font-black" style={{ color: 'var(--lokadia-gray-900)' }}>Tokyo 🇯🇵</p><div className="mt-2 flex items-center justify-between"><span className="text-[11px]" style={{ color: 'var(--lokadia-gray-600)' }}>Sécurité</span><span className="rounded-full px-2 py-0.5 text-xs font-black text-white" style={{ background: '#22c55e' }}>92</span></div></div></div>{ok('📱 Widget intégrable')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Le Lokascore dans votre app passager.</p><div className="mx-auto w-48 rounded-3xl border-4 p-3" style={{ borderColor: 'var(--lokadia-gray-200)' }}><div className="rounded-xl p-3" style={{ background: offer.bg }}><p className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>Votre vol AF276</p><p className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>Tokyo</p><div className="mt-2 flex items-center justify-between"><span className="text-[11px]" style={{ color: 'var(--lokadia-gray-600)' }}>Sécurité</span><span className="rounded-full px-2 py-0.5 text-xs font-bold text-white" style={{ background: '#22c55e' }}>92</span></div></div></div>{ok('Widget intégrable')}</div>;
       case 'preflight':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Briefing sécurité avant départ.</p>{list(['Lokascore et niveau destination', 'Alertes en cours', 'Numéros d\'urgence et consulat', 'Formalités d\'entrée et santé'])}{ok('✈️ Briefing pré-vol prêt')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Briefing sécurité avant départ.</p>{list(['Lokascore et niveau destination', 'Alertes en cours', 'Numéros d\'urgence et consulat', 'Formalités d\'entrée et santé'])}{ok('Briefing pré-vol prêt')}</div>;
       case 'ops-alerts':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Anticipez annulations et déroutements.</p>{list(['Catastrophes (GDACS) sur les routes', 'Fermetures d\'espace aérien', 'Épidémies impactant destinations', 'Webhook vers équipes ops'])}{ok('🛰️ Flux ops connecté')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Anticipez annulations et déroutements.</p>{list(['Catastrophes (GDACS) sur les routes', 'Fermetures d\'espace aérien', 'Épidémies impactant destinations', 'Webhook vers équipes ops'])}{ok('Flux ops connecté')}</div>;
       default: return null;
     }
   }

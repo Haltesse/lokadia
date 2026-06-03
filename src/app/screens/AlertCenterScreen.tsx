@@ -163,7 +163,7 @@ export function AlertCenterScreen() {
       {uniqueDestinations.length > 0 && (
         <div className="rounded-2xl border-2 p-4" style={{ borderColor: "var(--lokadia-primary)", background: "var(--lokadia-info-bg)" }}>
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-sm font-black" style={{ color: "var(--lokadia-primary)" }}>
+            <h3 className="flex items-center gap-2 text-sm font-bold" style={{ color: "var(--lokadia-primary)" }}>
               <MapPin className="h-4 w-4" />
               Destination
             </h3>
@@ -205,7 +205,7 @@ export function AlertCenterScreen() {
 
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-sm font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+          <h2 className="flex items-center gap-2 text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
             <Filter className="h-4 w-4" />
             Filtres
           </h2>
@@ -241,7 +241,7 @@ export function AlertCenterScreen() {
       </div>
 
       <div>
-        <h3 className="mb-3 flex items-center gap-2 text-sm font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
           <TrendingUp className="h-4 w-4" />
           Priorité
         </h3>
@@ -279,11 +279,11 @@ export function AlertCenterScreen() {
               {sources.map((source) => (
                 <div key={source.code} className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 backdrop-blur" title={source.label}>
                   <CheckCircle2 className="h-3.5 w-3.5 text-white" />
-                  <span className="text-xs font-black text-white">{source.code}</span>
+                  <span className="text-xs font-bold text-white">{source.code}</span>
                 </div>
               ))}
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-white lg:text-5xl">Alertes temps réel</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-white lg:text-5xl">Alertes temps réel</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/90 lg:text-base">
               Centre de notifications bureau avec filtres permanents, lecture rapide et détail ouvert sans quitter la page.
             </p>
@@ -321,7 +321,7 @@ export function AlertCenterScreen() {
                   return (
                     <div key={stat.label} className="rounded-2xl p-4 text-white backdrop-blur" style={{ background: stat.bg, border: "1px solid rgba(255,255,255,0.18)" }}>
                       <Icon className="mb-2 h-5 w-5 text-white/80" />
-                      <p className="text-2xl font-black">{stat.count}</p>
+                      <p className="text-2xl font-bold">{stat.count}</p>
                       <p className="text-xs font-semibold text-white/75">{stat.label}</p>
                     </div>
                   );
@@ -338,10 +338,10 @@ export function AlertCenterScreen() {
           <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'rgba(239, 68, 68, 0.12)' }}>
             <AlertTriangle className="h-4 w-4" style={{ color: '#dc2626' }} />
           </div>
-          <h2 className="text-lg font-black tracking-tight" style={{ color: 'var(--lokadia-gray-900)' }}>
+          <h2 className="text-lg font-bold tracking-tight" style={{ color: 'var(--lokadia-gray-900)' }}>
             Alertes mondiales temps réel
           </h2>
-          <span className="ml-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider" style={{ background: 'rgba(34, 197, 94, 0.12)', color: '#15803d' }}>
+          <span className="ml-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'rgba(34, 197, 94, 0.12)', color: '#15803d' }}>
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: '#22c55e' }} />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ background: '#22c55e' }} />
@@ -370,14 +370,14 @@ export function AlertCenterScreen() {
         <div>
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+              <h2 className="text-xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                 {filteredAlerts.length} alerte{filteredAlerts.length > 1 ? "s" : ""}
               </h2>
               <p className="text-sm" style={{ color: "var(--lokadia-gray-500)" }}>
                 Dernière mise à jour : {lastUpdate.toLocaleString("fr-FR")}
               </p>
             </div>
-            <div className="hidden rounded-full px-3 py-1 text-xs font-black lg:block" style={{ background: "var(--lokadia-success-bg)", color: "var(--lokadia-success)" }}>
+            <div className="hidden rounded-full px-3 py-1 text-xs font-bold lg:block" style={{ background: "var(--lokadia-success-bg)", color: "var(--lokadia-success)" }}>
               Live
             </div>
           </div>
@@ -391,7 +391,7 @@ export function AlertCenterScreen() {
           ) : filteredAlerts.length === 0 ? (
             <div className="rounded-3xl bg-white px-6 py-16 text-center" style={{ boxShadow: "var(--shadow-sm)" }}>
               <Bell className="mx-auto mb-4 h-10 w-10" style={{ color: "var(--lokadia-primary)" }} />
-              <h3 className="text-xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+              <h3 className="text-xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                 Aucune alerte trouvée
               </h3>
               <p className="mt-2 text-sm" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -426,10 +426,10 @@ export function AlertCenterScreen() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="mb-2 flex items-start justify-between gap-3">
-                          <h3 className="font-black leading-snug" style={{ color: "var(--lokadia-gray-900)" }}>
+                          <h3 className="font-bold leading-snug" style={{ color: "var(--lokadia-gray-900)" }}>
                             {alert.title}
                           </h3>
-                          <span className="flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-black" style={{ background: levelConfig.bg, color: levelConfig.color }}>
+                          <span className="flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: levelConfig.bg, color: levelConfig.color }}>
                             {levelConfig.label}
                           </span>
                         </div>
@@ -467,18 +467,18 @@ export function AlertCenterScreen() {
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: `${typeConfig.color}16`, color: typeConfig.color }}>
                           <Icon className="h-6 w-6" />
                         </div>
-                        <span className="rounded-full px-3 py-1 text-xs font-black" style={{ background: levelConfig.bg, color: levelConfig.color }}>
+                        <span className="rounded-full px-3 py-1 text-xs font-bold" style={{ background: levelConfig.bg, color: levelConfig.color }}>
                           {levelConfig.label}
                         </span>
                       </div>
-                      <h2 className="text-xl font-black leading-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+                      <h2 className="text-xl font-bold leading-tight" style={{ color: "var(--lokadia-gray-900)" }}>
                         {selectedAlert.title}
                       </h2>
                       <p className="mt-4 text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
                         {selectedAlert.summary}
                       </p>
                       <div className="mt-6 space-y-3 rounded-2xl p-4" style={{ background: "#F8FAFC" }}>
-                        <p className="text-sm font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                        <p className="text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                           {selectedAlert.destination}, {selectedAlert.country}
                         </p>
                         <p className="text-xs font-semibold" style={{ color: "var(--lokadia-gray-500)" }}>
@@ -487,7 +487,7 @@ export function AlertCenterScreen() {
                       </div>
                       {selectedAlert.affectedZones && selectedAlert.affectedZones.length > 0 && (
                         <div className="mt-4 rounded-2xl p-4" style={{ background: "rgba(245, 158, 11, 0.1)", color: "#92400E" }}>
-                          <p className="mb-1 text-sm font-black">Zones à risque</p>
+                          <p className="mb-1 text-sm font-bold">Zones à risque</p>
                           <p className="text-sm leading-6">{selectedAlert.affectedZones.join(", ")}</p>
                         </div>
                       )}

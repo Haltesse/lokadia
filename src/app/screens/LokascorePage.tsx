@@ -135,9 +135,9 @@ export default function LokascorePage() {
           <div className="relative z-10 flex min-h-[440px] flex-col justify-end">
             <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-4 py-2 backdrop-blur-md">
               <Sparkles className="h-4 w-4" />
-              <span className="text-xs font-black uppercase tracking-wide">Méthodologie Lokascore</span>
+              <span className="text-xs font-bold uppercase tracking-wide">Méthodologie Lokascore</span>
             </div>
-            <h1 className="max-w-2xl text-5xl font-black leading-[1.04] tracking-tight">
+            <h1 className="max-w-2xl text-5xl font-bold leading-[1.04] tracking-tight">
               Un Nutri-Score du voyage international, en temps réel.
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8 text-white/90">
@@ -147,14 +147,14 @@ export default function LokascorePage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <button
                 onClick={() => navigate("/destination-count")}
-                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-black"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold"
                 style={{ color: "var(--lokadia-primary)" }}
               >
                 Vérifier une destination <ArrowRight className="h-4 w-4" />
               </button>
               <button
                 onClick={() => navigate("/profile")}
-                className="inline-flex items-center gap-2 rounded-full bg-white/15 px-6 py-3 text-sm font-black text-white backdrop-blur"
+                className="inline-flex items-center gap-2 rounded-full bg-white/15 px-6 py-3 text-sm font-bold text-white backdrop-blur"
               >
                 Choisir mon profil voyage
               </button>
@@ -167,15 +167,15 @@ export default function LokascorePage() {
           <div className="rounded-[32px] bg-white p-6" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-lg)" }}>
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-black uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
+                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
                   Lecture immédiate
                 </p>
-                <h2 className="mt-1 text-2xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                <h2 className="mt-1 text-2xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                   Échelle Lokascore
                 </h2>
               </div>
               <div className="rounded-2xl px-4 py-3 text-right" style={{ background: "var(--lokadia-info-bg)" }}>
-                <p className="text-4xl font-black" style={{ color: "var(--lokadia-primary)" }}>
+                <p className="text-4xl font-bold" style={{ color: "var(--lokadia-primary)" }}>
                   0-100
                 </p>
                 <p className="text-xs font-bold" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -188,11 +188,11 @@ export default function LokascorePage() {
               {LOKASCORE_LEVELS_ORDER.map((tier) => (
                 <div key={tier.level} className="rounded-2xl border p-3" style={{ borderColor: "var(--lokadia-gray-100)" }}>
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm font-black flex items-center gap-2" style={{ color: tier.color }}>
-                      <span>{tier.emoji}</span>
+                    <span className="text-sm font-bold flex items-center gap-2" style={{ color: tier.color }}>
+                      <tier.Icon className="h-4 w-4" style={{ color: tier.color }} />
                       {tier.label}
                     </span>
-                    <span className="rounded-full px-3 py-1 text-xs font-black text-white tabular-nums" style={{ background: tier.fillColor }}>
+                    <span className="rounded-full px-3 py-1 text-xs font-bold text-white tabular-nums" style={{ background: tier.fillColor }}>
                       {tier.min}-{tier.max}
                     </span>
                   </div>
@@ -214,7 +214,7 @@ export default function LokascorePage() {
               return (
                 <div key={item.title} className="rounded-3xl bg-white p-5" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
                   <Icon className="mb-4 h-6 w-6" style={{ color: "var(--lokadia-primary)" }} />
-                  <p className="font-black" style={{ color: "var(--lokadia-gray-900)" }}>{item.title}</p>
+                  <p className="font-bold" style={{ color: "var(--lokadia-gray-900)" }}>{item.title}</p>
                   <p className="mt-1 text-xs font-semibold" style={{ color: "var(--lokadia-gray-500)" }}>{item.desc}</p>
                 </div>
               );
@@ -225,10 +225,10 @@ export default function LokascorePage() {
 
       {/* ─── 4 DIMENSIONS (sans poids visibles) ─── */}
       <section className="mx-auto mt-10 max-w-7xl px-5 lg:px-0">
-        <p className="text-xs font-black uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
+        <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
           Architecture
         </p>
-        <h2 className="mt-2 text-3xl font-black tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+        <h2 className="mt-2 text-3xl font-bold tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
           Les 4 dimensions du Lokascore
         </h2>
         <p className="mt-2 text-sm max-w-3xl" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -253,7 +253,7 @@ export default function LokascorePage() {
                     <Icon className="h-5 w-5" style={{ color: dim.meta.color }} />
                   </span>
                   <div>
-                    <h3 className="font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                    <h3 className="font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                       {dim.meta.label}
                     </h3>
                     <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: dim.meta.color }}>
@@ -284,10 +284,10 @@ export default function LokascorePage() {
               <Lock className="h-6 w-6" />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-black uppercase tracking-wide opacity-80">
+              <p className="text-xs font-bold uppercase tracking-wide opacity-80">
                 Algorithme propriétaire
               </p>
-              <h2 className="mt-2 text-2xl font-black tracking-tight lg:text-3xl">
+              <h2 className="mt-2 text-2xl font-bold tracking-tight lg:text-3xl">
                 Méthodologie déposée à l'INPI
               </h2>
               <p className="mt-3 text-sm leading-relaxed opacity-95 max-w-3xl">
@@ -312,10 +312,10 @@ export default function LokascorePage() {
           className="rounded-[32px] bg-white p-6 lg:p-8"
           style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}
         >
-          <p className="text-xs font-black uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
+          <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
             Pipeline
           </p>
-          <h2 className="mt-2 text-3xl font-black tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
             Comment le score est produit
           </h2>
           <div className="mt-6 space-y-4">
@@ -326,13 +326,13 @@ export default function LokascorePage() {
                 style={{ borderColor: "var(--lokadia-gray-100)" }}
               >
                 <div
-                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl text-sm font-black text-white"
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl text-sm font-bold text-white"
                   style={{ background: "var(--gradient-primary)" }}
                 >
                   {step.n}
                 </div>
                 <div>
-                  <h3 className="font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                  <h3 className="font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                     {step.title}
                   </h3>
                   <p className="mt-1 text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -349,10 +349,10 @@ export default function LokascorePage() {
           className="rounded-[32px] bg-white p-6 lg:p-8"
           style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}
         >
-          <p className="text-xs font-black uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
+          <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
             Personnalisation
           </p>
-          <h2 className="mt-2 text-3xl font-black tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
             9 profils de voyage
           </h2>
           <p className="mt-2 text-sm" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -369,9 +369,9 @@ export default function LokascorePage() {
                   className="flex items-center gap-3 rounded-2xl border p-3"
                   style={{ borderColor: "var(--lokadia-gray-100)" }}
                 >
-                  <span className="text-lg flex-shrink-0" aria-hidden="true">{meta.emoji}</span>
+                  <meta.Icon className="h-5 w-5 flex-shrink-0" style={{ color: meta.color }} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                    <p className="text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                       {meta.label}
                     </p>
                     <p className="text-[11px] leading-snug" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -385,7 +385,7 @@ export default function LokascorePage() {
 
           <button
             onClick={() => navigate("/profile")}
-            className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-black text-white"
+            className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white"
             style={{ background: "var(--gradient-primary)" }}
           >
             Choisir mon profil de voyage <ArrowRight className="h-4 w-4" />
@@ -395,10 +395,10 @@ export default function LokascorePage() {
 
       {/* ─── SOURCES OFFICIELLES (visibles pour la confiance) ─── */}
       <section className="mx-auto mt-10 max-w-7xl px-5 lg:px-0">
-        <p className="text-xs font-black uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
+        <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
           Sources vérifiables
         </p>
-        <h2 className="mt-2 text-3xl font-black tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+        <h2 className="mt-2 text-3xl font-bold tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
           17 organismes officiels accessibles
         </h2>
         <p className="mt-2 text-sm max-w-3xl" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -424,10 +424,10 @@ export default function LokascorePage() {
                   </span>
                   <ExternalLink className="h-3.5 w-3.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100" />
                 </div>
-                <h3 className="font-black text-sm" style={{ color: "var(--lokadia-gray-900)" }}>
+                <h3 className="font-bold text-sm" style={{ color: "var(--lokadia-gray-900)" }}>
                   {source.name}
                 </h3>
-                <p className="mt-0.5 text-[10px] font-black uppercase tracking-wide" style={{ color: source.color }}>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide" style={{ color: source.color }}>
                   {source.full}
                 </p>
                 <p className="mt-1.5 text-[10px] font-bold" style={{ color: "var(--lokadia-gray-500)" }}>

@@ -81,12 +81,12 @@ export default function BookingScreen() {
           <button onClick={() => navigate(-1)} className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-xs font-bold text-white backdrop-blur">
             <ArrowLeft className="h-3.5 w-3.5" /> Retour
           </button>
-          <h1 className="text-2xl font-black text-white lg:text-3xl">Réserver mon voyage</h1>
+          <h1 className="text-2xl font-bold text-white lg:text-3xl">Réserver mon voyage</h1>
           <p className="mt-1 text-sm text-white/85">
             {destName}{countryName ? `, ${countryName}` : ''} · {new Date(startDate).toLocaleDateString('fr-FR')} → {new Date(endDate).toLocaleDateString('fr-FR')} · {travelers} voyageur{travelers > 1 ? 's' : ''}
           </p>
-          <p className="mt-2 inline-block rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold text-white">
-            🛒 Tout réservable in-app · paiement unique sécurisé
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold text-white">
+            <ShoppingCart className="h-3.5 w-3.5" /> Tout réservable in-app · paiement unique sécurisé
           </p>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function BookingScreen() {
                     <p className="text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>{f.airline} · {f.stops === 0 ? 'Direct' : `${f.stops} escale`}{f.tag ? ` · ${f.tag}` : ''}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-base font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(priceTotal)}</p>
+                    <p className="text-base font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(priceTotal)}</p>
                     <p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>{travelers} pers.</p>
                   </div>
                   <AddBtn added={added} color={CATEGORY_META.flight.color} onClick={() => add({ id, category: 'flight', title: `${f.airline} → ${destName}`, subtitle: `${f.departTime}-${f.arriveTime} · ${f.stops === 0 ? 'Direct' : f.stops + ' escale'}`, price: priceTotal, meta: `${travelers} voyageur${travelers > 1 ? 's' : ''}`, destinationId })} />
@@ -150,7 +150,7 @@ export default function BookingScreen() {
                     </div>
                     <div className="mt-1.5 flex items-end justify-between">
                       <div>
-                        <p className="text-base font-black leading-none" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(h.totalPrice)}</p>
+                        <p className="text-base font-bold leading-none" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(h.totalPrice)}</p>
                         <p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>{nights} nuit{nights > 1 ? 's' : ''} · {h.pricePerNight}€/nuit</p>
                       </div>
                       <AddBtn added={added} color={CATEGORY_META.hotel.color} onClick={() => add({ id, category: 'hotel', title: h.name, subtitle: `${h.tier} · ${h.rating.toFixed(1)}★`, price: h.totalPrice, meta: `${nights} nuit${nights > 1 ? 's' : ''}`, destinationId })} />
@@ -203,9 +203,9 @@ export default function BookingScreen() {
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
             <div>
               <p className="text-[11px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>{count} article{count > 1 ? 's' : ''} dans le panier</p>
-              <p className="text-xl font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(total)}</p>
+              <p className="text-xl font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(total)}</p>
             </div>
-            <button onClick={() => navigate('/checkout')} className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-black text-white" style={{ background: 'var(--gradient-primary)' }}>
+            <button onClick={() => navigate('/checkout')} className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white" style={{ background: 'var(--gradient-primary)' }}>
               <ShoppingCart className="h-4 w-4" /> Voir le panier & payer
             </button>
           </div>
@@ -236,12 +236,12 @@ function OfferRow({ o, added, onAdd, Icon }: { o: CatalogOffer; added: boolean; 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{o.title}</p>
-          {o.badge && <span className="rounded-full px-1.5 py-0.5 text-[9px] font-black" style={{ background: `${c}15`, color: c }}>{o.badge}</span>}
+          {o.badge && <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold" style={{ background: `${c}15`, color: c }}>{o.badge}</span>}
         </div>
         <p className="text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>{o.subtitle}</p>
       </div>
       <div className="text-right flex-shrink-0">
-        <p className="text-base font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{o.price.toLocaleString('fr-FR')} €</p>
+        <p className="text-base font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{o.price.toLocaleString('fr-FR')} €</p>
         <p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>{o.meta}</p>
       </div>
       <AddBtn added={added} color={c} onClick={onAdd} />

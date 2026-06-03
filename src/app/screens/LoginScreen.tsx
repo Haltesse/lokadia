@@ -296,7 +296,7 @@ export function LoginScreen() {
           <motion.h1 
             className="mb-2 text-center text-4xl font-bold text-white lg:text-left lg:text-6xl"
             style={{
-              textShadow: "0 4px 20px rgba(0, 0, 0, 0.3), 0 0 40px rgba(6, 182, 212, 0.2)",
+              textShadow: "0 2px 16px rgba(8, 15, 30, 0.45)",
               letterSpacing: "0.02em",
             }}
             initial={{ opacity: 0 }}
@@ -333,7 +333,7 @@ export function LoginScreen() {
                     backdropFilter: "blur(20px)",
                     WebkitBackdropFilter: "blur(20px)",
                     border: "1px solid rgba(255, 255, 255, 0.3)",
-                    boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+                    boxShadow: "0 24px 60px -20px rgba(8, 15, 30, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
                   }}
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -414,7 +414,7 @@ export function LoginScreen() {
                     backdropFilter: "blur(20px)",
                     WebkitBackdropFilter: "blur(20px)",
                     border: "1px solid rgba(255, 255, 255, 0.3)",
-                    boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+                    boxShadow: "0 24px 60px -20px rgba(8, 15, 30, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
                   }}
                   initial={{ opacity: 0, y: 50, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -570,7 +570,7 @@ export function LoginScreen() {
                       whileHover={{ scale: isLoading ? 1 : 1.02, backgroundColor: "rgba(255, 255, 255, 0.3)" }}
                       whileTap={{ scale: isLoading ? 1 : 0.98 }}
                     >
-                      {isLoading ? "Connexion..." : "🎭 Essayer le compte démo"}
+                      {isLoading ? "Connexion..." : "Essayer le compte démo"}
                     </motion.button>
                     <p className="text-center text-white/60 text-xs mt-2">
                       Explorez l'application sans créer de compte
@@ -595,7 +595,7 @@ export function LoginScreen() {
                     backdropFilter: "blur(20px)",
                     WebkitBackdropFilter: "blur(20px)",
                     border: "1px solid rgba(255, 255, 255, 0.3)",
-                    boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+                    boxShadow: "0 24px 60px -20px rgba(8, 15, 30, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
                   }}
                   initial={{ opacity: 0, y: 50, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}

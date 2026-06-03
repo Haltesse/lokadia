@@ -169,10 +169,10 @@ export function SearchScreen() {
 
         <div className="hidden lg:flex items-start justify-between gap-8 mb-6">
           <div>
-            <p className="text-xs font-black uppercase tracking-wide mb-2" style={{ color: "var(--lokadia-primary)" }}>
+            <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--lokadia-primary)" }}>
               Recherche
             </p>
-            <h1 className="text-4xl font-black tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+            <h1 className="text-4xl font-bold tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
               Trouver une destination
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -209,7 +209,7 @@ export function SearchScreen() {
       <div className="px-6 py-4 space-y-3 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6 lg:space-y-0 lg:px-0 lg:py-6">
         <aside className="hidden lg:block">
           <div className="sticky top-28 rounded-3xl bg-white p-5" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
-            <h2 className="text-sm font-black mb-4" style={{ color: "var(--lokadia-gray-900)" }}>
+            <h2 className="text-sm font-bold mb-4" style={{ color: "var(--lokadia-gray-900)" }}>
               Répartition
             </h2>
             <div className="space-y-2">
@@ -218,7 +218,7 @@ export function SearchScreen() {
                   <span className="text-sm font-bold" style={{ color: "var(--lokadia-gray-700)" }}>
                     {region}
                   </span>
-                  <span className="text-xs font-black" style={{ color: "var(--lokadia-primary)" }}>
+                  <span className="text-xs font-bold" style={{ color: "var(--lokadia-primary)" }}>
                     {count}
                   </span>
                 </div>

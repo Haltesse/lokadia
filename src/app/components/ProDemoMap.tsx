@@ -103,12 +103,12 @@ export function ProDemoMap({ points, accent }: Props) {
                 <Popup>
                   <div className="text-sm" style={{ minWidth: 180 }}>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{p.city}</span>
-                      <span className="rounded-full px-2 py-0.5 text-xs font-black text-white tabular-nums" style={{ background: isAlert ? '#dc2626' : lvl.fillColor }}>
+                      <span className="font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{p.city}</span>
+                      <span className="rounded-full px-2 py-0.5 text-xs font-bold text-white tabular-nums" style={{ background: isAlert ? '#dc2626' : lvl.fillColor }}>
                         {p.score ?? '…'}
                       </span>
                     </div>
-                    {isAlert && <p className="mt-1 text-[10px] font-black" style={{ color: '#dc2626' }}>🔴 ALERTE EN COURS</p>}
+                    {isAlert && <p className="mt-1 flex items-center gap-1 text-[10px] font-bold" style={{ color: '#dc2626' }}><span className="inline-block h-2 w-2 rounded-full" style={{ background: '#dc2626' }} /> ALERTE EN COURS</p>}
                     <p className="mt-1 text-[11px] font-bold" style={{ color: accent }}>{p.count} personne{p.count > 1 ? 's' : ''}</p>
                     <p className="mt-0.5 text-[10px] leading-snug" style={{ color: 'var(--lokadia-gray-500)' }}>{p.names.slice(0, 4).join(', ')}{p.names.length > 4 ? '…' : ''}</p>
                   </div>
@@ -120,7 +120,7 @@ export function ProDemoMap({ points, accent }: Props) {
 
         {/* Légende */}
         <div className="absolute bottom-3 left-3 z-[400] rounded-xl bg-white p-2.5 shadow-md" style={{ border: '1px solid var(--lokadia-gray-100)' }}>
-          <p className="mb-1 text-[10px] font-black uppercase tracking-wider" style={{ color: 'var(--lokadia-gray-600)' }}>Vos personnes</p>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--lokadia-gray-600)' }}>Vos personnes</p>
           <div className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-full" style={{ background: '#22c55e' }} /><span className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-600)' }}>Zone sûre</span></div>
           <div className="flex items-center gap-1.5 mt-0.5"><span className="inline-block h-3 w-3 rounded-full" style={{ background: '#ef4444', boxShadow: '0 0 0 2px #dc2626' }} /><span className="text-[10px] font-bold" style={{ color: '#991b1b' }}>Alerte / risque</span></div>
         </div>

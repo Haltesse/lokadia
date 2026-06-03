@@ -11,6 +11,7 @@ import TripsScreen from "./screens/TripsScreen";
 import TripWizardScreen from "./screens/TripWizardScreen";
 import TripDetailScreen from "./screens/TripDetailScreen";
 import TripMapPlannerScreen from "./screens/TripMapPlannerScreen";
+import TripBookingFunnel from "./screens/TripBookingFunnel";
 import { Premium } from "./screens/Premium";
 import LandingScreen from "./screens/LandingScreen";
 import LokascorePage from "./screens/LokascorePage";
@@ -149,6 +150,7 @@ function App() {
                 <Route path="/trips" element={<TripsScreen />} />
                 <Route path="/trips/create" element={<TripWizardScreen />} />
                 <Route path="/trips/map-planner" element={<TripMapPlannerScreen />} />
+                <Route path="/trips/:tripId/book" element={<TripBookingFunnel />} />
                 <Route path="/trips/:tripId" element={<TripDetailScreen />} />
                 <Route path="/trips/:tripId/edit" element={<TripWizardScreen />} />
                 <Route path="/premium" element={<Premium />} />

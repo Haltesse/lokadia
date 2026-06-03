@@ -156,12 +156,12 @@ function DesktopDestinationFeature({
         style={{ zIndex: 4 }}
       >
         <div className="flex items-start justify-between gap-6">
-          <div className="flex items-center gap-2 rounded-full bg-slate-950/38 px-4 py-2 text-xs font-black uppercase tracking-wide text-white shadow-[0_12px_32px_rgba(15,23,42,0.18)] ring-1 ring-white/18">
+          <div className="flex items-center gap-2 rounded-full bg-slate-950/38 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-[0_12px_32px_rgba(15,23,42,0.18)] ring-1 ring-white/18">
             <Star className="h-4 w-4 fill-white" />
             {destination.tag}
           </div>
           <div
-            className="rounded-full px-4 py-2 text-sm font-black text-white shadow-lg"
+            className="rounded-full px-4 py-2 text-sm font-bold text-white shadow-lg"
             style={{ background: scoreBackground }}
           >
             Lokascore {loading && score === null ? "..." : score !== null ? `${score}/100` : "--"}
@@ -169,7 +169,7 @@ function DesktopDestinationFeature({
         </div>
 
         <div className="max-w-2xl">
-          <h3 className="text-6xl font-black leading-none tracking-tight text-white">
+          <h3 className="text-6xl font-bold leading-none tracking-tight text-white">
             {destination.city}
           </h3>
           <div
@@ -179,7 +179,7 @@ function DesktopDestinationFeature({
             <MapPin className="h-5 w-5" />
             {destination.country}
           </div>
-          <div className="mt-7 inline-flex items-center gap-2 rounded-full bg-slate-950/38 px-5 py-3 text-sm font-black text-white shadow-[0_18px_42px_rgba(15,23,42,0.22)] ring-1 ring-white/18 transition-transform group-hover:translate-x-1">
+          <div className="mt-7 inline-flex items-center gap-2 rounded-full bg-slate-950/38 px-5 py-3 text-sm font-bold text-white shadow-[0_18px_42px_rgba(15,23,42,0.22)] ring-1 ring-white/18 transition-transform group-hover:translate-x-1">
             Découvrir la destination <ChevronRight className="h-4 w-4" />
           </div>
         </div>
@@ -258,7 +258,7 @@ export function DesktopHomeExperience() {
               </span>
             </div>
 
-            <h1 className="max-w-2xl text-5xl font-black leading-[1.04] tracking-tight text-white">
+            <h1 className="max-w-2xl text-5xl font-bold leading-[1.04] tracking-tight text-white">
               Préparez votre prochain voyage avec les bons repères.
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8 text-white/90">
@@ -313,7 +313,7 @@ export function DesktopHomeExperience() {
                   </span>
                   <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" style={{ color: "var(--lokadia-gray-400)" }} />
                 </div>
-                <h2 className="text-lg font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                <h2 className="text-lg font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                   {action.title}
                 </h2>
                 <p className="mt-2 text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -332,11 +332,11 @@ export function DesktopHomeExperience() {
               Inspiration
             </p>
             <div className="mt-1 flex items-center gap-3">
-              <h2 className="text-3xl font-black tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+              <h2 className="text-3xl font-bold tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
                 Destinations du moment
               </h2>
               <span
-                className="rounded-full px-3 py-1 text-xs font-black tabular-nums"
+                className="rounded-full px-3 py-1 text-xs font-bold tabular-nums"
                 style={{ background: "var(--lokadia-info-bg)", color: "var(--lokadia-primary)" }}
               >
                 {activeDestinationIndex + 1}/{destinations.length}
@@ -393,7 +393,7 @@ export function DesktopHomeExperience() {
             <div>
               <div className="flex items-center gap-2">
                 <Bell className="h-5 w-5" style={{ color: "var(--lokadia-primary)" }} />
-                <h2 className="text-xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                <h2 className="text-xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                   Essentiels de voyage
                 </h2>
               </div>
@@ -425,7 +425,7 @@ export function DesktopHomeExperience() {
                   <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: partner.bg }}>
                     <Icon className="h-5 w-5" style={{ color: partner.color }} />
                   </span>
-                  <span className="block text-sm font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                  <span className="block text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                     {partner.label}
                   </span>
                   <span className="mt-1 block text-xs font-semibold uppercase tracking-wide" style={{ color: partner.color }}>

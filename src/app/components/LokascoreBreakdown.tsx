@@ -71,11 +71,11 @@ export function LokascoreBreakdown({
       {/* Header : profil + score composite */}
       <div className="flex items-start justify-between mb-4 gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: 'var(--lokadia-primary)' }}>
+          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--lokadia-primary)' }}>
             Aperçu par catégorie
           </p>
           <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--lokadia-gray-600)' }}>
-            <span className="font-bold">{profileMeta.emoji} {profileMeta.label}</span>
+            <span className="inline-flex items-center gap-1 font-bold"><profileMeta.Icon className="h-3.5 w-3.5" style={{ color: 'var(--lokadia-primary)' }} /> {profileMeta.label}</span>
             {' · '}
             <span style={{ color: 'var(--lokadia-gray-500)' }}>{profileMeta.description}</span>
           </p>
@@ -83,7 +83,7 @@ export function LokascoreBreakdown({
         {compositeScore !== null && (
           <div className="flex flex-col items-end flex-shrink-0">
             <span
-              className="text-2xl font-black tabular-nums leading-none"
+              className="text-2xl font-bold tabular-nums leading-none"
               style={{ color: getLokascoreLevel(compositeScore).color }}
             >
               {compositeScore}
@@ -101,7 +101,7 @@ export function LokascoreBreakdown({
         >
           <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: '#dc2626' }} />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-black" style={{ color: '#991b1b' }}>
+            <p className="text-xs font-bold" style={{ color: '#991b1b' }}>
               {liveAlerts.length} alerte{liveAlerts.length > 1 ? 's' : ''} active{liveAlerts.length > 1 ? 's' : ''}
             </p>
             <ul className="mt-1 space-y-0.5">
@@ -126,12 +126,12 @@ export function LokascoreBreakdown({
             <div key={key}>
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-xs" aria-hidden="true">{meta.emoji}</span>
+                  <meta.Icon className="h-3.5 w-3.5" style={{ color: meta.color }} />
                   <span className="text-xs font-bold truncate" style={{ color: 'var(--lokadia-gray-700)' }}>
                     {meta.label}
                   </span>
                 </div>
-                <span className="text-xs font-black tabular-nums flex-shrink-0" style={{ color: lvl.color }}>
+                <span className="text-xs font-bold tabular-nums flex-shrink-0" style={{ color: lvl.color }}>
                   {intValue}
                 </span>
               </div>

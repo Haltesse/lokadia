@@ -16,7 +16,7 @@ export function StubScreen({ title, emoji, description }: StubProps) {
         <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-2xl bg-white shadow-sm flex items-center justify-center">
           <ArrowLeft className="w-5 h-5 text-slate-700" />
         </button>
-        <h1 className="text-xl font-black text-slate-900">{title}</h1>
+        <h1 className="text-xl font-bold text-slate-900">{title}</h1>
       </div>
       <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 pb-32">
         <span className="text-7xl">{emoji}</span>

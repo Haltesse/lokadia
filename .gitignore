@@ -38,3 +38,11 @@ lerna-debug.log*
 *.tsbuildinfo
 
 .vercel
+
+# Local caches & build artifacts (not for repo)
+.npm-cache/
+*-output.log
+Document/
+
+# Claude local preview config
+.claude/launch.json

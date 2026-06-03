@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router';
 import {
   Plane, Building2, Train, Wifi, ShieldCheck, Ticket, Home,
   Check, Plus, Star, ShoppingCart, Clock, ChevronRight, ArrowLeft,
-  Trash2, Sparkles, CheckCircle2, RotateCcw,
+  Trash2, Sparkles, CheckCircle2, RotateCcw, type LucideIcon,
 } from 'lucide-react';
 import type { TripWithChecklist } from '../lib/tripService';
 import { getTripBooking, clearTripBooking, type TripBooking } from '../lib/tripBookings';
@@ -100,10 +100,10 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
 
   // ─── ÉTAT : VOYAGE DÉJÀ FINALISÉ ───
   if (booking && !view) {
-    const cats = new Map<string, { label: string; emoji: string; items: typeof booking.items }>();
+    const cats = new Map<string, { label: string; Icon: LucideIcon; items: typeof booking.items }>();
     for (const it of booking.items) {
       const m = CATEGORY_META[it.category];
-      const e = cats.get(it.category) ?? { label: m.label, emoji: m.emoji, items: [] };
+      const e = cats.get(it.category) ?? { label: m.label, Icon: m.Icon, items: [] };
       e.items.push(it);
       cats.set(it.category, e);
     }
@@ -114,7 +114,7 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/20">
               <CheckCircle2 className="h-8 w-8" />
             </div>
-            <h2 className="text-xl font-black">Voyage finalisé 🎉</h2>
+            <h2 className="text-xl font-bold">Voyage finalisé</h2>
             <p className="mt-1 text-sm text-white/85">Tout est réservé pour {destName}</p>
             <div className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-bold">
               Réf. {booking.reference}
@@ -123,13 +123,13 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
         </div>
 
         <div className="rounded-3xl bg-white p-5" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
-          <h3 className="mb-3 text-base font-black" style={{ color: 'var(--lokadia-gray-900)' }}>Votre voyage réservé</h3>
+          <h3 className="mb-3 text-base font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>Votre voyage réservé</h3>
           <div className="space-y-3">
             {[...cats.entries()].map(([cat, group]) => (
               <div key={cat}>
                 <div className="mb-1 flex items-center gap-1.5">
-                  <span>{group.emoji}</span>
-                  <span className="text-xs font-black uppercase tracking-wide" style={{ color: CATEGORY_META[cat as CartCategory].color }}>{group.label}</span>
+                  <group.Icon className="h-4 w-4" style={{ color: CATEGORY_META[cat as CartCategory].color }} />
+                  <span className="text-xs font-bold uppercase tracking-wide" style={{ color: CATEGORY_META[cat as CartCategory].color }}>{group.label}</span>
                 </div>
                 {group.items.map((it) => (
                   <div key={it.id} className="flex items-center gap-2 pl-6">
@@ -143,7 +143,7 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
           </div>
           <div className="mt-4 flex items-center justify-between border-t pt-3" style={{ borderColor: 'var(--lokadia-gray-100)' }}>
             <span className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-600)' }}>Total payé</span>
-            <span className="text-xl font-black" style={{ color: '#059669' }}>{fmt(booking.total)}</span>
+            <span className="text-xl font-bold" style={{ color: '#059669' }}>{fmt(booking.total)}</span>
           </div>
         </div>
 
@@ -172,7 +172,7 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
             <cat.Icon className="h-5 w-5" style={{ color: c }} />
           </div>
           <div>
-            <h2 className="text-lg font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{cat.label}</h2>
+            <h2 className="text-lg font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{cat.label}</h2>
             <p className="text-xs" style={{ color: 'var(--lokadia-gray-500)' }}>{cat.desc}</p>
           </div>
         </div>
@@ -202,7 +202,7 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
                 <p className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{f.departTime} → {f.arriveTime} <span className="font-normal" style={{ color: 'var(--lokadia-gray-400)' }}>· {f.duration}</span></p>
                 <p className="text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>{f.airline} · {f.stops === 0 ? 'Direct' : `${f.stops} escale`}{f.tag ? ` · ${f.tag}` : ''}</p>
               </div>
-              <div className="text-right flex-shrink-0"><p className="text-base font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(priceTotal)}</p><p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>{travelers} pers.</p></div>
+              <div className="text-right flex-shrink-0"><p className="text-base font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(priceTotal)}</p><p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>{travelers} pers.</p></div>
               <Toggle added={has(id)} color={CATEGORY_META.flight.color} onClick={() => has(id) ? remove(id) : add({ id, category: 'flight', title: `${f.airline} → ${destName}`, subtitle: `${f.departTime}-${f.arriveTime} · ${f.stops === 0 ? 'Direct' : f.stops + ' escale'}`, price: priceTotal, meta: `${travelers} voyageur${travelers > 1 ? 's' : ''}`, destinationId })} />
             </div>
           );
@@ -228,7 +228,7 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
         <div className="p-5">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
-            <h2 className="text-lg font-black">Organisez tout votre voyage</h2>
+            <h2 className="text-lg font-bold">Organisez tout votre voyage</h2>
           </div>
           <p className="mt-1 text-sm text-white/85">
             {destName} · {nights} nuit{nights > 1 ? 's' : ''} · {travelers} voyageur{travelers > 1 ? 's' : ''}
@@ -262,7 +262,7 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
                   <cat.Icon className="h-5 w-5" style={{ color: c }} />
                 </div>
                 {isBooked ? (
-                  <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black text-white" style={{ background: c }}>
+                  <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold text-white" style={{ background: c }}>
                     <Check className="h-3 w-3" strokeWidth={3} /> {catItems.length}
                   </span>
                 ) : (
@@ -271,12 +271,12 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
                   </span>
                 )}
               </div>
-              <p className="text-base font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{cat.label}</p>
+              <p className="text-base font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{cat.label}</p>
               {isBooked ? (
                 <>
                   <p className="mt-0.5 text-xs truncate" style={{ color: 'var(--lokadia-gray-600)' }}>{catItems[0].title}{catItems.length > 1 ? ` +${catItems.length - 1}` : ''}</p>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="text-sm font-black" style={{ color: c }}>{fmt(catTotal)}</span>
+                    <span className="text-sm font-bold" style={{ color: c }}>{fmt(catTotal)}</span>
                     <span className="inline-flex items-center gap-0.5 text-[11px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>Modifier <ChevronRight className="h-3 w-3" /></span>
                   </div>
                 </>
@@ -297,7 +297,7 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
       {count > 0 && (
         <div className="rounded-3xl bg-white p-5" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-base font-black" style={{ color: 'var(--lokadia-gray-900)' }}>
+            <h3 className="flex items-center gap-2 text-base font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>
               <ShoppingCart className="h-4 w-4" /> Récapitulatif
             </h3>
             <span className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>{count} article{count > 1 ? 's' : ''}</span>
@@ -307,12 +307,12 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
               const m = CATEGORY_META[it.category];
               return (
                 <div key={it.id} className="flex items-center gap-2.5">
-                  <span className="text-base">{m.emoji}</span>
+                  <m.Icon className="h-4 w-4" style={{ color: m.color }} />
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold truncate" style={{ color: 'var(--lokadia-gray-900)' }}>{it.title}</p>
                     <p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>{m.label}{it.qty > 1 ? ` ×${it.qty}` : ''}</p>
                   </div>
-                  <span className="text-xs font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(it.price * it.qty)}</span>
+                  <span className="text-xs font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(it.price * it.qty)}</span>
                   <button onClick={() => remove(it.id)} className="flex h-7 w-7 items-center justify-center rounded-lg text-red-400 hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
               );
@@ -320,7 +320,7 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
           </div>
           <div className="mt-3 flex items-center justify-between border-t pt-3" style={{ borderColor: 'var(--lokadia-gray-100)' }}>
             <span className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-600)' }}>Total</span>
-            <span className="text-xl font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(total)}</span>
+            <span className="text-xl font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(total)}</span>
           </div>
         </div>
       )}
@@ -328,7 +328,9 @@ export default function TripBookingTab({ trip }: { trip: TripWithChecklist }) {
       {/* État vide encourageant */}
       {count === 0 && (
         <div className="rounded-3xl bg-white p-6 text-center" style={{ border: '1px dashed var(--lokadia-gray-200)' }}>
-          <div className="mx-auto mb-2 text-3xl">🧳</div>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full" style={{ background: 'var(--lokadia-info-bg)' }}>
+            <ShoppingCart className="h-6 w-6" style={{ color: 'var(--lokadia-primary)' }} />
+          </div>
           <p className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-700)' }}>Commencez par l'essentiel</p>
           <p className="mt-1 text-xs" style={{ color: 'var(--lokadia-gray-500)' }}>Hébergement, vol et assurance pour un voyage serein.</p>
         </div>
@@ -346,9 +348,9 @@ function CartBar({ count, total, fmt, onClick }: { count: number; total: number;
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>{count} article{count > 1 ? 's' : ''}</p>
-          <p className="text-xl font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(total)}</p>
+          <p className="text-xl font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(total)}</p>
         </div>
-        <button onClick={onClick} className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-black text-white" style={{ background: 'var(--gradient-primary)' }}>
+        <button onClick={onClick} className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white" style={{ background: 'var(--gradient-primary)' }}>
           <CheckCircle2 className="h-4 w-4" /> Finaliser le voyage
         </button>
       </div>
@@ -360,7 +362,7 @@ function Label({ icon: Icon, text, color }: { icon: any; text: string; color: st
   return (
     <div className="flex items-center gap-2 pt-2">
       <Icon className="h-4 w-4" style={{ color }} />
-      <h3 className="text-sm font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{text}</h3>
+      <h3 className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{text}</h3>
     </div>
   );
 }
@@ -389,7 +391,7 @@ function HotelCard({ h, nights, fmt, added, onToggle }: { h: any; nights: number
         </div>
         <div className="mt-1.5 flex items-end justify-between">
           <div>
-            <p className="text-base font-black leading-none" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(h.totalPrice)}</p>
+            <p className="text-base font-bold leading-none" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(h.totalPrice)}</p>
             <p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>{nights} nuit{nights > 1 ? 's' : ''} · {h.pricePerNight}€/nuit</p>
           </div>
           <Toggle added={added} color={CATEGORY_META.hotel.color} onClick={onToggle} />
@@ -409,12 +411,12 @@ function Row({ o, added, onToggle, Icon }: { o: CatalogOffer; added: boolean; on
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{o.title}</p>
-          {o.badge && <span className="rounded-full px-1.5 py-0.5 text-[9px] font-black" style={{ background: `${c}15`, color: c }}>{o.badge}</span>}
+          {o.badge && <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold" style={{ background: `${c}15`, color: c }}>{o.badge}</span>}
         </div>
         <p className="text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>{o.subtitle}</p>
       </div>
       <div className="text-right flex-shrink-0">
-        <p className="text-base font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{o.price.toLocaleString('fr-FR')} €</p>
+        <p className="text-base font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{o.price.toLocaleString('fr-FR')} €</p>
         <p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>{o.meta}</p>
       </div>
       <Toggle added={added} color={c} onClick={onToggle} />

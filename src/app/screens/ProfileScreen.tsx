@@ -573,7 +573,7 @@ export function ProfileScreen() {
                 {t.profile.noTrips}
               </p>
               <button
-                onClick={() => navigate("/trip/create")}
+                onClick={() => navigate("/trips/map-planner")}
                 className="px-6 py-3 rounded-xl font-semibold text-white"
                 style={{ backgroundColor: "var(--lokadia-deep-blue)" }}
               >
@@ -660,9 +660,9 @@ export function ProfileScreen() {
             background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.06), rgba(109, 40, 217, 0.06))',
             border: '1px solid var(--lokadia-gray-100)',
           }}>
-            <div className="text-2xl flex-shrink-0">{PROFILE_META[travelProfile].emoji}</div>
+            <div className="flex-shrink-0">{(() => { const I = PROFILE_META[travelProfile].Icon; return <I className="h-6 w-6" style={{ color: 'var(--lokadia-primary)' }} />; })()}</div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-black uppercase tracking-wide" style={{ color: 'var(--lokadia-primary)' }}>
+              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--lokadia-primary)' }}>
                 Profil actif
               </p>
               <p className="text-sm font-bold mt-0.5" style={{ color: 'var(--lokadia-gray-900)' }}>

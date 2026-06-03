@@ -91,6 +91,22 @@ const config: Config = {
       fontFamily: {
         sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
       },
+      // Ombres slate-tintées & diffuses (style Linear/Stripe/Vercel) —
+      // remplacent les ombres noir pur de Tailwind sur toute l'app.
+      boxShadow: {
+        sm: "0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06)",
+        DEFAULT: "0 1px 3px 0 rgb(15 23 42 / 0.06), 0 1px 2px -1px rgb(15 23 42 / 0.05)",
+        md: "0 4px 8px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.05)",
+        lg: "0 12px 20px -6px rgb(15 23 42 / 0.10), 0 4px 8px -4px rgb(15 23 42 / 0.06)",
+        xl: "0 20px 32px -10px rgb(15 23 42 / 0.12), 0 8px 16px -8px rgb(15 23 42 / 0.07)",
+        "2xl": "0 28px 56px -16px rgb(15 23 42 / 0.18), 0 12px 24px -12px rgb(15 23 42 / 0.10)",
+      },
+      // Eyebrows uppercase plus aérées (défauts Tailwind trop serrés).
+      letterSpacing: {
+        wide: "0.075em",
+        wider: "0.12em",
+        widest: "0.18em",
+      },
     },
   },
   plugins: [animate],

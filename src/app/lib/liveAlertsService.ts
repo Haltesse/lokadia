@@ -11,6 +11,8 @@
  * Chaque alerte est catégorisée, géolocalisée (lat/lon) et notée en sévérité.
  */
 
+import { Activity, Tornado, Waves, Mountain, Sun, Flame, Biohazard, Swords, Landmark, LifeBuoy, Wind, AlertTriangle, type LucideIcon } from 'lucide-react';
+
 export type AlertSeverity = 'orange' | 'red';
 export type AlertType =
   | 'earthquake' | 'cyclone' | 'flood' | 'volcano' | 'drought' | 'wildfire'
@@ -46,19 +48,19 @@ export interface LiveAlertsSnapshot {
 }
 
 /** Métadonnées d'affichage par type d'alerte (label FR, emoji, couleur) */
-export const ALERT_TYPE_META: Record<string, { label: string; emoji: string; color: string }> = {
-  earthquake:   { label: 'Séisme',              emoji: '🌋', color: '#b45309' },
-  cyclone:      { label: 'Cyclone / Tempête',   emoji: '🌀', color: '#0369a1' },
-  flood:        { label: 'Inondation',          emoji: '🌊', color: '#0e7490' },
-  volcano:      { label: 'Volcan',              emoji: '🌋', color: '#c2410c' },
-  drought:      { label: 'Sécheresse',          emoji: '🏜️', color: '#a16207' },
-  wildfire:     { label: 'Incendie',            emoji: '🔥', color: '#dc2626' },
-  epidemic:     { label: 'Épidémie',            emoji: '🦠', color: '#7c3aed' },
-  war:          { label: 'Guerre / Conflit',    emoji: '⚔️', color: '#991b1b' },
-  political:    { label: 'Instabilité politique', emoji: '🏛️', color: '#b91c1c' },
-  humanitarian: { label: 'Crise humanitaire',   emoji: '🆘', color: '#be123c' },
-  storm:        { label: 'Tempête',             emoji: '🌀', color: '#0369a1' },
-  other:        { label: 'Alerte',              emoji: '⚠️', color: '#dc2626' },
+export const ALERT_TYPE_META: Record<string, { label: string; Icon: LucideIcon; color: string }> = {
+  earthquake:   { label: 'Séisme',              Icon: Activity,      color: '#b45309' },
+  cyclone:      { label: 'Cyclone / Tempête',   Icon: Tornado,       color: '#0369a1' },
+  flood:        { label: 'Inondation',          Icon: Waves,         color: '#0e7490' },
+  volcano:      { label: 'Volcan',              Icon: Mountain,      color: '#c2410c' },
+  drought:      { label: 'Sécheresse',          Icon: Sun,           color: '#a16207' },
+  wildfire:     { label: 'Incendie',            Icon: Flame,         color: '#dc2626' },
+  epidemic:     { label: 'Épidémie',            Icon: Biohazard,     color: '#7c3aed' },
+  war:          { label: 'Guerre / Conflit',    Icon: Swords,        color: '#991b1b' },
+  political:    { label: 'Instabilité politique', Icon: Landmark,    color: '#b91c1c' },
+  humanitarian: { label: 'Crise humanitaire',   Icon: LifeBuoy,      color: '#be123c' },
+  storm:        { label: 'Tempête',             Icon: Wind,          color: '#0369a1' },
+  other:        { label: 'Alerte',              Icon: AlertTriangle, color: '#dc2626' },
 };
 
 const CACHE_DURATION = 20 * 60 * 1000; // 20 min

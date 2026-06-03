@@ -120,7 +120,7 @@ export default function ProPage() {
                 <Briefcase className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                <p className="text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                   Lokadia Pro
                 </p>
                 <p className="text-xs font-semibold" style={{ color: "var(--lokadia-gray-500)" }}>
@@ -152,7 +152,7 @@ export default function ProPage() {
 
             <div className="mt-6 rounded-2xl p-4" style={{ background: "var(--lokadia-info-bg)" }}>
               <Shield className="mb-3 h-5 w-5" style={{ color: "var(--lokadia-primary)" }} />
-              <p className="text-sm font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+              <p className="text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                 Devoir de protection
               </p>
               <p className="mt-1 text-xs leading-5" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -173,9 +173,9 @@ export default function ProPage() {
             <div className="relative z-10 max-w-3xl">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 backdrop-blur-md">
                 <Briefcase className="h-4 w-4" />
-                <span className="text-xs font-black uppercase tracking-wide">B2B</span>
+                <span className="text-xs font-bold uppercase tracking-wide">B2B</span>
               </div>
-              <h1 className="text-4xl font-black leading-tight tracking-tight lg:text-6xl">
+              <h1 className="text-4xl font-bold leading-tight tracking-tight lg:text-6xl">
                 Pilotez le risque voyage comme un back-office.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-7 text-white/90 lg:text-lg">
@@ -183,7 +183,7 @@ export default function ProPage() {
               </p>
               <button
                 onClick={() => navigate(`/pro/demo?offer=${activeOffer.id}`)}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-black shadow-lg transition-transform hover:-translate-y-0.5"
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold shadow-lg transition-transform hover:-translate-y-0.5"
                 style={{ color: "var(--lokadia-primary)" }}
               >
                 <LayoutDashboard className="h-4 w-4" /> Voir la démo du tableau de bord Pro
@@ -196,7 +196,7 @@ export default function ProPage() {
                   { label: "Usage", value: "B2B" },
                 ].map((stat) => (
                   <div key={stat.label} className="rounded-2xl bg-white/15 p-4 backdrop-blur">
-                    <p className="text-2xl font-black">{stat.value}</p>
+                    <p className="text-2xl font-bold">{stat.value}</p>
                     <p className="text-xs font-semibold text-white/75">{stat.label}</p>
                   </div>
                 ))}
@@ -208,15 +208,15 @@ export default function ProPage() {
             <div className="rounded-[28px] bg-white p-6" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
               <div className="mb-5 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-wide" style={{ color: activeOffer.color }}>
+                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: activeOffer.color }}>
                     Offre sélectionnée
                   </p>
-                  <h2 className="mt-1 text-3xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                  <h2 className="mt-1 text-3xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                     {activeOffer.title}
                   </h2>
                 </div>
                 <div className="rounded-2xl px-4 py-3 text-right" style={{ background: activeOffer.bg }}>
-                  <p className="text-2xl font-black" style={{ color: activeOffer.color }}>
+                  <p className="text-2xl font-bold" style={{ color: activeOffer.color }}>
                     {activeOffer.price}
                   </p>
                   <p className="text-xs font-bold" style={{ color: "var(--lokadia-gray-500)" }}>
@@ -239,7 +239,7 @@ export default function ProPage() {
               {/* Démo dédiée à l'offre sélectionnée */}
               <button
                 onClick={() => navigate(`/pro/demo?offer=${activeOffer.id}`)}
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-black text-white transition-transform hover:-translate-y-0.5"
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-bold text-white transition-transform hover:-translate-y-0.5"
                 style={{ background: activeOffer.color }}
               >
                 <LayoutDashboard className="h-4 w-4" />
@@ -248,7 +248,7 @@ export default function ProPage() {
               </button>
 
               <div className="mt-6 overflow-hidden rounded-2xl border" style={{ borderColor: "var(--lokadia-gray-100)" }}>
-                <div className="grid grid-cols-[1.2fr_0.8fr_0.8fr] bg-gray-50 px-4 py-3 text-xs font-black uppercase tracking-wide" style={{ color: "var(--lokadia-gray-500)" }}>
+                <div className="grid grid-cols-[1.2fr_0.8fr_0.8fr] bg-gray-50 px-4 py-3 text-xs font-bold uppercase tracking-wide" style={{ color: "var(--lokadia-gray-500)" }}>
                   <span>Segment</span>
                   <span>Budget</span>
                   <span>Statut</span>
@@ -260,13 +260,13 @@ export default function ProPage() {
                     className="grid w-full grid-cols-[1.2fr_0.8fr_0.8fr] items-center border-t px-4 py-4 text-left text-sm transition-colors hover:bg-gray-50"
                     style={{ borderColor: "var(--lokadia-gray-100)" }}
                   >
-                    <span className="font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                    <span className="font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                       {offer.title}
                     </span>
                     <span className="font-semibold" style={{ color: "var(--lokadia-gray-600)" }}>
                       {offer.price}
                     </span>
-                    <span className="w-fit rounded-full px-2.5 py-1 text-xs font-black" style={{ background: offer.bg, color: offer.color }}>
+                    <span className="w-fit rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: offer.bg, color: offer.color }}>
                       {offer.featured ? "Demandé" : "Disponible"}
                     </span>
                   </button>
@@ -280,7 +280,7 @@ export default function ProPage() {
                   <Mail className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                  <h2 className="text-xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                     Parlons de votre besoin
                   </h2>
                   <p className="text-sm" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -292,13 +292,13 @@ export default function ProPage() {
               {status === "success" ? (
                 <div className="rounded-2xl p-6 text-center" style={{ background: "rgba(16, 185, 129, 0.1)", color: "#059669" }}>
                   <CheckCircle2 className="mx-auto mb-3 h-10 w-10" />
-                  <p className="text-lg font-black">Demande reçue, merci !</p>
+                  <p className="text-lg font-bold">Demande reçue, merci !</p>
                   <p className="mt-1 text-sm">Nous vous recontactons sous 48 h ouvrées.</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label className="mb-2 block text-sm font-black" style={{ color: "var(--lokadia-gray-700)" }}>
+                    <label className="mb-2 block text-sm font-bold" style={{ color: "var(--lokadia-gray-700)" }}>
                       Organisation
                     </label>
                     <input
@@ -312,7 +312,7 @@ export default function ProPage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-black" style={{ color: "var(--lokadia-gray-700)" }}>
+                    <label className="mb-2 block text-sm font-bold" style={{ color: "var(--lokadia-gray-700)" }}>
                       Email professionnel
                     </label>
                     <input
@@ -328,7 +328,7 @@ export default function ProPage() {
                   <button
                     type="submit"
                     disabled={status === "loading"}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-black text-white"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-bold text-white"
                     style={{ background: "var(--gradient-primary)" }}
                   >
                     {status === "loading" ? "Envoi..." : "Être recontacté"}
@@ -338,7 +338,7 @@ export default function ProPage() {
                   <button
                     type="button"
                     onClick={() => navigate(`/pro/demo?offer=${activeOffer.id}`)}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 py-4 text-sm font-black"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 py-4 text-sm font-bold"
                     style={{ borderColor: "var(--lokadia-primary)", color: "var(--lokadia-primary)" }}
                   >
                     <LayoutDashboard className="h-4 w-4" /> Explorer la démo « {activeOffer.title} »

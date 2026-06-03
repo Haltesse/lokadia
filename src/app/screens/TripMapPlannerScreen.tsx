@@ -566,7 +566,17 @@ export default function TripMapPlannerScreen() {
         });
       }
 
-      navigate(`/trips/${trip.id}`);
+      // Handoff vers le funnel de réservation guidé (vol → hébergement → eSIM → activités)
+      const params = new URLSearchParams({
+        dest: mainStop.destinationId,
+        name: mainStop.name,
+        country: mainStop.country || '',
+        start: startDate,
+        end: endDate,
+        travelers: String(travelers),
+        from: departure.iata,
+      });
+      navigate(`/trips/${trip.id}/book?${params.toString()}`);
     } catch (e) {
       console.error('❌ Sauvegarde voyage planifié:', e);
       alert('Erreur lors de la sauvegarde du voyage');
@@ -898,7 +908,7 @@ export default function TripMapPlannerScreen() {
 
           <div className="flex-1 text-left mt-1 pointer-events-none">
             <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">
-              <span className="lg:hidden">Glisse ↕ pour redimensionner</span>
+              <span className="lg:hidden">Glisse pour redimensionner</span>
               <span className="hidden lg:inline">Itinéraire de travail</span>
             </p>
             <p className="text-sm font-bold text-gray-900">
@@ -1150,7 +1160,7 @@ export default function TripMapPlannerScreen() {
                     ? 'Choisis tes dates'
                     : stops.length === 0
                       ? 'Ajoute au moins une étape'
-                      : 'Enregistrer le voyage'}
+                      : 'Continuer vers la réservation'}
             </button>
 
             <p className="text-[11px] text-center text-gray-500 flex items-center justify-center gap-1">

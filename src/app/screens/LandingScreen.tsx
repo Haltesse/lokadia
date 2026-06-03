@@ -107,8 +107,8 @@ export default function LandingScreen() {
                 style={{ background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.25)' }}
               >
                 <Shield className="h-4 w-4 text-white" />
-                <span className="text-xs font-semibold text-white tracking-wide">
-                  L'ASSISTANT SÉCURITÉ VOYAGEUR
+                <span className="text-xs font-semibold text-white uppercase" style={{ letterSpacing: '0.18em' }}>
+                  L'assistant sécurité voyageur
                 </span>
               </motion.div>
 
@@ -157,7 +157,10 @@ export default function LandingScreen() {
                   style={{
                     background: status === 'success' ? '#10B981' : '#FCD34D',
                     color: status === 'success' ? 'white' : '#0F4C81',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+                    boxShadow:
+                      status === 'success'
+                        ? '0 10px 30px -10px rgba(16, 185, 129, 0.55)'
+                        : '0 10px 30px -10px rgba(252, 211, 77, 0.7)',
                   }}
                 >
                   {status === 'loading' && 'Envoi...'}
@@ -212,7 +215,7 @@ export default function LandingScreen() {
             >
               <div
                 className="rounded-3xl p-7 bg-white/95 backdrop-blur-md"
-                style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.35)' }}
+                style={{ boxShadow: '0 25px 60px -15px rgba(15, 23, 42, 0.4), 0 8px 20px -8px rgba(15, 23, 42, 0.15)' }}
               >
                 <div className="flex items-center gap-3 mb-5">
                   <MapPin className="h-5 w-5" style={{ color: 'var(--lokadia-primary)' }} />
@@ -340,10 +343,12 @@ export default function LandingScreen() {
         <div className="text-center mt-10">
           <button
             onClick={() => navigate('/lokascore')}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all hover:-translate-y-0.5"
             style={{
-              background: 'var(--lokadia-info-bg)',
+              background: 'white',
               color: 'var(--lokadia-primary)',
+              border: '1px solid var(--lokadia-gray-200)',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
             Comprendre l'algorithme Lokascore <ArrowRight className="h-4 w-4" />
@@ -404,7 +409,9 @@ export default function LandingScreen() {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-md mb-5">
                 <Briefcase className="h-4 w-4 text-white" />
-                <span className="text-xs font-semibold text-white tracking-wide">ESPACE PRO</span>
+                <span className="text-xs font-semibold text-white uppercase" style={{ letterSpacing: '0.18em' }}>
+                  Espace Pro
+                </span>
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
                 Protégez vos équipes, vos étudiants, vos assurés.
@@ -463,9 +470,24 @@ export default function LandingScreen() {
             © 2026 Lokadia · Voyage en toute sécurité · contact@lokadia.fr
           </p>
           <div className="flex gap-4 text-xs" style={{ color: 'var(--lokadia-gray-500)' }}>
-            <button onClick={() => navigate('/global-home')}>Démo</button>
-            <button onClick={() => navigate('/pro')}>Pro</button>
-            <button onClick={() => navigate('/lokascore')}>Lokascore</button>
+            <button
+              onClick={() => navigate('/global-home')}
+              className="transition-colors hover:text-[color:var(--lokadia-primary)]"
+            >
+              Démo
+            </button>
+            <button
+              onClick={() => navigate('/pro')}
+              className="transition-colors hover:text-[color:var(--lokadia-primary)]"
+            >
+              Pro
+            </button>
+            <button
+              onClick={() => navigate('/lokascore')}
+              className="transition-colors hover:text-[color:var(--lokadia-primary)]"
+            >
+              Lokascore
+            </button>
           </div>
         </div>
       </footer>

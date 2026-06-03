@@ -199,7 +199,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
       country: destination.country,
     };
     console.log("✈️ Création de voyage pour:", destinationForTrip);
-    navigate("/trips/create", { state: { destination: destinationForTrip } });
+    navigate("/trips/map-planner", { state: { destination: destinationForTrip } });
   };
 
   const handleGoToChecklist = () => {

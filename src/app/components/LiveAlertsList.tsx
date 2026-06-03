@@ -6,7 +6,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Globe, MapPin, RefreshCw } from 'lucide-react';
+import { Globe, MapPin, RefreshCw, ShieldCheck, AlertTriangle } from 'lucide-react';
 import {
   fetchLiveAlerts,
   getLiveAlertsSnapshot,
@@ -100,9 +100,9 @@ export function LiveAlertsList() {
           border: '1px solid rgba(34, 197, 94, 0.25)',
         }}
       >
-        <div className="text-3xl">✅</div>
+        <ShieldCheck className="h-8 w-8 flex-shrink-0" style={{ color: '#15803d' }} />
         <div>
-          <h3 className="font-black text-sm" style={{ color: '#15803d' }}>
+          <h3 className="font-bold text-sm" style={{ color: '#15803d' }}>
             Aucune alerte majeure dans le monde
           </h3>
           <p className="text-xs mt-1" style={{ color: '#166534' }}>
@@ -150,14 +150,14 @@ export function LiveAlertsList() {
             <Globe className="h-5 w-5" style={{ color: '#dc2626' }} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-black" style={{ color: '#991b1b' }}>
+            <p className="text-sm font-bold" style={{ color: '#991b1b' }}>
               {totalAlerts} alerte{totalAlerts > 1 ? 's' : ''} active{totalAlerts > 1 ? 's' : ''} dans {groups.length} pays
               {redCount > 0 && (
                 <span
-                  className="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black text-white tabular-nums"
+                  className="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold text-white tabular-nums"
                   style={{ background: '#dc2626' }}
                 >
-                  {redCount} 🚨 critique
+                  {redCount} critique
                 </span>
               )}
             </p>
@@ -198,7 +198,7 @@ export function LiveAlertsList() {
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span className="text-2xl flex-shrink-0" aria-hidden="true">{flag}</span>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-black" style={{ color: 'var(--lokadia-gray-900)' }}>
+                    <h3 className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>
                       {group.iso} · {group.alerts.length} alerte{group.alerts.length > 1 ? 's' : ''}
                     </h3>
                     {group.destinations.length > 0 && (
@@ -210,10 +210,10 @@ export function LiveAlertsList() {
                 </div>
                 {group.hasRed && (
                   <span
-                    className="flex-shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black text-white tabular-nums"
+                    className="flex-shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white tabular-nums"
                     style={{ background: '#dc2626' }}
                   >
-                    🚨 ROUGE
+                    <AlertTriangle className="h-3 w-3" /> ROUGE
                   </span>
                 )}
               </div>
@@ -230,7 +230,7 @@ export function LiveAlertsList() {
                         background: alert.severity === 'red' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(245, 158, 11, 0.05)',
                       }}
                     >
-                      <span className="text-sm flex-shrink-0 mt-0.5" aria-hidden="true">{meta.emoji}</span>
+                      <meta.Icon className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: meta.color }} />
                       <div className="flex-1 min-w-0">
                         <p className="text-[11px] font-bold leading-snug" style={{ color: 'var(--lokadia-gray-900)' }}>
                           {alert.description}

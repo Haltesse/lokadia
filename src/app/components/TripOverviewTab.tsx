@@ -91,7 +91,7 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
           {priorityActions.length === 0 ? (
             <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
               <CheckCircle2 className="mx-auto text-green-600 mb-2" size={32} />
-              <p className="text-green-800 font-medium">Vous êtes prêt ! 🎉</p>
+              <p className="text-green-800 font-medium">Vous êtes prêt !</p>
             </div>
           ) : (
             priorityActions.map((action) => {

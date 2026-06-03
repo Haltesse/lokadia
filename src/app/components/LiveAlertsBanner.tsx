@@ -7,7 +7,7 @@
  */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { AlertTriangle, ChevronRight, Globe } from 'lucide-react';
+import { Activity, AlertTriangle, ChevronRight, Globe } from 'lucide-react';
 import {
   subscribeToLiveAlerts,
   getLiveAlertsSnapshot,
@@ -75,16 +75,16 @@ export function LiveAlertsBanner({ variant = 'mobile' }: LiveAlertsBannerProps) 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <p
-            className={isDesktop ? 'text-sm font-black' : 'text-xs font-black'}
+            className={isDesktop ? 'text-sm font-bold' : 'text-xs font-bold'}
             style={{ color: '#991b1b' }}
           >
             {totalAlerts} alerte{totalAlerts > 1 ? 's' : ''} active{totalAlerts > 1 ? 's' : ''}
             {redAlerts > 0 && (
               <span
-                className="ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black text-white tabular-nums"
+                className="ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white tabular-nums"
                 style={{ background: '#dc2626' }}
               >
-                {redAlerts} 🚨
+                <AlertTriangle className="h-3 w-3" /> {redAlerts}
               </span>
             )}
           </p>
@@ -107,7 +107,7 @@ export function LiveAlertsBanner({ variant = 'mobile' }: LiveAlertsBannerProps) 
         <p className={isDesktop ? 'text-xs' : 'text-[11px]'} style={{ color: '#7f1d1d' }}>
           <Globe className="inline h-3 w-3 mr-1" />
           {countriesCount} pays affectés ·{' '}
-          {earthquakeCount > 0 && <>🌋 {earthquakeCount} séisme{earthquakeCount > 1 ? 's' : ''} · </>}
+          {earthquakeCount > 0 && <><Activity className="inline h-3 w-3" /> {earthquakeCount} séisme{earthquakeCount > 1 ? 's' : ''} · </>}
           {snapshot.sources.join(' + ')}
         </p>
       </div>

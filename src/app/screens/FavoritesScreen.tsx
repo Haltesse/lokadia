@@ -18,8 +18,8 @@ export function FavoritesScreen() {
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
         <div className="lg:flex-1">
-          <p className="hidden lg:block text-xs font-black uppercase tracking-wide text-white/75 mb-2">Sélections</p>
-          <h1 className="text-xl font-bold text-white lg:text-4xl lg:font-black">Favoris</h1>
+          <p className="hidden lg:block text-xs font-bold uppercase tracking-wide text-white/75 mb-2">Sélections</p>
+          <h1 className="text-xl font-bold text-white lg:text-4xl lg:font-bold">Favoris</h1>
           <p className="hidden lg:block mt-2 max-w-2xl text-sm leading-6 text-white/85">
             Retrouvez ici les destinations sauvegardées. L’espace est prêt pour une lecture desktop en grille.
           </p>
@@ -32,7 +32,7 @@ export function FavoritesScreen() {
         <aside className="hidden lg:block">
           <div className="sticky top-28 rounded-3xl bg-white p-5" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
             <Heart className="h-6 w-6 mb-4" style={{ color: "var(--lokadia-primary)" }} />
-            <h2 className="text-lg font-black" style={{ color: "var(--lokadia-gray-900)" }}>Bibliothèque</h2>
+            <h2 className="text-lg font-bold" style={{ color: "var(--lokadia-gray-900)" }}>Bibliothèque</h2>
             <div className="mt-5 space-y-2">
               {[
                 { icon: MapPin, label: "Destinations", count: 0 },
@@ -46,7 +46,7 @@ export function FavoritesScreen() {
                       <Icon className="h-4 w-4" />
                       {item.label}
                     </span>
-                    <span className="text-xs font-black" style={{ color: "var(--lokadia-primary)" }}>{item.count}</span>
+                    <span className="text-xs font-bold" style={{ color: "var(--lokadia-primary)" }}>{item.count}</span>
                   </div>
                 );
               })}

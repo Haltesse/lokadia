@@ -119,7 +119,7 @@ export function DestinationCountScreen() {
             <ArrowLeft className="h-5 w-5 text-white" />
           </button>
 
-          <h1 className="text-3xl font-bold text-white mb-3 lg:text-5xl lg:font-black">
+          <h1 className="text-3xl font-bold text-white mb-3 lg:text-5xl lg:font-bold">
             Destinations disponibles
           </h1>
           <p className="text-white/90 text-lg mb-6">
@@ -154,7 +154,7 @@ export function DestinationCountScreen() {
         <aside className="hidden lg:block">
           <div className="sticky top-28 rounded-3xl bg-white p-5" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
             <CheckCircle className="h-7 w-7 mb-4" style={{ color: "var(--lokadia-primary)" }} />
-            <h2 className="text-2xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+            <h2 className="text-2xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
               {totalCount}
             </h2>
             <p className="text-sm font-semibold mb-4" style={{ color: "var(--lokadia-gray-600)" }}>

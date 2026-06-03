@@ -37,7 +37,7 @@ import { generateFlightOffers, generateHotelOffers, computeBudgetEstimate, estim
 import { getCoherentCountries } from '../data/countryNeighbors';
 import { STOP_CITIES, type StopCity } from '../data/stopCities';
 import { TripMap, type TripMapPoint } from '../components/TripMap';
-import { Plane, Train, Bus, Map as MapIcon, CheckCircle2 } from 'lucide-react';
+import { Plane, Train, Bus, Map as MapIcon, CheckCircle2, Hotel, Wallet, ShieldCheck, X } from 'lucide-react';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -335,21 +335,21 @@ export default function TripWizardScreen() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full" style={{ background: 'rgba(16,185,129,0.12)' }}>
             <CheckCircle2 className="h-9 w-9" style={{ color: '#059669' }} />
           </div>
-          <h1 className="text-2xl font-black" style={{ color: 'var(--lokadia-gray-900)' }}>Voyage créé 🎉</h1>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>Voyage créé</h1>
           <p className="mt-2 text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
             Votre voyage vers <strong>{createdTripName}</strong> est prêt. Réservez vos hébergements,
             vols et e-SIM dans l'onglet « Réserver ».
           </p>
           <button
             onClick={() => navigate(`/trips/${createdTripId}`)}
-            className="mt-6 w-full rounded-2xl py-3.5 text-sm font-black text-white"
+            className="mt-6 w-full rounded-2xl py-3.5 text-sm font-bold text-white"
             style={{ background: 'var(--gradient-primary)' }}
           >
             Voir mon voyage
           </button>
           <button
             onClick={() => navigate('/trips')}
-            className="mt-2 w-full rounded-2xl border-2 py-3 text-sm font-black"
+            className="mt-2 w-full rounded-2xl border-2 py-3 text-sm font-bold"
             style={{ borderColor: 'var(--lokadia-primary)', color: 'var(--lokadia-primary)' }}
           >
             Aller à mes voyages
@@ -604,7 +604,7 @@ export default function TripWizardScreen() {
                         </span>
                         {resolveCityName(id)}
                         {idx === 0 && <span className="text-[10px] uppercase opacity-80">Principale</span>}
-                        <span className="ml-1 opacity-70">✕</span>
+                        <X className="ml-1 h-3 w-3 opacity-70" />
                       </motion.button>
                     ))}
                   </div>
@@ -1350,8 +1350,8 @@ export default function TripWizardScreen() {
                   <div className="mt-8">
                     <div className="flex items-end justify-between mb-3">
                       <div>
-                        <h3 className="text-lg font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>
-                          ✈️ Vols suggérés
+                        <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: 'var(--lokadia-gray-900)' }}>
+                          <Plane className="h-5 w-5" style={{ color: 'var(--lokadia-primary)' }} /> Vols suggérés
                         </h3>
                         <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
                           {depCity.label} → {destName} · aller-retour
@@ -1365,8 +1365,8 @@ export default function TripWizardScreen() {
                   <div className="mt-8">
                     <div className="flex items-end justify-between mb-3">
                       <div>
-                        <h3 className="text-lg font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>
-                          🏨 Hôtels à {destName}
+                        <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: 'var(--lokadia-gray-900)' }}>
+                          <Hotel className="h-5 w-5" style={{ color: 'var(--lokadia-primary)' }} /> Hôtels à {destName}
                         </h3>
                         <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
                           {nights} nuit{nights > 1 ? 's' : ''} · {travelers} voyageur{travelers > 1 ? 's' : ''}
@@ -1382,7 +1382,7 @@ export default function TripWizardScreen() {
                     style={{ background: 'var(--gradient-primary)', boxShadow: 'var(--shadow-lg)' }}
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-bold">💰 Budget estimé</h3>
+                      <h3 className="text-lg font-bold flex items-center gap-2"><Wallet className="h-5 w-5" /> Budget estimé</h3>
                       <span className="text-xs bg-white/20 px-2 py-1 rounded-full">hors essentiels</span>
                     </div>
                     <div className="space-y-2 text-sm">
@@ -1410,10 +1410,10 @@ export default function TripWizardScreen() {
             <div className="mt-8">
               <div className="mb-4">
                 <h3
-                  className="text-lg font-bold"
+                  className="text-lg font-bold flex items-center gap-2"
                   style={{ color: 'var(--lokadia-gray-900)' }}
                 >
-                  🛡️ Sécurise les essentiels
+                  <ShieldCheck className="h-5 w-5" style={{ color: 'var(--lokadia-primary)' }} /> Sécurise les essentiels
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
                   e-SIM, assurance et activités — en 2 clics.

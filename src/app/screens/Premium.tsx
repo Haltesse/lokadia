@@ -109,7 +109,7 @@ export function Premium() {
             className="w-20 h-20 rounded-3xl flex items-center justify-center backdrop-blur-md"
             style={{ 
               background: "rgba(255, 255, 255, 0.25)",
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+              boxShadow: '0 10px 28px -8px rgba(15, 23, 42, 0.28)'
             }}
           >
             <Crown className="h-10 w-10 text-white" />

@@ -19,6 +19,8 @@ export interface CatalogOffer {
   meta: string;
   /** badge optionnel (ex: "Le moins cher", "Recommandé") */
   badge?: string;
+  /** sous-groupe optionnel (ex: type d'hébergement : Hôtel, Appartement…) */
+  group?: string;
   destinationId?: string;
 }
 
@@ -124,6 +126,42 @@ export function generateStayOffers(destinationId: string, destinationName: strin
       price: round(perNight * nights),
       meta: `${nights} nuit${nights > 1 ? 's' : ''} · ${perNight}€/nuit`,
       badge: i === 0 ? 'Coup de cœur' : i === 3 ? 'Idéal famille' : undefined,
+      destinationId,
+    };
+  });
+}
+
+// ─── Hébergement unifié (5 types) pour le funnel guidé ──────────────────────
+// Couvre Hôtel, Appartement, Maison, Airbnb et Hostel — chaque offre porte un
+// `group` pour permettre le filtrage par type dans le funnel.
+const LODGING_TEMPLATES: Array<{ group: string; type: string; label: string; base: number; guests: string; badge?: string }> = [
+  { group: 'Hôtel',       type: 'Hôtel',       label: 'Hôtel 3★ bien situé',          base: 95,  guests: 'Chambre double',  badge: 'Bon plan' },
+  { group: 'Hôtel',       type: 'Hôtel',       label: 'Hôtel 4★ centre-ville',        base: 140, guests: 'Chambre double' },
+  { group: 'Hôtel',       type: 'Hôtel',       label: 'Boutique-hôtel design',        base: 185, guests: 'Chambre double',  badge: 'Coup de cœur' },
+  { group: 'Appartement', type: 'Appartement', label: 'Studio cosy centre-ville',     base: 75,  guests: '1-2 voyageurs' },
+  { group: 'Appartement', type: 'Appartement', label: 'Appartement 2 chambres',       base: 110, guests: '2-4 voyageurs',    badge: 'Familles' },
+  { group: 'Maison',      type: 'Maison',      label: 'Maison entière avec jardin',   base: 180, guests: '4-6 voyageurs' },
+  { group: 'Maison',      type: 'Maison',      label: 'Villa avec terrasse',          base: 240, guests: '6-8 voyageurs' },
+  { group: 'Airbnb',      type: 'Airbnb',      label: 'Loft design avec balcon',      base: 135, guests: '2-3 voyageurs' },
+  { group: 'Airbnb',      type: 'Airbnb',      label: 'Logement entier chez l\'habitant', base: 90, guests: '2 voyageurs' },
+  { group: 'Hostel',      type: 'Auberge',     label: 'Lit en dortoir',               base: 26,  guests: '1 voyageur',       badge: 'Budget' },
+  { group: 'Hostel',      type: 'Auberge',     label: 'Chambre privée en auberge',    base: 55,  guests: '1-2 voyageurs' },
+];
+export function generateLodgingOffers(destinationId: string, destinationName: string, startDate: string, endDate: string, travelers: number): CatalogOffer[] {
+  const nights = daysBetween(startDate, endDate);
+  const rng = seeded(`lodge-${destinationId}`);
+  const cityFactor = 0.85 + rng() * 0.5; // coût de la vie local
+  return LODGING_TEMPLATES.map((s, i) => {
+    const perNight = round(s.base * cityFactor * 5) / 5;
+    return {
+      id: `lodge-${destinationId}-${i}`,
+      category: 'hotel' as CartCategory, // même catégorie panier pour tout hébergement
+      title: `${s.type} — ${s.label}`,
+      subtitle: `${destinationName} · ${s.guests} · annulation gratuite`,
+      price: round(perNight * nights),
+      meta: `${nights} nuit${nights > 1 ? 's' : ''} · ${perNight}€/nuit`,
+      badge: s.badge,
+      group: s.group,
       destinationId,
     };
   });

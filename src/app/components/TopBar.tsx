@@ -29,7 +29,10 @@ export function TopBar() {
   return (
     <header
       className="hidden md:block sticky top-0 z-40 bg-white/95 backdrop-blur-md"
-      style={{ borderBottom: "1px solid var(--lokadia-gray-100)" }}
+      style={{
+        borderBottom: "1px solid var(--lokadia-gray-100)",
+        boxShadow: "0 1px 3px 0 rgb(15 23 42 / 0.04), 0 4px 16px -8px rgb(15 23 42 / 0.06)",
+      }}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20 gap-4">
@@ -92,7 +95,7 @@ export function TopBar() {
           <div className="flex items-center gap-2">
             {/* CTA création voyage — driver de commission */}
             <button
-              onClick={() => navigate("/trips/create")}
+              onClick={() => navigate("/trips/map-planner")}
               className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-all"
               style={{
                 background: "var(--gradient-primary)",

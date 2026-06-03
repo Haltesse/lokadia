@@ -193,7 +193,7 @@ export default function TripsScreen() {
             <p className="mb-3 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wide backdrop-blur">
               Voyages
             </p>
-            <h1 className="text-3xl font-black tracking-tight lg:text-5xl">Mes voyages</h1>
+            <h1 className="text-3xl font-bold tracking-tight lg:text-5xl">Mes voyages</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/90 lg:text-base">
               Une vue bureau pour consulter la liste, garder le détail ouvert et reprendre la préparation sans changer constamment d'écran.
             </p>
@@ -208,7 +208,7 @@ export default function TripsScreen() {
               Planifier un itinéraire
             </button>
             <button
-              onClick={() => navigate("/trips/create")}
+              onClick={() => navigate("/trips/map-planner")}
               className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5"
               style={{ background: "var(--gradient-primary)" }}
             >
@@ -228,7 +228,7 @@ export default function TripsScreen() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as "upcoming" | "past")}
-              className="rounded-xl px-5 py-2 text-sm font-black transition-all"
+              className="rounded-xl px-5 py-2 text-sm font-bold transition-all"
               style={{
                 background: activeTab === tab.id ? "white" : "transparent",
                 color: activeTab === tab.id ? "var(--lokadia-primary)" : "var(--lokadia-gray-600)",
@@ -249,7 +249,7 @@ export default function TripsScreen() {
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl" style={{ background: "var(--gradient-primary)" }}>
             <Plane className="h-9 w-9 text-white" />
           </div>
-          <h2 className="text-3xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+          <h2 className="text-3xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
             {activeTab === "upcoming" ? "Aucun voyage prévu" : "Aucun voyage passé"}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -259,7 +259,7 @@ export default function TripsScreen() {
           </p>
           <div className="mt-7 flex justify-center gap-3">
             <button
-              onClick={() => navigate("/trips/create")}
+              onClick={() => navigate("/trips/map-planner")}
               className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white"
               style={{ background: "var(--gradient-primary)" }}
             >
@@ -295,7 +295,7 @@ export default function TripsScreen() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="truncate text-base font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                        <h3 className="truncate text-base font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                           {trip.destinationName}
                         </h3>
                         <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--lokadia-gray-500)" }}>
@@ -306,7 +306,7 @@ export default function TripsScreen() {
                       <ChevronRight className="h-4 w-4 flex-shrink-0 transition-transform group-hover:translate-x-1" style={{ color: "var(--lokadia-gray-400)" }} />
                     </div>
                     <div className="mt-3 flex items-center justify-between gap-3">
-                      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black uppercase" style={{ background: status.bgColor, color: status.color }}>
+                      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase" style={{ background: status.bgColor, color: status.color }}>
                         {status.icon}
                         {status.label}
                       </span>
@@ -332,7 +332,7 @@ export default function TripsScreen() {
                         <p className="mb-3 inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-bold uppercase tracking-wide backdrop-blur">
                           Détail du voyage
                         </p>
-                        <h2 className="text-4xl font-black tracking-tight">{selectedTrip.destinationName}</h2>
+                        <h2 className="text-4xl font-bold tracking-tight">{selectedTrip.destinationName}</h2>
                         <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-white/90">
                           <Calendar className="h-4 w-4" />
                           {formatDateRange(selectedTrip.startDate, selectedTrip.endDate)}
@@ -349,14 +349,14 @@ export default function TripsScreen() {
                     <div className="flex gap-3">
                       <button
                         onClick={() => navigate(`/trips/${selectedTrip.id}`)}
-                        className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black"
+                        className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold"
                         style={{ color: "var(--lokadia-primary)" }}
                       >
                         Ouvrir le voyage <ChevronRight className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => navigate(`/trips/${selectedTrip.id}/edit`)}
-                        className="inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-3 text-sm font-black text-white backdrop-blur"
+                        className="inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-3 text-sm font-bold text-white backdrop-blur"
                       >
                         Modifier
                       </button>
@@ -366,18 +366,18 @@ export default function TripsScreen() {
 
                 <div className="grid grid-cols-[1.4fr_0.8fr] gap-6 p-6">
                   <div>
-                    <h3 className="text-lg font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                    <h3 className="text-lg font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                       Étapes
                     </h3>
                     <div className="mt-4 space-y-3">
                       {selectedTrip.stops.length > 0 ? (
                         selectedTrip.stops.map((stop, index) => (
                           <div key={stop.id} className="flex items-center gap-3 rounded-2xl border p-4" style={{ borderColor: "var(--lokadia-gray-100)" }}>
-                            <span className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-black text-white" style={{ background: "var(--gradient-primary)" }}>
+                            <span className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: "var(--gradient-primary)" }}>
                               {index + 1}
                             </span>
                             <div>
-                              <p className="font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                              <p className="font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                                 {stop.destinationName}
                               </p>
                               <p className="text-xs font-semibold" style={{ color: "var(--lokadia-gray-500)" }}>
@@ -396,13 +396,13 @@ export default function TripsScreen() {
 
                   <div className="space-y-4">
                     <div className="rounded-2xl p-5" style={{ background: "var(--lokadia-info-bg)" }}>
-                      <p className="text-sm font-black" style={{ color: "var(--lokadia-primary)" }}>
+                      <p className="text-sm font-bold" style={{ color: "var(--lokadia-primary)" }}>
                         Préparation
                       </p>
                       <div className="mt-3 flex items-center gap-3">
                         <CheckCircle2 className="h-6 w-6" style={{ color: "var(--lokadia-success)" }} />
                         <div>
-                          <p className="text-2xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                          <p className="text-2xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                             {selectedTrip.checklistProgress.completed}/{selectedTrip.checklistProgress.total}
                           </p>
                           <p className="text-xs font-semibold" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -412,12 +412,12 @@ export default function TripsScreen() {
                       </div>
                     </div>
                     <button
-                      onClick={() => navigate("/trips/create")}
+                      onClick={() => navigate("/trips/map-planner")}
                       className="w-full rounded-2xl border border-dashed bg-white p-5 text-left transition-all hover:shadow-md"
                       style={{ borderColor: "var(--lokadia-primary)" }}
                     >
                       <Plus className="mb-3 h-5 w-5" style={{ color: "var(--lokadia-primary)" }} />
-                      <p className="font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                      <p className="font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                         Créer un autre voyage
                       </p>
                       <p className="mt-1 text-sm" style={{ color: "var(--lokadia-gray-600)" }}>
@@ -454,7 +454,7 @@ export default function TripsScreen() {
                     className="w-full rounded-2xl border bg-white p-4 text-left"
                     style={{ borderColor: "var(--lokadia-gray-200)", boxShadow: "var(--shadow-sm)" }}
                   >
-                    <h3 className="pr-10 text-base font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+                    <h3 className="pr-10 text-base font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                       {trip.destinationName}
                     </h3>
                     <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--lokadia-gray-500)" }}>
@@ -462,7 +462,7 @@ export default function TripsScreen() {
                       {formatDateRange(trip.startDate, trip.endDate)}
                     </p>
                     <div className="mt-3 flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black uppercase" style={{ background: status.bgColor, color: status.color }}>
+                      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase" style={{ background: status.bgColor, color: status.color }}>
                         {status.icon}
                         {status.label}
                       </span>

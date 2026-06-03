@@ -12,6 +12,13 @@
 
 // ─── Profils de voyage (identifiants + métadonnées d'affichage) ──────────────
 
+import {
+  Globe, GraduationCap, Laptop, Backpack, Users, HeartPulse, Briefcase, HeartHandshake, Palmtree,
+  Shield, Stethoscope, Tornado, Building2,
+  ShieldCheck, Eye, AlertTriangle, AlertOctagon, Ban, Clock,
+  type LucideIcon,
+} from 'lucide-react';
+
 export type TravelProfile =
   | 'default'
   | 'studies'
@@ -26,7 +33,7 @@ export type TravelProfile =
 export interface TravelProfileMeta {
   id: TravelProfile;
   label: string;
-  emoji: string;
+  Icon: LucideIcon;
   description: string;
   /** Une phrase qui justifie la pondération utilisée */
   rationale: string;
@@ -36,63 +43,63 @@ export const PROFILE_META: Record<TravelProfile, TravelProfileMeta> = {
   default: {
     id: 'default',
     label: 'Par défaut',
-    emoji: '🌍',
+    Icon: Globe,
     description: 'Pondération équilibrée',
     rationale: 'Aucun profil sélectionné — calcul standard 40/25/20/15.',
   },
   studies: {
     id: 'studies',
     label: 'Études / Erasmus',
-    emoji: '🎓',
+    Icon: GraduationCap,
     description: 'Séjour long, dépendance aux services publics',
     rationale: 'Surpondère sécurité et infrastructure (transports, état de droit) car le séjour long expose davantage aux conditions locales.',
   },
   'remote-work': {
     id: 'remote-work',
     label: 'Travail à distance',
-    emoji: '💻',
+    Icon: Laptop,
     description: 'Connectivité prioritaire',
     rationale: 'Surpondère l\'infrastructure (connectivité indispensable) et sous-pondère la santé.',
   },
   backpack: {
     id: 'backpack',
     label: 'Backpack / Aventure',
-    emoji: '🎒',
+    Icon: Backpack,
     description: 'Sécurité et santé renforcées',
     rationale: 'Surpondère la santé (sejours longs, alimentation locale, climat) tout en gardant un poids fort sur la sécurité.',
   },
   family: {
     id: 'family',
     label: 'Famille avec enfants',
-    emoji: '👨‍👩‍👧',
+    Icon: Users,
     description: 'Santé prioritaire pour les enfants',
     rationale: 'Surpondère la santé (enfants vulnérables) et garde un poids significatif sur les catastrophes naturelles.',
   },
   senior: {
     id: 'senior',
     label: 'Voyage senior / santé',
-    emoji: '🧓',
+    Icon: HeartPulse,
     description: 'Qualité des soins prioritaire',
     rationale: 'Surpondère fortement la santé (qualité des soins en cas d\'urgence) et réduit l\'infrastructure.',
   },
   business: {
     id: 'business',
     label: 'Voyage d\'affaires',
-    emoji: '💼',
+    Icon: Briefcase,
     description: 'Sécurité et fiabilité logistique',
     rationale: 'Surpondère sécurité et infrastructure (fiabilité logistique et stabilité).',
   },
   humanitarian: {
     id: 'humanitarian',
     label: 'Mission humanitaire',
-    emoji: '🤝',
+    Icon: HeartHandshake,
     description: 'Sécurité maximale',
     rationale: 'Poids très fort sur la sécurité, les autres dimensions étant secondaires car cette population est spécifiquement formée.',
   },
   vacation: {
     id: 'vacation',
     label: 'Vacances classiques',
-    emoji: '🏖️',
+    Icon: Palmtree,
     description: 'Pondération équilibrée',
     rationale: 'Pondération par défaut, valable pour la majorité des séjours touristiques de courte durée.',
   },
@@ -127,7 +134,7 @@ export interface DimensionMeta {
   id: keyof LokascoreDimensions;
   label: string;
   short: string;
-  emoji: string;
+  Icon: LucideIcon;
   /** Sources officielles cibles documentées */
   sources: string[];
   /** Couleur d'accent */
@@ -139,7 +146,7 @@ export const DIMENSION_META: Record<keyof LokascoreDimensions, DimensionMeta> = 
     id: 'security',
     label: 'Sécurité',
     short: 'S',
-    emoji: '🛡️',
+    Icon: Shield,
     sources: ['MAE France', 'UK FCDO', 'US State Dept', 'AU DFAT'],
     color: '#1E40AF',
   },
@@ -147,7 +154,7 @@ export const DIMENSION_META: Record<keyof LokascoreDimensions, DimensionMeta> = 
     id: 'health',
     label: 'Santé',
     short: 'H',
-    emoji: '🏥',
+    Icon: Stethoscope,
     sources: ['OMS', 'ECDC', 'CDC USA', 'Lancet HAQ'],
     color: '#6D28D9',
   },
@@ -155,7 +162,7 @@ export const DIMENSION_META: Record<keyof LokascoreDimensions, DimensionMeta> = 
     id: 'nature',
     label: 'Nature & catastrophes',
     short: 'N',
-    emoji: '🌪️',
+    Icon: Tornado,
     sources: ['GDACS', 'ReliefWeb', 'NASA EONET', 'EM-DAT'],
     color: '#92400E',
   },
@@ -163,7 +170,7 @@ export const DIMENSION_META: Record<keyof LokascoreDimensions, DimensionMeta> = 
     id: 'infrastructure',
     label: 'Infrastructure & droit',
     short: 'I',
-    emoji: '🏗️',
+    Icon: Building2,
     sources: ['WJP', 'Transparency Int.', 'WHO Road', 'World Bank', 'GSMA'],
     color: '#047857',
   },
@@ -189,7 +196,7 @@ export interface LokascoreLevelConfig {
   bgColor: string;
   /** Couleur pleine pour les pills (texte blanc dessus) */
   fillColor: string;
-  emoji: string;
+  Icon: LucideIcon;
   description: string;
   /** Plage min-max (incluse) */
   min: number;
@@ -204,7 +211,7 @@ export const LOKASCORE_LEVELS: Record<Exclude<LokascoreLevel, 'unknown'>, Lokasc
     color: '#15803d',
     bgColor: 'rgba(34, 197, 94, 0.12)',
     fillColor: '#22c55e',
-    emoji: '🟢',
+    Icon: ShieldCheck,
     description: 'Voyage standard, précautions habituelles. Pas d\'alerte spécifique.',
     min: 80,
     max: 100,
@@ -216,7 +223,7 @@ export const LOKASCORE_LEVELS: Record<Exclude<LokascoreLevel, 'unknown'>, Lokasc
     color: '#a16207',
     bgColor: 'rgba(234, 179, 8, 0.14)',
     fillColor: '#eab308',
-    emoji: '🟡',
+    Icon: Eye,
     description: 'Quelques précautions ciblées (quartiers, transports, horaires).',
     min: 60,
     max: 79,
@@ -228,7 +235,7 @@ export const LOKASCORE_LEVELS: Record<Exclude<LokascoreLevel, 'unknown'>, Lokasc
     color: '#c2410c',
     bgColor: 'rgba(249, 115, 22, 0.14)',
     fillColor: '#f97316',
-    emoji: '🟠',
+    Icon: AlertTriangle,
     description: 'Vigilance renforcée, certains déplacements déconseillés.',
     min: 40,
     max: 59,
@@ -240,7 +247,7 @@ export const LOKASCORE_LEVELS: Record<Exclude<LokascoreLevel, 'unknown'>, Lokasc
     color: '#b91c1c',
     bgColor: 'rgba(239, 68, 68, 0.14)',
     fillColor: '#ef4444',
-    emoji: '🔴',
+    Icon: AlertOctagon,
     description: 'Voyage formellement déconseillé sauf raison impérative.',
     min: 20,
     max: 39,
@@ -252,7 +259,7 @@ export const LOKASCORE_LEVELS: Record<Exclude<LokascoreLevel, 'unknown'>, Lokasc
     color: '#111827',
     bgColor: 'rgba(17, 24, 39, 0.16)',
     fillColor: '#1f2937',
-    emoji: '⚫',
+    Icon: Ban,
     description: 'Pays en guerre ou crise extrême. Toute présence est dangereuse.',
     min: 0,
     max: 19,
@@ -275,7 +282,7 @@ const UNKNOWN_LEVEL: LokascoreLevelConfig = {
   color: '#6b7280',
   bgColor: 'rgba(107, 114, 128, 0.12)',
   fillColor: '#9ca3af',
-  emoji: '⏳',
+  Icon: Clock,
   description: 'Score en cours de chargement ou source momentanément indisponible.',
   min: 0,
   max: 0,

@@ -50,13 +50,13 @@ export function TravelProfileSelector({ variant = 'list', onSelect }: TravelProf
           >
             <div className="flex items-start gap-3">
               <div
-                className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
                 style={{
                   background: isSelected ? 'rgba(255,255,255,0.7)' : 'var(--lokadia-gray-50, #f8fafc)',
                 }}
                 aria-hidden="true"
               >
-                {meta.emoji}
+                <meta.Icon className="h-5 w-5" style={{ color: 'var(--lokadia-primary)' }} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -105,7 +105,7 @@ export function ActiveProfileBadge({ onEdit }: { onEdit?: () => void }) {
         background: 'white',
       }}
     >
-      <span aria-hidden="true">{meta.emoji}</span>
+      <meta.Icon className="h-4 w-4" style={{ color: 'var(--lokadia-primary)' }} />
       <span className="text-xs font-bold" style={{ color: 'var(--lokadia-gray-800)' }}>
         {meta.label}
       </span>

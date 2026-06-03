@@ -98,7 +98,7 @@ export function BottomNav() {
           {/* CTA central — Créer un voyage (driver commission) */}
           <div className="flex-1 flex items-center justify-center">
             <motion.button
-              onClick={() => navigate("/trips/create")}
+              onClick={() => navigate("/trips/map-planner")}
               whileTap={{ scale: 0.92 }}
               whileHover={{ scale: 1.05 }}
               className="relative -mt-8 w-14 h-14 rounded-full flex items-center justify-center"

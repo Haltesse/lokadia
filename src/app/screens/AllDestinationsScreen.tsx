@@ -114,7 +114,7 @@ export function AllDestinationsScreen() {
               <TrendingUp className="h-5 w-5 text-white" strokeWidth={2.5} />
             </div>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight leading-tight lg:text-4xl lg:font-black">
+              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight leading-tight lg:text-4xl lg:font-bold">
                 Toutes les destinations
               </h1>
               <p className="text-white/85 text-xs md:text-sm tabular-nums">
@@ -170,7 +170,7 @@ export function AllDestinationsScreen() {
         <aside className="hidden lg:block">
           <div className="sticky top-28 rounded-3xl bg-white p-5" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
             <TrendingUp className="h-6 w-6 mb-4" style={{ color: "var(--lokadia-primary)" }} />
-            <h2 className="text-xl font-black" style={{ color: "var(--lokadia-gray-900)" }}>
+            <h2 className="text-xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
               Catalogue
             </h2>
             <p className="mt-2 text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>

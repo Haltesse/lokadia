@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Search, ShieldCheck, AlertTriangle } from 'lucide-react';
 import {
   subscribeToLiveAlerts,
   getLiveAlertsSnapshot,
@@ -105,7 +105,7 @@ export function WorldAlertsMap() {
               className="flex-shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold transition-colors"
               style={{ background: active ? meta.color : `${meta.color}15`, color: active ? 'white' : meta.color }}
             >
-              <span>{meta.emoji}</span> {meta.label} ({count})
+              <meta.Icon className="h-3.5 w-3.5" /> {meta.label} ({count})
             </button>
           );
         })}
@@ -136,10 +136,10 @@ export function WorldAlertsMap() {
                 <Popup maxWidth={260}>
                   <div className="text-sm" style={{ minWidth: '210px' }}>
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-lg">{meta.emoji}</span>
+                      <meta.Icon className="h-5 w-5" style={{ color: meta.color }} />
                       <div className="min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: meta.color }}>
-                          {meta.label} {isRed && '· 🚨'}
+                        <p className="text-[10px] font-bold uppercase tracking-wide flex items-center gap-1" style={{ color: meta.color }}>
+                          {meta.label} {isRed && <><span>·</span><AlertTriangle className="h-3 w-3" /></>}
                         </p>
                         <p className="text-xs font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{a.countryIso || '—'}</p>
                       </div>
@@ -171,10 +171,10 @@ export function WorldAlertsMap() {
 
         {/* Compteur live */}
         <div className="absolute top-3 right-3 z-[400] rounded-xl bg-white p-2.5 shadow-md" style={{ border: '1px solid var(--lokadia-gray-100)' }}>
-          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: 'var(--lokadia-gray-600)' }}>En direct</p>
-          <p className="text-xl font-black tabular-nums leading-none mt-0.5" style={{ color: 'var(--lokadia-gray-900)' }}>{located.length}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--lokadia-gray-600)' }}>En direct</p>
+          <p className="text-xl font-bold tabular-nums leading-none mt-0.5" style={{ color: 'var(--lokadia-gray-900)' }}>{located.length}</p>
           <p className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>
-            alertes {redCount > 0 && <span style={{ color: '#dc2626' }}>· {redCount} 🚨</span>}
+            alertes {redCount > 0 && <span style={{ color: '#dc2626' }}>· {redCount} critique{redCount > 1 ? 's' : ''}</span>}
           </p>
         </div>
 
@@ -190,8 +190,8 @@ export function WorldAlertsMap() {
         {located.length === 0 && (
           <div className="absolute inset-0 z-[300] flex items-center justify-center backdrop-blur-sm" style={{ background: 'rgba(255,255,255,0.85)' }}>
             <div className="text-center">
-              <div className="text-5xl mb-2">{typeFilter ? '🔍' : '✅'}</div>
-              <p className="text-sm font-black" style={{ color: typeFilter ? 'var(--lokadia-gray-700)' : '#15803d' }}>
+              <div className="mb-2 flex justify-center">{typeFilter ? <Search className="h-10 w-10" style={{ color: 'var(--lokadia-gray-400)' }} /> : <ShieldCheck className="h-10 w-10" style={{ color: '#15803d' }} />}</div>
+              <p className="text-sm font-bold" style={{ color: typeFilter ? 'var(--lokadia-gray-700)' : '#15803d' }}>
                 {typeFilter ? 'Aucune alerte de ce type' : 'Aucune alerte majeure'}
               </p>
             </div>

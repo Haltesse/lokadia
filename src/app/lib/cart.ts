@@ -8,6 +8,7 @@
  * le jour où les contrats partenaires + le statut d'agence sont en place.
  */
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode, createElement } from 'react';
+import { Plane, Hotel, Train, Wifi, ShieldCheck, Ticket, type LucideIcon } from 'lucide-react';
 
 export type CartCategory = 'flight' | 'hotel' | 'train' | 'esim' | 'insurance' | 'activity';
 
@@ -82,11 +83,11 @@ export function useCart(): CartContextValue {
   return useContext(CartContext);
 }
 
-export const CATEGORY_META: Record<CartCategory, { label: string; emoji: string; color: string }> = {
-  flight: { label: 'Vol', emoji: '✈️', color: '#0F4C81' },
-  hotel: { label: 'Hôtel', emoji: '🏨', color: '#7C3AED' },
-  train: { label: 'Train', emoji: '🚆', color: '#0E7490' },
-  esim: { label: 'e-SIM', emoji: '📶', color: '#059669' },
-  insurance: { label: 'Assurance', emoji: '🛡️', color: '#D97706' },
-  activity: { label: 'Activité', emoji: '🎟️', color: '#DB2777' },
+export const CATEGORY_META: Record<CartCategory, { label: string; Icon: LucideIcon; color: string }> = {
+  flight: { label: 'Vol', Icon: Plane, color: '#0F4C81' },
+  hotel: { label: 'Hôtel', Icon: Hotel, color: '#7C3AED' },
+  train: { label: 'Train', Icon: Train, color: '#0E7490' },
+  esim: { label: 'e-SIM', Icon: Wifi, color: '#059669' },
+  insurance: { label: 'Assurance', Icon: ShieldCheck, color: '#D97706' },
+  activity: { label: 'Activité', Icon: Ticket, color: '#DB2777' },
 };

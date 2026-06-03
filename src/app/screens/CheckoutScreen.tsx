@@ -60,15 +60,15 @@ export default function CheckoutScreen() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full" style={{ background: 'rgba(16,185,129,0.12)' }}>
             <CheckCircle2 className="h-9 w-9" style={{ color: '#059669' }} />
           </div>
-          <h1 className="text-2xl font-black" style={{ color: 'var(--lokadia-gray-900)' }}>Réservation confirmée 🎉</h1>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>Réservation confirmée</h1>
           <p className="mt-2 text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
             Votre voyage est réservé. Un récapitulatif a été envoyé par email.
           </p>
           <div className="my-5 rounded-2xl p-4" style={{ background: 'var(--lokadia-info-bg)' }}>
             <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--lokadia-gray-500)' }}>Référence</p>
-            <p className="text-lg font-black" style={{ color: 'var(--lokadia-primary)' }}>{reference}</p>
+            <p className="text-lg font-bold" style={{ color: 'var(--lokadia-primary)' }}>{reference}</p>
           </div>
-          <button onClick={() => navigate(tripId ? `/trips/${tripId}` : '/trips')} className="w-full rounded-2xl py-3.5 text-sm font-black text-white" style={{ background: 'var(--gradient-primary)' }}>
+          <button onClick={() => navigate(tripId ? `/trips/${tripId}` : '/trips')} className="w-full rounded-2xl py-3.5 text-sm font-bold text-white" style={{ background: 'var(--gradient-primary)' }}>
             {tripId ? 'Voir mon voyage finalisé' : 'Voir mes voyages'}
           </button>
           <button onClick={() => navigate('/global-home')} className="mt-2 w-full rounded-2xl py-3 text-sm font-bold" style={{ color: 'var(--lokadia-gray-600)' }}>
@@ -85,8 +85,8 @@ export default function CheckoutScreen() {
       <main className="min-h-screen flex items-center justify-center px-5" style={{ background: 'var(--lokadia-background)' }}>
         <div className="text-center">
           <ShoppingCart className="mx-auto mb-3 h-12 w-12" style={{ color: 'var(--lokadia-gray-300)' }} />
-          <p className="text-lg font-black" style={{ color: 'var(--lokadia-gray-700)' }}>Votre panier est vide</p>
-          <button onClick={() => navigate('/destination-count')} className="mt-4 rounded-full px-6 py-3 text-sm font-black text-white" style={{ background: 'var(--gradient-primary)' }}>
+          <p className="text-lg font-bold" style={{ color: 'var(--lokadia-gray-700)' }}>Votre panier est vide</p>
+          <button onClick={() => navigate('/destination-count')} className="mt-4 rounded-full px-6 py-3 text-sm font-bold text-white" style={{ background: 'var(--gradient-primary)' }}>
             Explorer les destinations
           </button>
         </div>
@@ -101,7 +101,7 @@ export default function CheckoutScreen() {
           <button onClick={() => navigate(-1)} className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-xs font-bold text-white backdrop-blur">
             <ArrowLeft className="h-3.5 w-3.5" /> Continuer mes achats
           </button>
-          <h1 className="text-2xl font-black text-white lg:text-3xl">Panier & paiement</h1>
+          <h1 className="text-2xl font-bold text-white lg:text-3xl">Panier & paiement</h1>
           <p className="mt-1 text-sm text-white/85">{count} article{count > 1 ? 's' : ''} · {fmt(grand)}</p>
         </div>
       </div>
@@ -113,9 +113,9 @@ export default function CheckoutScreen() {
             const c = CATEGORY_META[it.category];
             return (
               <div key={it.id} className="flex items-center gap-3 rounded-2xl bg-white p-4" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-lg" style={{ background: `${c.color}12` }}>{c.emoji}</div>
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl" style={{ background: `${c.color}12` }}><c.Icon className="h-5 w-5" style={{ color: c.color }} /></div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: c.color }}>{c.label}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: c.color }}>{c.label}</p>
                   <p className="text-sm font-bold truncate" style={{ color: 'var(--lokadia-gray-900)' }}>{it.title}</p>
                   <p className="text-[11px] truncate" style={{ color: 'var(--lokadia-gray-500)' }}>{it.subtitle}{it.meta ? ` · ${it.meta}` : ''}</p>
                 </div>
@@ -125,7 +125,7 @@ export default function CheckoutScreen() {
                   <button onClick={() => setQty(it.id, it.qty + 1)} className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'var(--lokadia-gray-100)' }}><Plus className="h-3.5 w-3.5" /></button>
                 </div>
                 <div className="w-20 text-right">
-                  <p className="text-sm font-black" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(it.price * it.qty)}</p>
+                  <p className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>{fmt(it.price * it.qty)}</p>
                 </div>
                 <button onClick={() => remove(it.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
               </div>
@@ -138,7 +138,7 @@ export default function CheckoutScreen() {
           <div className="space-y-1.5">
             <div className="flex justify-between text-sm"><span style={{ color: 'var(--lokadia-gray-600)' }}>Sous-total</span><span className="font-bold">{fmt(total)}</span></div>
             <div className="flex justify-between text-sm"><span style={{ color: 'var(--lokadia-gray-600)' }}>Frais de service</span><span className="font-bold" style={{ color: '#059669' }}>Offerts</span></div>
-            <div className="flex justify-between border-t pt-2 text-base font-black" style={{ borderColor: 'var(--lokadia-gray-100)' }}><span>Total</span><span>{fmt(grand)}</span></div>
+            <div className="flex justify-between border-t pt-2 text-base font-bold" style={{ borderColor: 'var(--lokadia-gray-100)' }}><span>Total</span><span>{fmt(grand)}</span></div>
           </div>
 
           <div className="space-y-3 pt-2">
@@ -153,7 +153,7 @@ export default function CheckoutScreen() {
 
           {status === 'error' && <p className="text-sm font-semibold text-red-600">{error}</p>}
 
-          <button onClick={pay} disabled={status === 'paying'} className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-black text-white" style={{ background: 'var(--gradient-primary)', opacity: status === 'paying' ? 0.7 : 1 }}>
+          <button onClick={pay} disabled={status === 'paying'} className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-sm font-bold text-white" style={{ background: 'var(--gradient-primary)', opacity: status === 'paying' ? 0.7 : 1 }}>
             {status === 'paying' ? (
               <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Paiement…</>
             ) : (
