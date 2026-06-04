@@ -1,5 +1,5 @@
 import { Component, ReactNode } from "react";
-import { Routes, Route, MemoryRouter } from "react-router";
+import { Routes, Route, MemoryRouter, Navigate } from "react-router";
 import { GlobalHome } from "./screens/GlobalHome";
 import { SearchScreen } from "./screens/SearchScreen";
 import { DestinationCountScreen } from "./screens/DestinationCountScreen";
@@ -13,7 +13,6 @@ import TripDetailScreen from "./screens/TripDetailScreen";
 import TripMapPlannerScreen from "./screens/TripMapPlannerScreen";
 import TripBookingFunnel from "./screens/TripBookingFunnel";
 import { Premium } from "./screens/Premium";
-import LandingScreen from "./screens/LandingScreen";
 import LokascorePage from "./screens/LokascorePage";
 import NosServicesPage from "./screens/NosServicesPage";
 import ProPage from "./screens/ProPage";
@@ -133,7 +132,7 @@ function App() {
 
               {/* Routes avec layout (TopBar desktop + BottomNav mobile) */}
               <Route element={<RootLayout />}>
-                <Route path="/" element={<LandingScreen />} />
+                <Route path="/" element={<Navigate to="/global-home" replace />} />
                 <Route path="/lokascore" element={<LokascorePage />} />
                 <Route path="/services" element={<NosServicesPage />} />
                 <Route path="/pro" element={<ProPage />} />
