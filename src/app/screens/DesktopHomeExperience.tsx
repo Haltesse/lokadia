@@ -15,6 +15,7 @@ import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { BOOKING_PARTNERS } from "../components/PartnerBookingSection";
 import { useLokascore } from "../hooks/useLokascore";
 import { LiveAlertsBanner } from "../components/LiveAlertsBanner";
+import { HomeServicesSection } from "../components/HomeServicesSection";
 
 const destinations = [
   {
@@ -259,10 +260,10 @@ export function DesktopHomeExperience() {
             </div>
 
             <h1 className="max-w-2xl text-5xl font-bold leading-[1.04] tracking-tight text-white">
-              Préparez votre prochain voyage avec les bons repères.
+              Organisez votre voyage, en toute sécurité.
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8 text-white/90">
-              Destinations, sécurité, alertes et réservations essentielles dans un espace pensé pour explorer calmement sur ordinateur.
+              Vols, hébergements, activités et e-SIM au meilleur prix — avec une sécurité renforcée avant, pendant et après votre séjour : assurance personnalisée, alertes en temps réel et Lokascore.
             </p>
 
             <button
@@ -290,6 +291,9 @@ export function DesktopHomeExperience() {
       </section>
 
       <section className="mx-auto max-w-7xl px-8 pt-6">
+        <h2 className="mb-3 text-lg font-bold tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+          Restez informé à tout instant.
+        </h2>
         <LiveAlertsBanner variant="desktop" />
       </section>
 
@@ -323,6 +327,10 @@ export function DesktopHomeExperience() {
             );
           })}
         </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-8 pb-12">
+        <HomeServicesSection />
       </section>
 
       <section className="mx-auto max-w-7xl px-8 pb-12">
@@ -397,16 +405,13 @@ export function DesktopHomeExperience() {
                   Essentiels de voyage
                 </h2>
               </div>
-              <p className="mt-1 text-sm" style={{ color: "var(--lokadia-gray-600)" }}>
-                Les mêmes services que sur mobile, présentés en lecture large.
-              </p>
             </div>
             <button
-              onClick={() => navigate("/alerts")}
+              onClick={() => document.getElementById('nos-services')?.scrollIntoView({ behavior: 'smooth' })}
               className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold"
               style={{ background: "var(--lokadia-info-bg)", color: "var(--lokadia-primary)" }}
             >
-              Alertes temps réel <ChevronRight className="h-4 w-4" />
+              Consulter toutes nos offres <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 

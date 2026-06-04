@@ -15,16 +15,23 @@ export function TopBar() {
   const auth = (() => { try { return useAuth(); } catch { return null; } })();
   const isAuth = !!auth?.user;
 
-  const navLinks = [
-    { path: "/global-home", label: "Accueil" },
-    { path: "/trips", label: "Voyages" },
-    { path: "/alerts", label: "Alertes" },
-    { path: "/lokascore", label: "Lokascore" },
-    { path: "/pro", label: "Pro" },
-  ];
+  const goToServices = () => {
+    const el = document.getElementById("nos-services");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      navigate("/global-home");
+      setTimeout(() => document.getElementById("nos-services")?.scrollIntoView({ behavior: "smooth" }), 300);
+    }
+  };
 
-  const isActive = (path: string) => location.pathname === path ||
-    (path === "/trips" && location.pathname.startsWith("/trips"));
+  const navLinks: Array<{ id: string; label: string; onClick: () => void; active: boolean }> = [
+    { id: "home", label: "Accueil", onClick: () => navigate("/global-home"), active: location.pathname === "/global-home" },
+    { id: "trips", label: "Voyage", onClick: () => navigate("/trips"), active: location.pathname.startsWith("/trips") },
+    { id: "services", label: "Nos services", onClick: goToServices, active: false },
+    { id: "lokascore", label: "Lokascore", onClick: () => navigate("/lokascore"), active: location.pathname === "/lokascore" },
+    { id: "pro", label: "Pro", onClick: () => navigate("/pro"), active: location.pathname === "/pro" },
+  ];
 
   return (
     <header
@@ -36,6 +43,7 @@ export function TopBar() {
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20 gap-4">
+          <div className="flex items-center gap-4 min-w-0">
           {/* Logo */}
           <button
             onClick={() => navigate(isAuth ? "/global-home" : "/")}
@@ -67,29 +75,7 @@ export function TopBar() {
               </p>
             </div>
           </button>
-
-          {/* Nav links desktop */}
-          <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
-            {navLinks.map((link) => (
-              <button
-                key={link.path}
-                onClick={() => navigate(link.path)}
-                className="px-4 py-2 rounded-full text-sm font-medium transition-all"
-                style={{
-                  color: isActive(link.path) ? "var(--lokadia-primary)" : "var(--lokadia-gray-700)",
-                  background: isActive(link.path) ? "var(--lokadia-info-bg)" : "transparent",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive(link.path)) e.currentTarget.style.background = "var(--lokadia-gray-100)";
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive(link.path)) e.currentTarget.style.background = "transparent";
-                }}
-              >
-                {link.label}
-              </button>
-            ))}
-          </nav>
+          </div>
 
           {/* Right actions */}
           <div className="flex items-center gap-2">
@@ -150,6 +136,25 @@ export function TopBar() {
           </div>
         </div>
 
+        {/* Barre de navigation — juste sous la top bar (desktop) */}
+        <nav className="hidden lg:flex items-center gap-1 -mt-1 pb-2">
+          {navLinks.map((link) => (
+            <button
+              key={link.id}
+              onClick={link.onClick}
+              className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
+              style={{
+                color: link.active ? "var(--lokadia-primary)" : "var(--lokadia-gray-700)",
+                background: link.active ? "var(--lokadia-info-bg)" : "transparent",
+              }}
+              onMouseEnter={(e) => { if (!link.active) e.currentTarget.style.background = "var(--lokadia-gray-100)"; }}
+              onMouseLeave={(e) => { if (!link.active) e.currentTarget.style.background = "transparent"; }}
+            >
+              {link.label}
+            </button>
+          ))}
+        </nav>
+
         {/* Mobile/tablet dropdown menu */}
         <AnimatePresence>
           {menuOpen && (
@@ -162,15 +167,15 @@ export function TopBar() {
               <nav className="flex flex-col gap-1">
                 {navLinks.map((link) => (
                   <button
-                    key={link.path}
+                    key={link.id}
                     onClick={() => {
-                      navigate(link.path);
+                      link.onClick();
                       setMenuOpen(false);
                     }}
                     className="text-left px-4 py-3 rounded-xl text-sm font-medium transition-all"
                     style={{
-                      color: isActive(link.path) ? "var(--lokadia-primary)" : "var(--lokadia-gray-700)",
-                      background: isActive(link.path) ? "var(--lokadia-info-bg)" : "transparent",
+                      color: link.active ? "var(--lokadia-primary)" : "var(--lokadia-gray-700)",
+                      background: link.active ? "var(--lokadia-info-bg)" : "transparent",
                     }}
                   >
                     {link.label}

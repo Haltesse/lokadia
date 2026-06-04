@@ -13,6 +13,7 @@ import { useLanguageSafe } from "../context/LanguageContext";
 import { PartnerBookingSection } from "../components/PartnerBookingSection";
 import { HeroSlideshow } from "../components/HeroSlideshow";
 import { LiveAlertsBanner } from "../components/LiveAlertsBanner";
+import { HomeServicesSection } from "../components/HomeServicesSection";
 import { DesktopHomeExperience } from "./DesktopHomeExperience";
 import { useLokascore } from "../hooks/useLokascore";
 
@@ -297,6 +298,9 @@ export function GlobalHome() {
 
       {/* ───────── LIVE ALERTS BANNER — USGS + ReliefWeb temps réel ───────── */}
       <div className="px-5 -mt-3 relative z-10 mb-4 max-w-3xl mx-auto w-full lk-fade-in-up lk-delay-1">
+        <h2 className="mb-2 text-sm font-bold tracking-tight" style={{ color: 'var(--lokadia-gray-900)' }}>
+          Restez informé à tout instant.
+        </h2>
         <LiveAlertsBanner variant="mobile" />
       </div>
 
@@ -359,6 +363,11 @@ export function GlobalHome() {
             />
           ))}
         </div>
+      </section>
+
+      {/* ───────── NOS SERVICES — positionnement voyage + sécurité ───────── */}
+      <section className="px-5 mb-6 lk-fade-in-up lk-delay-3">
+        <HomeServicesSection />
       </section>
 
       {/* Partner commission section — driver de revenu */}

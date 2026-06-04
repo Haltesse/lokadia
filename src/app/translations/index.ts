@@ -211,8 +211,8 @@ export const translations: Record<Language, Translations> = {
       profile: 'Profil',
     },
     home: {
-      greeting: 'Bonjour',
-      subtitle: 'Où vous emmène votre prochaine aventure ?',
+      greeting: 'Organisez votre voyage, en toute sécurité.',
+      subtitle: 'Vols, hébergements, activités et e-SIM — et une sécurité renforcée avant, pendant et après.',
       searchPlaceholder: 'Rechercher une ville, un pays...',
       trendingDestinations: 'Destinations Tendances',
       whyLokadia: 'Pourquoi Lokadia ?',
@@ -402,8 +402,8 @@ export const translations: Record<Language, Translations> = {
       profile: 'Profile',
     },
     home: {
-      greeting: 'Hello!',
-      subtitle: 'Where is your next adventure taking you?',
+      greeting: 'Plan your trip, safely.',
+      subtitle: 'Flights, stays, activities and e-SIM — with enhanced safety before, during and after.',
       searchPlaceholder: 'Search for a city, country...',
       trendingDestinations: 'Trending Destinations',
       whyLokadia: 'Why Lokadia?',

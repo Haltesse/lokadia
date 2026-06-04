@@ -349,17 +349,6 @@ export function LoginScreen() {
                       Votre sécurité, notre priorité.
                     </p>
                     
-                    {/* Info message pour les problèmes de connexion */}
-                    <motion.div 
-                      className="mt-4 p-3 rounded-xl bg-blue-500/20 border border-blue-400/30 backdrop-blur-sm"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.5 }}
-                    >
-                      <p className="text-blue-100 text-xs leading-relaxed">
-                        <strong>Note :</strong> Si vous rencontrez l'erreur "Failed to fetch", cela signifie que le serveur backend n'est pas encore déployé. Contactez l'administrateur pour activer le serveur Supabase Edge Function.
-                      </p>
-                    </motion.div>
                   </div>
 
                   {/* Primary Button - Sign Up */}
