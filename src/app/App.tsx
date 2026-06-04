@@ -15,6 +15,7 @@ import TripBookingFunnel from "./screens/TripBookingFunnel";
 import { Premium } from "./screens/Premium";
 import LandingScreen from "./screens/LandingScreen";
 import LokascorePage from "./screens/LokascorePage";
+import NosServicesPage from "./screens/NosServicesPage";
 import ProPage from "./screens/ProPage";
 import ProDemoScreen from "./screens/ProDemoScreen";
 import BookingScreen from "./screens/BookingScreen";
@@ -134,6 +135,7 @@ function App() {
               <Route element={<RootLayout />}>
                 <Route path="/" element={<LandingScreen />} />
                 <Route path="/lokascore" element={<LokascorePage />} />
+                <Route path="/services" element={<NosServicesPage />} />
                 <Route path="/pro" element={<ProPage />} />
                 <Route path="/pro/demo" element={<ProDemoScreen />} />
                 <Route path="/booking/:destinationId" element={<BookingScreen />} />

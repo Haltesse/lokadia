@@ -13,7 +13,6 @@ import { useLanguageSafe } from "../context/LanguageContext";
 import { PartnerBookingSection } from "../components/PartnerBookingSection";
 import { HeroSlideshow } from "../components/HeroSlideshow";
 import { LiveAlertsBanner } from "../components/LiveAlertsBanner";
-import { HomeServicesSection } from "../components/HomeServicesSection";
 import { DesktopHomeExperience } from "./DesktopHomeExperience";
 import { useLokascore } from "../hooks/useLokascore";
 
@@ -363,11 +362,6 @@ export function GlobalHome() {
             />
           ))}
         </div>
-      </section>
-
-      {/* ───────── NOS SERVICES — positionnement voyage + sécurité ───────── */}
-      <section className="px-5 mb-6 lk-fade-in-up lk-delay-3">
-        <HomeServicesSection />
       </section>
 
       {/* Partner commission section — driver de revenu */}

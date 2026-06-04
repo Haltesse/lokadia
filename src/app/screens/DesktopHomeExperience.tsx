@@ -15,7 +15,6 @@ import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { BOOKING_PARTNERS } from "../components/PartnerBookingSection";
 import { useLokascore } from "../hooks/useLokascore";
 import { LiveAlertsBanner } from "../components/LiveAlertsBanner";
-import { HomeServicesSection } from "../components/HomeServicesSection";
 
 const destinations = [
   {
@@ -194,7 +193,10 @@ export function DesktopHomeExperience() {
   const [activeDestinationIndex, setActiveDestinationIndex] = useState(0);
   const [isDestinationsPaused, setIsDestinationsPaused] = useState(false);
   const activeDestination = destinations[activeDestinationIndex];
-  const visiblePartners = BOOKING_PARTNERS.slice(0, 5);
+  const partnerOrder = ["flight", "hotel", "esim", "activity", "insurance"];
+  const visiblePartners = partnerOrder
+    .map((id) => BOOKING_PARTNERS.find((p) => p.id === id))
+    .filter((p): p is (typeof BOOKING_PARTNERS)[number] => Boolean(p));
 
   useEffect(() => {
     if (isDestinationsPaused) return;
@@ -330,7 +332,51 @@ export function DesktopHomeExperience() {
       </section>
 
       <section className="mx-auto max-w-7xl px-8 pb-12">
-        <HomeServicesSection />
+        <div className="rounded-3xl bg-white p-6" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Bell className="h-5 w-5" style={{ color: "var(--lokadia-primary)" }} />
+                <h2 className="text-xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
+                  Essentiels de voyage
+                </h2>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate("/services")}
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold"
+              style={{ background: "var(--lokadia-info-bg)", color: "var(--lokadia-primary)" }}
+            >
+              Consulter toutes nos offres <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-5 gap-3">
+            {visiblePartners.map((partner) => {
+              const Icon = partner.icon;
+              return (
+                <a
+                  key={partner.id}
+                  href={partner.href}
+                  target="_blank"
+                  rel="noopener nofollow sponsored"
+                  className="rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                  style={{ borderColor: "var(--lokadia-gray-100)" }}
+                >
+                  <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: partner.bg }}>
+                    <Icon className="h-5 w-5" style={{ color: partner.color }} />
+                  </span>
+                  <span className="block text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
+                    {partner.label}
+                  </span>
+                  <span className="mt-1 block text-xs font-semibold uppercase tracking-wide" style={{ color: partner.color }}>
+                    {partner.provider}
+                  </span>
+                </a>
+              );
+            })}
+          </div>
+        </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-8 pb-12">
@@ -392,54 +438,6 @@ export function DesktopHomeExperience() {
               }}
             />
           ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-8 pb-16">
-        <div className="rounded-3xl bg-white p-6" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
-          <div className="mb-5 flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5" style={{ color: "var(--lokadia-primary)" }} />
-                <h2 className="text-xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
-                  Essentiels de voyage
-                </h2>
-              </div>
-            </div>
-            <button
-              onClick={() => document.getElementById('nos-services')?.scrollIntoView({ behavior: 'smooth' })}
-              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold"
-              style={{ background: "var(--lokadia-info-bg)", color: "var(--lokadia-primary)" }}
-            >
-              Consulter toutes nos offres <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-5 gap-3">
-            {visiblePartners.map((partner) => {
-              const Icon = partner.icon;
-              return (
-                <a
-                  key={partner.id}
-                  href={partner.href}
-                  target="_blank"
-                  rel="noopener nofollow sponsored"
-                  className="rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:shadow-lg"
-                  style={{ borderColor: "var(--lokadia-gray-100)" }}
-                >
-                  <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: partner.bg }}>
-                    <Icon className="h-5 w-5" style={{ color: partner.color }} />
-                  </span>
-                  <span className="block text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
-                    {partner.label}
-                  </span>
-                  <span className="mt-1 block text-xs font-semibold uppercase tracking-wide" style={{ color: partner.color }}>
-                    {partner.provider}
-                  </span>
-                </a>
-              );
-            })}
-          </div>
         </div>
       </section>
     </main>

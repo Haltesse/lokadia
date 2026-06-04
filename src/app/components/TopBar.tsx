@@ -15,20 +15,10 @@ export function TopBar() {
   const auth = (() => { try { return useAuth(); } catch { return null; } })();
   const isAuth = !!auth?.user;
 
-  const goToServices = () => {
-    const el = document.getElementById("nos-services");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    } else {
-      navigate("/global-home");
-      setTimeout(() => document.getElementById("nos-services")?.scrollIntoView({ behavior: "smooth" }), 300);
-    }
-  };
-
   const navLinks: Array<{ id: string; label: string; onClick: () => void; active: boolean }> = [
     { id: "home", label: "Accueil", onClick: () => navigate("/global-home"), active: location.pathname === "/global-home" },
     { id: "trips", label: "Voyage", onClick: () => navigate("/trips"), active: location.pathname.startsWith("/trips") },
-    { id: "services", label: "Nos services", onClick: goToServices, active: false },
+    { id: "services", label: "Nos services", onClick: () => navigate("/services"), active: location.pathname === "/services" },
     { id: "lokascore", label: "Lokascore", onClick: () => navigate("/lokascore"), active: location.pathname === "/lokascore" },
     { id: "pro", label: "Pro", onClick: () => navigate("/pro"), active: location.pathname === "/pro" },
   ];
