@@ -107,14 +107,14 @@ export default function NosServicesPage() {
             <ArrowLeft className="h-3.5 w-3.5" /> Retour
           </button>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/80">
-            Le guide Lokadia
+            Tout votre voyage, au meilleur prix
           </p>
           <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight lg:text-5xl">
-            Nos services, dans l'ordre de votre voyage.
+            Découvrez nos offres, au meilleur prix.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-white/90">
-            Lokadia réunit tous les essentiels de votre voyage au meilleur prix — et vous protège
-            avant, pendant et après votre séjour. Voici comment on s'organise, étape par étape.
+            Vols, hébergements, e-SIM, activités et assurance — tous les essentiels de votre voyage
+            réunis au même endroit, avec une sécurité renforcée avant, pendant et après votre séjour.
           </p>
         </div>
       </section>

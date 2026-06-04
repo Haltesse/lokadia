@@ -33,7 +33,7 @@ export function TopBar() {
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20 gap-4">
-          <div className="flex items-center gap-4 min-w-0">
+          <div className="flex items-center gap-4 min-w-0 flex-1">
           {/* Logo */}
           <button
             onClick={() => navigate(isAuth ? "/global-home" : "/")}
@@ -52,7 +52,7 @@ export function TopBar() {
 
           <button
             onClick={() => navigate("/destination-count")}
-            className="hidden xl:flex min-w-[280px] items-center gap-3 rounded-full border bg-white px-4 py-2.5 text-left transition-all hover:border-sky-300 hover:shadow-md"
+            className="hidden lg:flex flex-1 max-w-2xl items-center gap-3 rounded-full border bg-white px-4 py-2.5 text-left transition-all hover:border-sky-300 hover:shadow-md"
             style={{ borderColor: "var(--lokadia-gray-200)" }}
           >
             <Search className="h-4 w-4" style={{ color: "var(--lokadia-primary)" }} />
