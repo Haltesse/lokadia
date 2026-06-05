@@ -173,7 +173,7 @@ export default function TripWizardScreen() {
     try {
       setCreating(true);
       if (!user) {
-        alert('Veuillez vous connecter');
+        navigate('/login');
         return;
       }
 
