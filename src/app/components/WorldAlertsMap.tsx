@@ -84,7 +84,7 @@ export function WorldAlertsMap() {
   const redCount = snapshot.alerts.filter((a) => a.severity === 'red').length;
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-white" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
+    <div className="isolate overflow-hidden rounded-2xl bg-white" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
       {/* Filtres par type */}
       <div className="flex items-center gap-1.5 overflow-x-auto px-3 py-2.5 scrollbar-hide" style={{ borderBottom: '1px solid var(--lokadia-gray-100)' }}>
         <button

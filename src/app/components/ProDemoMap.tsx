@@ -79,7 +79,7 @@ export function ProDemoMap({ points, accent }: Props) {
   }
 
   return (
-    <div className="overflow-hidden rounded-3xl bg-white" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
+    <div className="isolate overflow-hidden rounded-3xl bg-white" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
       <div className="relative" style={{ height: 360 }}>
         <MapContainer center={[25, 15]} zoom={2} minZoom={1} maxZoom={7} scrollWheelZoom={false} worldCopyJump style={{ height: '100%', width: '100%', background: '#f1f5f9' }} attributionControl={false}>
           <FitBounds coords={coords} />
