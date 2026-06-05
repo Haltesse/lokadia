@@ -1,0 +1,16 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Intégration Leaflet — confinement du contexte d'empilement
+
+   Leaflet attribue des z-index très élevés à ses couches internes :
+   .leaflet-pane = 400, contrôles (zoom/attribution) = 1000, popups = 700.
+   Sans confinement, ces couches passent AU-DESSUS du reste de l'UI (liste
+   d'alertes, BottomNav) dès qu'une carte défile à proximité sur mobile.
+
+   En forçant chaque carte à constituer son propre contexte d'empilement isolé,
+   ces z-index restent « prisonniers » de la carte : une carte ne peut plus
+   recouvrir un élément situé en dehors de sa propre boîte.
+   ─────────────────────────────────────────────────────────────────────────── */
+.leaflet-container {
+  isolation: isolate;
+  z-index: 0;
+}

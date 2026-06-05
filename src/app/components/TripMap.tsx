@@ -98,7 +98,7 @@ export function TripMap({ points, legs, startDate, endDate, travelers }: TripMap
   }
 
   return (
-    <div className="rounded-3xl overflow-hidden" style={{ boxShadow: 'var(--shadow-lg)' }}>
+    <div className="isolate rounded-3xl overflow-hidden" style={{ boxShadow: 'var(--shadow-lg)' }}>
       <MapContainer
         center={center}
         zoom={4}
