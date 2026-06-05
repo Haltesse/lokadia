@@ -137,10 +137,10 @@ export default function LokascorePage() {
               <Sparkles className="h-4 w-4" />
               <span className="text-xs font-bold uppercase tracking-wide">Méthodologie Lokascore</span>
             </div>
-            <h1 className="max-w-2xl text-5xl font-bold leading-[1.04] tracking-tight">
+            <h1 className="max-w-2xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl lg:text-5xl lg:leading-[1.04]">
               Un Nutri-Score du voyage international, en temps réel.
             </h1>
-            <p className="mt-5 max-w-xl text-lg leading-8 text-white/90">
+            <p className="mt-4 max-w-xl text-base leading-7 text-white/90 md:mt-5 md:text-lg md:leading-8">
               Un seul chiffre <strong>0-100</strong> qui agrège <strong>16 sources officielles internationales</strong>
               {' '}(sécurité, santé, catastrophes, infrastructure). Adapté à votre profil de voyage.
             </p>
@@ -175,7 +175,7 @@ export default function LokascorePage() {
                 </h2>
               </div>
               <div className="rounded-2xl px-4 py-3 text-right" style={{ background: "var(--lokadia-info-bg)" }}>
-                <p className="text-4xl font-bold" style={{ color: "var(--lokadia-primary)" }}>
+                <p className="text-3xl font-bold whitespace-nowrap md:text-4xl" style={{ color: "var(--lokadia-primary)" }}>
                   0-100
                 </p>
                 <p className="text-xs font-bold" style={{ color: "var(--lokadia-gray-600)" }}>

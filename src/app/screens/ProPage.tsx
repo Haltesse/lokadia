@@ -175,7 +175,7 @@ export default function ProPage() {
                 <Briefcase className="h-4 w-4" />
                 <span className="text-xs font-bold uppercase tracking-wide">B2B</span>
               </div>
-              <h1 className="text-4xl font-bold leading-tight tracking-tight lg:text-6xl">
+              <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl lg:text-6xl">
                 Pilotez le risque voyage comme un back-office.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-7 text-white/90 lg:text-lg">

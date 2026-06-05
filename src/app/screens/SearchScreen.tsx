@@ -172,7 +172,7 @@ export function SearchScreen() {
             <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--lokadia-primary)" }}>
               Recherche
             </p>
-            <h1 className="text-4xl font-bold tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+            <h1 className="text-2xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--lokadia-gray-900)" }}>
               Trouver une destination
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>

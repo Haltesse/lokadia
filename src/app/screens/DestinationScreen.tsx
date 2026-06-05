@@ -260,7 +260,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
 
         {/* Destination Info */}
         <div className="absolute bottom-6 left-6 right-6">
-          <h1 className="text-4xl font-bold text-white mb-2">{destination.name}</h1>
+          <h1 className="text-3xl font-bold text-white mb-2 md:text-4xl">{destination.name}</h1>
           <div className="flex items-center gap-2 text-white/90 mb-4">
             <MapPin className="h-5 w-5" />
             <span className="text-lg">{destination.country}</span>
