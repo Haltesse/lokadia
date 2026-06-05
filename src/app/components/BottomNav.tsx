@@ -79,14 +79,14 @@ export function BottomNav() {
             style={{
               top: 4,
               bottom: 4,
-              width: "20%",
+              width: "calc((100% - 1rem) / 5)",
               background: isActive("/global-home") || isActive("/trips") || isActive("/services") || isActive("/profile")
                 ? "linear-gradient(135deg, #0F4C81 0%, #134074 100%)"
                 : "transparent",
-              left: isActive("/global-home") ? "0.5%"
-                : isActive("/trips") ? "20.5%"
-                : isActive("/services") ? "60.5%"
-                : isActive("/profile") ? "80.5%"
+              left: isActive("/global-home") ? "0.5rem"
+                : isActive("/trips") ? "calc(0.5rem + (100% - 1rem) / 5)"
+                : isActive("/services") ? "calc(0.5rem + 3 * (100% - 1rem) / 5)"
+                : isActive("/profile") ? "calc(0.5rem + 4 * (100% - 1rem) / 5)"
                 : "-100%",
               opacity: isActive("/global-home") || isActive("/trips") || isActive("/services") || isActive("/profile") ? 1 : 0,
             }}
