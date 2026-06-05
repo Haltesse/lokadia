@@ -6,7 +6,8 @@ import {
   Shield,
   MapPin,
   TrendingUp,
-  ChevronRight
+  ChevronRight,
+  Building2
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useLanguageSafe } from "../context/LanguageContext";
@@ -341,6 +342,45 @@ export function GlobalHome() {
           <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" style={{ color: 'var(--lokadia-gray-400)' }} />
         </button>
       </div>
+
+      {/* ───────── ACCÈS RAPIDE — Lokascore & Pro (mobile only) ───────── */}
+      <section className="px-5 mb-6 max-w-3xl mx-auto w-full lk-fade-in-up lk-delay-2">
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => navigate('/lokascore')}
+            className="lk-card-hover lk-btn flex items-center gap-3 rounded-2xl bg-white p-3.5 text-left"
+            style={{ boxShadow: 'var(--shadow-md)', border: '1px solid var(--lokadia-gray-100)' }}
+          >
+            <div
+              className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background: 'var(--lokadia-info-bg)' }}
+            >
+              <Shield className="h-5 w-5" style={{ color: 'var(--lokadia-primary)' }} strokeWidth={2.5} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold leading-tight" style={{ color: 'var(--lokadia-gray-900)' }}>Lokascore</p>
+              <p className="text-[11px] leading-tight mt-0.5" style={{ color: 'var(--lokadia-gray-500)' }}>Score sécurité indicatif</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/pro')}
+            className="lk-card-hover lk-btn flex items-center gap-3 rounded-2xl bg-white p-3.5 text-left"
+            style={{ boxShadow: 'var(--shadow-md)', border: '1px solid var(--lokadia-gray-100)' }}
+          >
+            <div
+              className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background: 'rgba(139, 92, 246, 0.12)' }}
+            >
+              <Building2 className="h-5 w-5" style={{ color: 'var(--lokadia-accent)' }} strokeWidth={2.5} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold leading-tight" style={{ color: 'var(--lokadia-gray-900)' }}>Lokadia Pro</p>
+              <p className="text-[11px] leading-tight mt-0.5" style={{ color: 'var(--lokadia-gray-500)' }}>Pour les équipes</p>
+            </div>
+          </button>
+        </div>
+      </section>
 
       {/* ───────── TRENDING — slider horizontal compact ───────── */}
       <section className="mb-6 lk-fade-in-up lk-delay-3">
