@@ -511,6 +511,8 @@ export default function TripMapPlannerScreen() {
 
   // ── Sauvegarde ──
   const canSave = stops.length >= 1 && startDate && endDate && !!user;
+  // Bouton actif si : non connecté (→ redirige vers la connexion) OU conditions d'enregistrement réunies.
+  const saveButtonActive = !user || (canSave && !saving);
 
   const handleSave = async () => {
     if (!canSave) return;
@@ -1141,14 +1143,14 @@ export default function TripMapPlannerScreen() {
 
             {/* ── Bouton sauvegarde ── */}
             <button
-              onClick={handleSave}
-              disabled={!canSave || saving}
+              onClick={!user ? () => navigate('/login') : handleSave}
+              disabled={!user ? false : (!canSave || saving)}
               className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-bold transition-all"
               style={{
-                background: canSave && !saving ? 'linear-gradient(135deg,#10B981,#059669)' : '#E5E7EB',
-                color: canSave && !saving ? '#fff' : '#9CA3AF',
-                cursor: canSave && !saving ? 'pointer' : 'not-allowed',
-                boxShadow: canSave && !saving ? '0 8px 20px rgba(16,185,129,0.3)' : 'none',
+                background: saveButtonActive ? 'linear-gradient(135deg,#10B981,#059669)' : '#E5E7EB',
+                color: saveButtonActive ? '#fff' : '#9CA3AF',
+                cursor: saveButtonActive ? 'pointer' : 'not-allowed',
+                boxShadow: saveButtonActive ? '0 8px 20px rgba(16,185,129,0.3)' : 'none',
               }}
             >
               <Save size={18} />
