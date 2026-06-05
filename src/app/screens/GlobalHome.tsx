@@ -1,5 +1,5 @@
 import { TrendingDestinationCard } from "../components/TrendingDestinationCard";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Search,
@@ -13,6 +13,7 @@ import { useLanguageSafe } from "../context/LanguageContext";
 import { PartnerBookingSection } from "../components/PartnerBookingSection";
 import { HeroSlideshow } from "../components/HeroSlideshow";
 import { LiveAlertsBanner } from "../components/LiveAlertsBanner";
+import { getLiveAlertsSnapshot, subscribeToLiveAlerts } from "../lib/liveAlertsService";
 import { DesktopHomeExperience } from "./DesktopHomeExperience";
 import { useLokascore } from "../hooks/useLokascore";
 
@@ -90,6 +91,18 @@ export function GlobalHome() {
   const context = useLanguageSafe();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // La section alertes ne s'affiche que s'il y a réellement des alertes actives,
+  // sinon on évite un titre orphelin et un espace déséquilibré sous le hero.
+  const [hasAlerts, setHasAlerts] = useState(() => {
+    const snap = getLiveAlertsSnapshot();
+    return !!snap && snap.byCountry.size > 0;
+  });
+
+  useEffect(() => {
+    const unsub = subscribeToLiveAlerts((snap) => setHasAlerts(snap.byCountry.size > 0));
+    return () => unsub();
+  }, []);
 
   // Images pour le hero slideshow
   const heroImages = [
@@ -295,16 +308,19 @@ export function GlobalHome() {
         </div>
       </HeroSlideshow>
 
-      {/* ───────── LIVE ALERTS BANNER — USGS + ReliefWeb temps réel ───────── */}
-      <div className="px-5 -mt-3 relative z-10 mb-4 max-w-3xl mx-auto w-full lk-fade-in-up lk-delay-1">
-        <h2 className="mb-2 text-sm font-bold tracking-tight" style={{ color: 'var(--lokadia-gray-900)' }}>
-          Restez informé à tout instant.
-        </h2>
-        <LiveAlertsBanner variant="mobile" />
-      </div>
+      {/* ───────── LIVE ALERTS BANNER — USGS + ReliefWeb temps réel ─────────
+          Affichée uniquement s'il y a des alertes actives (sinon titre orphelin). */}
+      {hasAlerts && (
+        <div className="px-5 pt-5 relative z-10 mb-5 max-w-3xl mx-auto w-full lk-fade-in-up lk-delay-1">
+          <h2 className="mb-2 text-sm font-bold tracking-tight" style={{ color: 'var(--lokadia-gray-900)' }}>
+            Restez informé à tout instant.
+          </h2>
+          <LiveAlertsBanner variant="mobile" />
+        </div>
+      )}
 
       {/* ───────── SEARCH BAR — focus state premium ───────── */}
-      <div className="px-5 -mt-5 relative z-10 mb-6 max-w-3xl mx-auto w-full lk-fade-in-up lk-delay-2">
+      <div className={`px-5 ${hasAlerts ? '' : 'pt-5'} relative z-10 mb-6 max-w-3xl mx-auto w-full lk-fade-in-up lk-delay-2`}>
         <button
           onClick={() => navigate("/destination-count")}
           className="lk-search lk-btn flex items-center gap-3 w-full bg-white rounded-2xl p-3.5 border-2 group"

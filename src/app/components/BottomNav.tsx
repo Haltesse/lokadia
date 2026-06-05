@@ -1,11 +1,11 @@
 import { useLocation, useNavigate } from "react-router";
-import { Home, Bell, Plus, User, Plane } from "lucide-react";
+import { Home, LayoutGrid, Plus, User, Plane } from "lucide-react";
 import { useLanguageSafe } from "../context/LanguageContext";
 import { motion } from "motion/react";
 
 /**
  * BottomNav mobile (masquée sur md+).
- * 5 items : Accueil, Voyages, [CTA CENTRAL Créer], Alertes, Profil.
+ * 5 items : Accueil, Voyages, [CTA CENTRAL Créer], Nos services, Profil.
  * Le bouton central "Créer" est saillant car il est le driver de commissions.
  */
 export function BottomNav() {
@@ -22,7 +22,7 @@ export function BottomNav() {
     { path: "/trips", icon: Plane, label: "Voyages" },
   ];
   const rightItems = [
-    { path: "/alerts", icon: Bell, label: t.nav.alerts },
+    { path: "/services", icon: LayoutGrid, label: "Nos services" },
     { path: "/profile", icon: User, label: t.nav.profile },
   ];
 
@@ -80,15 +80,15 @@ export function BottomNav() {
               top: 4,
               bottom: 4,
               width: "20%",
-              background: isActive("/global-home") || isActive("/trips") || isActive("/alerts") || isActive("/profile")
+              background: isActive("/global-home") || isActive("/trips") || isActive("/services") || isActive("/profile")
                 ? "linear-gradient(135deg, #0F4C81 0%, #134074 100%)"
                 : "transparent",
               left: isActive("/global-home") ? "0.5%"
                 : isActive("/trips") ? "20.5%"
-                : isActive("/alerts") ? "60.5%"
+                : isActive("/services") ? "60.5%"
                 : isActive("/profile") ? "80.5%"
                 : "-100%",
-              opacity: isActive("/global-home") || isActive("/trips") || isActive("/alerts") || isActive("/profile") ? 1 : 0,
+              opacity: isActive("/global-home") || isActive("/trips") || isActive("/services") || isActive("/profile") ? 1 : 0,
             }}
           />
 
