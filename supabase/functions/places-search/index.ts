@@ -37,6 +37,35 @@ interface NormalizedPlace {
   photoUrl?: string;
 }
 
+// Catégories OSM « bruit » à masquer (transports, mobilier urbain, voirie…)
+const NOISE = new Set([
+  'bus_stop', 'bus_station', 'stop_position', 'platform', 'subway_entrance', 'train_station_entrance',
+  'tram_stop', 'halt', 'stop', 'station', 'ferry_terminal', 'taxi', 'parking', 'parking_entrance',
+  'parking_space', 'bicycle_parking', 'motorcycle_parking', 'traffic_signals', 'crossing', 'street_lamp',
+  'bench', 'waste_basket', 'vending_machine', 'recycling', 'fire_hydrant', 'drinking_water', 'toilets',
+  'telephone', 'post_box', 'bicycle_rental', 'charging_station', 'fuel', 'atm', 'clock', 'surveillance',
+  'camera', 'screen', 'give_way', 'turning_circle', 'elevator', 'steps', 'traffic_calming',
+  'motorway_junction', 'construction', 'tree', 'street_cabinet', 'switch', 'milestone', 'level_crossing',
+]);
+
+// Étiquettes FR pour les catégories courantes (sinon on capitalise le tag OSM)
+const CATEGORY_FR: Record<string, string> = {
+  attraction: 'Site touristique', museum: 'Musée', gallery: "Galerie d'art", artwork: 'Œuvre d\'art',
+  viewpoint: 'Point de vue', monument: 'Monument', memorial: 'Mémorial', castle: 'Château',
+  ruins: 'Ruines', fort: 'Fort', tower: 'Monument', place_of_worship: 'Lieu de culte',
+  restaurant: 'Restaurant', cafe: 'Café', bar: 'Bar', pub: 'Pub', fast_food: 'Restauration rapide',
+  bakery: 'Boulangerie', ice_cream: 'Glacier', winery: 'Domaine viticole',
+  hotel: 'Hôtel', hostel: 'Auberge', guest_house: "Maison d'hôtes", apartment: 'Appartement',
+  park: 'Parc', garden: 'Jardin', beach: 'Plage', nature_reserve: 'Réserve naturelle',
+  zoo: 'Zoo', aquarium: 'Aquarium', theme_park: "Parc d'attractions", water_park: 'Parc aquatique',
+  theatre: 'Théâtre', cinema: 'Cinéma', nightclub: 'Boîte de nuit', casino: 'Casino',
+  marketplace: 'Marché', mall: 'Centre commercial', department_store: 'Grand magasin',
+  supermarket: 'Supermarché', books: 'Librairie',
+  peak: 'Sommet', waterfall: 'Cascade', cave_entrance: 'Grotte', spring: 'Source',
+  city: 'Ville', town: 'Ville', village: 'Village', hamlet: 'Hameau',
+  suburb: 'Quartier', neighbourhood: 'Quartier', square: 'Place', stadium: 'Stade',
+};
+
 const cap = (s: string) =>
   s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ') : '';
 
@@ -44,29 +73,39 @@ function normalize(geojson: unknown): NormalizedPlace[] {
   const feats = Array.isArray((geojson as { features?: unknown[] })?.features)
     ? (geojson as { features: Record<string, any>[] }).features
     : [];
-  return feats
-    .filter((f) => f?.properties?.name)
-    .map((f): NormalizedPlace => {
-      const p = f.properties ?? {};
-      const coords = Array.isArray(f.geometry?.coordinates) ? f.geometry.coordinates : [];
-      const category = cap(p.osm_value || p.osm_key || p.type || '');
-      const address = [
-        [p.housenumber, p.street].filter(Boolean).join(' '),
-        p.city || p.town || p.village || p.county || p.state,
-        p.country,
-      ]
-        .filter(Boolean)
-        .join(', ');
-      return {
-        id: `${p.osm_type ?? 'X'}${p.osm_id ?? p.name}`,
-        name: String(p.name),
-        category,
-        lat: Number(coords[1]),
-        lon: Number(coords[0]),
-        address,
-      };
-    })
-    .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon));
+  const out: NormalizedPlace[] = [];
+  const seen = new Set<string>();
+  for (const f of feats) {
+    const p = f?.properties ?? {};
+    if (!p.name) continue;
+    const value = String(p.osm_value || '');
+    if (NOISE.has(value)) continue; // on jette le bruit OSM (arrêts de bus, parkings…)
+    const coords = Array.isArray(f.geometry?.coordinates) ? f.geometry.coordinates : [];
+    const lat = Number(coords[1]);
+    const lon = Number(coords[0]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+    // Dédoublonnage : même nom quasi au même endroit (lieu tagué plusieurs fois dans OSM)
+    const key = `${String(p.name).toLowerCase()}|${lat.toFixed(3)}|${lon.toFixed(3)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const category = CATEGORY_FR[value] || cap(value || p.osm_key || p.type || '');
+    const address = [
+      [p.housenumber, p.street].filter(Boolean).join(' '),
+      p.city || p.town || p.village || p.county || p.state,
+      p.country,
+    ]
+      .filter(Boolean)
+      .join(', ');
+    out.push({
+      id: `${p.osm_type ?? 'X'}${p.osm_id ?? p.name}`,
+      name: String(p.name),
+      category,
+      lat,
+      lon,
+      address,
+    });
+  }
+  return out;
 }
 
 async function readCache(key: string): Promise<NormalizedPlace[] | null> {
