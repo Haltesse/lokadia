@@ -18,8 +18,8 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
-  ArrowLeft, Search, Plane, Train, Bus, Car, Ship, X, ArrowUp, ArrowDown,
-  Save, Trash2, Users, MapPin, Plus, Check, Info, Loader2,
+  ArrowLeft, Search, Plane, Train, Bus, Car, Ship, X, ChevronLeft, ChevronRight,
+  Save, Trash2, Users, MapPin, Plus, Check, Info, Loader2, CalendarDays,
 } from 'lucide-react';
 import { motion, useMotionValue, useMotionValueEvent, type PanInfo } from 'motion/react';
 import { STOP_CITIES, type StopCity } from '../data/stopCities';
@@ -60,9 +60,12 @@ function formatDuration(minutes: number): string {
   return `${h}h${m.toString().padStart(2, '0')}`;
 }
 
-// Marqueur numéroté (étape sélectionnée)
-function makeStopIcon(label: string, isOrigin: boolean, isEnd: boolean) {
-  const bg = isOrigin ? '#10B981' : isEnd ? '#6366F1' : '#F59E0B';
+// Palette de couleurs par jour d'itinéraire (le départ reste vert)
+const DAY_COLORS = ['#6366F1', '#F59E0B', '#EC4899', '#06B6D4', '#8B5CF6', '#EF4444', '#14B8A6', '#F97316'];
+const dayColor = (day: number) => DAY_COLORS[(Math.max(1, day) - 1) % DAY_COLORS.length];
+
+// Marqueur numéroté (étape sélectionnée), coloré par jour
+function makeStopIcon(label: string, bg: string) {
   return L.divIcon({
     html: `<div style="width:36px;height:36px;background:${bg};border:3px solid #fff;border-radius:50%;
       box-shadow:0 4px 12px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;
@@ -256,6 +259,7 @@ interface PlannerStop {
   country: string;
   lat: number;
   lon: number;
+  day: number;         // jour d'itinéraire (1 = premier jour)
 }
 
 function geoResultToStop(g: GeoResult): PlannerStop {
@@ -268,6 +272,7 @@ function geoResultToStop(g: GeoResult): PlannerStop {
     country: g.country,
     lat: g.lat,
     lon: g.lon,
+    day: 1,
   };
 }
 
@@ -283,6 +288,7 @@ export default function TripMapPlannerScreen() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [travelers, setTravelers] = useState(1);
+  const [dayCount, setDayCount] = useState(1);
 
   // Mode choisi par leg, indexé par "fromId=>toId"
   const [legModes, setLegModes] = useState<Record<string, ModeKey>>({});
@@ -475,7 +481,7 @@ export default function TripMapPlannerScreen() {
     const stop = geoResultToStop(g);
     setStops((prev) => {
       if (prev.some((s) => s.id === stop.id)) return prev;
-      return [...prev, stop];
+      return [...prev, stop].sort((a, b) => a.day - b.day);
     });
     setSearch('');
     setSearchResults([]);
@@ -489,16 +495,12 @@ export default function TripMapPlannerScreen() {
     setStops((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
-  const moveStop = useCallback((id: string, dir: -1 | 1) => {
-    setStops((prev) => {
-      const idx = prev.findIndex((s) => s.id === id);
-      if (idx === -1) return prev;
-      const newIdx = idx + dir;
-      if (newIdx < 0 || newIdx >= prev.length) return prev;
-      const copy = [...prev];
-      [copy[idx], copy[newIdx]] = [copy[newIdx], copy[idx]];
-      return copy;
-    });
+  // Assigne une étape à un jour, et garde le tableau trié par jour
+  // (l'itinéraire/la carte suivent ainsi l'ordre des jours).
+  const setStopDay = useCallback((id: string, newDay: number) => {
+    setStops((prev) =>
+      [...prev.map((s) => (s.id === id ? { ...s, day: Math.max(1, newDay) } : s))].sort((a, b) => a.day - b.day),
+    );
   }, []);
 
   const clearAll = useCallback(() => {
@@ -521,6 +523,14 @@ export default function TripMapPlannerScreen() {
   const nights = startDate && endDate
     ? Math.max(1, Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000))
     : 0;
+
+  // Le nombre de jours de planning suit la durée du séjour (sans jamais réduire)
+  useEffect(() => {
+    if (nights > 0) setDayCount((d) => Math.max(d, nights));
+  }, [nights]);
+
+  // Jour le plus élevé réellement utilisé (pour ne pas supprimer un jour occupé)
+  const maxStopDay = stops.reduce((m, s) => Math.max(m, s.day), 1);
 
   const budget = useMemo(() => {
     if (legs.length === 0 || !startDate || !endDate) return null;
@@ -785,7 +795,7 @@ export default function TripMapPlannerScreen() {
             <Marker
               key={p.id}
               position={[p.lat, p.lon]}
-              icon={makeStopIcon(String(idx + 1), p.isOrigin, !p.isOrigin && idx === points.length - 1)}
+              icon={makeStopIcon(String(idx + 1), p.isOrigin ? '#10B981' : dayColor(stops[idx - 1]?.day ?? 1))}
             >
               <Popup>
                 <div style={{ minWidth: 180 }}>
@@ -1035,6 +1045,28 @@ export default function TripMapPlannerScreen() {
                     Tout effacer
                   </button>
                 </div>
+                {/* Organise par jour */}
+                <div className="mb-2 flex items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2">
+                  <CalendarDays size={15} className="flex-shrink-0 text-indigo-600" />
+                  <span className="text-xs font-bold text-indigo-900">Organise par jour</span>
+                  <div className="ml-auto flex items-center gap-1.5">
+                    <button
+                      onClick={() => setDayCount((d) => Math.max(maxStopDay, d - 1))}
+                      disabled={dayCount <= maxStopDay}
+                      className="flex h-6 w-6 items-center justify-center rounded-md border border-indigo-200 bg-white text-sm font-bold disabled:opacity-40"
+                      data-touch="compact"
+                      aria-label="Moins de jours"
+                    >−</button>
+                    <span className="w-16 text-center text-xs font-bold tabular-nums text-indigo-900">{dayCount} jour{dayCount > 1 ? 's' : ''}</span>
+                    <button
+                      onClick={() => setDayCount((d) => Math.min(20, d + 1))}
+                      className="flex h-6 w-6 items-center justify-center rounded-md border border-indigo-200 bg-white text-sm font-bold"
+                      data-touch="compact"
+                      aria-label="Plus de jours"
+                    >+</button>
+                  </div>
+                </div>
+
                 <div className="space-y-1.5">
                   {/* Départ (figé) */}
                   <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200">
@@ -1045,36 +1077,60 @@ export default function TripMapPlannerScreen() {
                     </div>
                   </div>
 
-                  {/* Stops */}
-                  {stops.map((s, idx) => {
-                    const num = idx + 2;
-                    const isLast = idx === stops.length - 1;
+                  {/* Étapes groupées par jour */}
+                  {Array.from({ length: dayCount }, (_, i) => i + 1).map((d) => {
+                    const dayStops = stops.filter((s) => s.day === d);
                     return (
-                      <div key={s.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200">
-                        <div
-                          className="w-7 h-7 rounded-full text-white flex items-center justify-center text-xs font-bold flex-shrink-0"
-                          style={{ background: isLast ? '#6366F1' : '#F59E0B' }}
-                        >{num}</div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate">{s.name}</p>
-                          <p className="text-[10px] text-gray-500 truncate">{s.country}</p>
-                        </div>
-                        <div className="flex items-center gap-0.5 flex-shrink-0">
-                          <button
-                            onClick={() => moveStop(s.id, -1)}
-                            disabled={idx === 0}
-                            className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                          ><ArrowUp size={14} /></button>
-                          <button
-                            onClick={() => moveStop(s.id, 1)}
-                            disabled={isLast}
-                            className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                          ><ArrowDown size={14} /></button>
-                          <button
-                            onClick={() => removeStop(s.id)}
-                            className="p-1 rounded hover:bg-red-50 text-red-500"
-                          ><X size={14} /></button>
-                        </div>
+                      <div key={`day-${d}`} className="space-y-1.5">
+                        {dayCount > 1 && (
+                          <div className="flex items-center gap-2 pt-1.5">
+                            <span
+                              className="inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold text-white"
+                              style={{ background: dayColor(d) }}
+                            >Jour {d}</span>
+                            <span className="text-[10px] text-gray-400">
+                              {dayStops.length} lieu{dayStops.length > 1 ? 'x' : ''}
+                            </span>
+                          </div>
+                        )}
+                        {dayCount > 1 && dayStops.length === 0 && (
+                          <p className="px-3 text-[11px] italic text-gray-400">
+                            Aucun lieu ce jour — déplace une étape ici avec ‹ ›
+                          </p>
+                        )}
+                        {dayStops.map((s) => {
+                          const num = stops.indexOf(s) + 2;
+                          return (
+                            <div key={s.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200">
+                              <div
+                                className="w-7 h-7 rounded-full text-white flex items-center justify-center text-xs font-bold flex-shrink-0"
+                                style={{ background: dayColor(s.day) }}
+                              >{num}</div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-gray-900 truncate">{s.name}</p>
+                                <p className="text-[10px] text-gray-500 truncate">{s.country}</p>
+                              </div>
+                              <div className="flex items-center gap-0.5 flex-shrink-0">
+                                <button
+                                  onClick={() => setStopDay(s.id, s.day - 1)}
+                                  disabled={s.day <= 1}
+                                  title="Jour précédent"
+                                  className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                                ><ChevronLeft size={15} /></button>
+                                <button
+                                  onClick={() => setStopDay(s.id, s.day + 1)}
+                                  disabled={s.day >= dayCount}
+                                  title="Jour suivant"
+                                  className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                                ><ChevronRight size={15} /></button>
+                                <button
+                                  onClick={() => removeStop(s.id)}
+                                  className="p-1 rounded hover:bg-red-50 text-red-500"
+                                ><X size={14} /></button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     );
                   })}
