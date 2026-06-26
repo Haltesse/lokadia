@@ -30,6 +30,7 @@ import { addStopToTrip, createTripSegment } from '../lib/tripStopService';
 import { useAuth } from '../context/AuthContext';
 import { EmirateDatePicker } from '../components/EmirateDatePicker';
 import { PlannerSuggestions } from '../components/PlannerSuggestions';
+import { searchPlaces } from '../lib/placesService';
 
 // ────── Modes & helpers ──────
 
@@ -91,7 +92,9 @@ interface GeoResult {
   countryCode?: string;
   lat: number;
   lon: number;
-  source: 'stop' | 'osm';
+  source: 'stop' | 'osm' | 'poi';
+  category?: string;   // POI : catégorie (ex. "Restaurant")
+  photoUrl?: string;   // POI : vignette
 }
 
 interface NominatimItem {
@@ -145,6 +148,21 @@ function stopCityToResult(c: StopCity): GeoResult {
     lat: c.lat!,
     lon: c.lon!,
     source: 'stop',
+  };
+}
+
+// POI Foursquare → GeoResult (lieu précis avec catégorie + photo)
+function placeToGeoResult(p: { id: string; name: string; category: string; lat: number; lon: number; address: string; photoUrl?: string }): GeoResult {
+  return {
+    id: `poi-${p.id}`,
+    name: p.name,
+    fullName: p.address || p.category,
+    country: p.address ? p.address.split(', ').pop() ?? '' : '',
+    lat: p.lat,
+    lon: p.lon,
+    source: 'poi',
+    category: p.category,
+    photoUrl: p.photoUrl,
   };
 }
 
@@ -335,6 +353,12 @@ export default function TripMapPlannerScreen() {
   // Departure resolution
   const departure = DEPARTURE_CITIES.find((c) => c.id === departureCityId) || DEPARTURE_CITIES[0];
 
+  // Biais géographique pour la recherche de lieux (POI) : dernière étape, sinon départ
+  const placesNearRef = useRef<{ lat: number; lon: number }>({ lat: departure.lat, lon: departure.lon });
+  placesNearRef.current = stops.length
+    ? { lat: stops[stops.length - 1].lat, lon: stops[stops.length - 1].lon }
+    : { lat: departure.lat, lon: departure.lon };
+
   // ── Points complets (départ + stops) pour la carte & le calcul ──
   const points = useMemo(() => {
     const list: Array<{ id: string; destinationId: string; name: string; lat: number; lon: number; isOrigin: boolean }> = [];
@@ -410,10 +434,15 @@ export default function TripMapPlannerScreen() {
     setSearching(true);
     const ctrl = new AbortController();
     const t = setTimeout(async () => {
-      const remote = await nominatimSearch(q, ctrl.signal);
-      // Fusion : locaux d'abord, puis Nominatim (sans doublons sur mêmes coordonnées approx.)
+      // En parallèle : villes (Nominatim) + lieux précis (Foursquare via Edge Function)
+      const [remote, places] = await Promise.all([
+        nominatimSearch(q, ctrl.signal),
+        searchPlaces(q, placesNearRef.current, ctrl.signal),
+      ]);
+      const poi = places.map(placeToGeoResult);
+      // Villes : locaux d'abord, puis Nominatim (sans doublons sur mêmes coordonnées approx.)
       const seen = new Set(local.map((r) => `${r.lat.toFixed(2)},${r.lon.toFixed(2)}`));
-      const merged = [
+      const cities = [
         ...local,
         ...remote.filter((r) => {
           const k = `${r.lat.toFixed(2)},${r.lon.toFixed(2)}`;
@@ -421,8 +450,9 @@ export default function TripMapPlannerScreen() {
           seen.add(k);
           return true;
         }),
-      ].slice(0, 10);
-      setSearchResults(merged);
+      ];
+      // Les lieux précis (POI) en tête, puis les villes
+      setSearchResults([...poi, ...cities].slice(0, 12));
       setSearching(false);
     }, 350);
 
@@ -691,18 +721,24 @@ export default function TripMapPlannerScreen() {
                   onClick={() => addStop(r)}
                   className="w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-0"
                 >
-                  <MapPin
-                    size={16}
-                    className={
-                      r.source === 'stop'
-                        ? 'text-emerald-500 flex-shrink-0'
-                        : 'text-blue-500 flex-shrink-0'
-                    }
-                  />
+                  {r.source === 'poi' && r.photoUrl ? (
+                    <img src={r.photoUrl} alt="" loading="lazy" className="h-9 w-9 flex-shrink-0 rounded-lg object-cover bg-gray-100" />
+                  ) : (
+                    <MapPin
+                      size={16}
+                      className={
+                        r.source === 'stop'
+                          ? 'text-emerald-500 flex-shrink-0'
+                          : r.source === 'poi'
+                            ? 'text-violet-500 flex-shrink-0'
+                            : 'text-blue-500 flex-shrink-0'
+                      }
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-gray-900 truncate">{r.name}</p>
                     <p className="text-xs text-gray-500 truncate">
-                      {r.source === 'osm' ? r.fullName : r.country}
+                      {r.source === 'poi' ? (r.category || r.fullName) : r.source === 'osm' ? r.fullName : r.country}
                     </p>
                   </div>
                   <Plus size={16} className="text-blue-600 flex-shrink-0" />
