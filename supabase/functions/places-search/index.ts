@@ -1,26 +1,18 @@
 /**
  * Edge Function : places-search
  *
- * Recherche de LIEUX (POI) riches via Foursquare Places API — avec photo,
- * catégorie, adresse — pour transformer le planner de « villes » en « vrais
- * lieux » (style Wanderlog).
+ * Recherche de LIEUX (POI) via PHOTON (komoot) — moteur basé sur OpenStreetMap,
+ * 100 % GRATUIT, SANS CLÉ ni carte bancaire. Transforme le planner de
+ * « villes » en « lieux précis » (monuments, restaurants, magasins, parcs…).
  *
- * La clé Foursquare est CACHÉE côté serveur (jamais dans le bundle). Les
- * réponses sont mises en cache dans la table `places_cache` → on divise les
- * appels payants par 5-10 et on gagne l'offline.
+ * OSM ne fournit pas de photo → on renvoie nom + catégorie + adresse. Les
+ * résultats sont mis en cache dans `places_cache` si la table existe (sinon
+ * dégradation gracieuse — on appelle Photon à chaque fois, c'est gratuit).
  *
  * Endpoint : GET /functions/v1/places-search?query={texte}&ll={lat,lon}
- *   → { "results": [ { id, name, category, categoryIcon, lat, lon, address, photoUrl } ] }
+ *   → { "results": [ { id, name, category, lat, lon, address } ] }
  *
- * Dégradation gracieuse : en cas d'erreur (clé absente, Foursquare down…),
- * renvoie 200 avec results:[] pour ne JAMAIS casser le planner.
- *
- * Secrets requis (Supabase) :
- *   supabase secrets set FOURSQUARE_API_KEY="fsq_xxx"
- *   (SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont injectés automatiquement.)
- *
- * Déploiement :
- *   supabase functions deploy places-search --no-verify-jwt
+ * Déploiement : supabase functions deploy places-search --no-verify-jwt
  */
 import { serve } from 'https://deno.land/std@0.182.0/http/server.ts';
 
@@ -30,7 +22,6 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const FSQ_KEY = Deno.env.get('FOURSQUARE_API_KEY') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 jours
@@ -46,31 +37,33 @@ interface NormalizedPlace {
   photoUrl?: string;
 }
 
-function normalize(fsq: unknown): NormalizedPlace[] {
-  const results = Array.isArray((fsq as { results?: unknown[] })?.results)
-    ? (fsq as { results: Record<string, any>[] }).results
+const cap = (s: string) =>
+  s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ') : '';
+
+function normalize(geojson: unknown): NormalizedPlace[] {
+  const feats = Array.isArray((geojson as { features?: unknown[] })?.features)
+    ? (geojson as { features: Record<string, any>[] }).features
     : [];
-  return results
-    .map((p): NormalizedPlace => {
-      const cat = Array.isArray(p.categories) ? p.categories[0] : undefined;
-      const categoryIcon = cat?.icon?.prefix && cat?.icon?.suffix
-        ? `${cat.icon.prefix}bg_64${cat.icon.suffix}`
-        : undefined;
-      const photo = Array.isArray(p.photos) ? p.photos[0] : undefined;
-      const photoUrl = photo?.prefix && photo?.suffix
-        ? `${photo.prefix}300x300${photo.suffix}`
-        : undefined;
-      const loc = p.location ?? {};
-      const address = [loc.address, loc.locality, loc.country].filter(Boolean).join(', ');
+  return feats
+    .filter((f) => f?.properties?.name)
+    .map((f): NormalizedPlace => {
+      const p = f.properties ?? {};
+      const coords = Array.isArray(f.geometry?.coordinates) ? f.geometry.coordinates : [];
+      const category = cap(p.osm_value || p.osm_key || p.type || '');
+      const address = [
+        [p.housenumber, p.street].filter(Boolean).join(' '),
+        p.city || p.town || p.village || p.county || p.state,
+        p.country,
+      ]
+        .filter(Boolean)
+        .join(', ');
       return {
-        id: String(p.fsq_place_id ?? `${p.name}-${p.latitude}`),
-        name: String(p.name ?? 'Lieu'),
-        category: String(cat?.name ?? ''),
-        categoryIcon,
-        lat: Number(p.latitude),
-        lon: Number(p.longitude),
+        id: `${p.osm_type ?? 'X'}${p.osm_id ?? p.name}`,
+        name: String(p.name),
+        category,
+        lat: Number(coords[1]),
+        lon: Number(coords[0]),
         address,
-        photoUrl,
       };
     })
     .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon));
@@ -108,7 +101,7 @@ async function writeCache(key: string, payload: NormalizedPlace[]): Promise<void
       body: JSON.stringify({ query_key: key, payload, created_at: new Date().toISOString() }),
     });
   } catch {
-    /* écriture de cache best-effort — on n'échoue jamais là-dessus */
+    /* best-effort */
   }
 }
 
@@ -127,31 +120,30 @@ serve(async (req) => {
   const ll = url.searchParams.get('ll') ?? '';
 
   if (query.length < 2) return json({ results: [] });
-  if (!FSQ_KEY) return json({ results: [], error: 'FOURSQUARE_API_KEY non configurée' });
 
-  const cacheKey = `search:${query.toLowerCase()}:${ll || 'global'}`;
-
+  const cacheKey = `photon:${query.toLowerCase()}:${ll || 'global'}`;
   const cached = await readCache(cacheKey);
   if (cached) return json({ results: cached, cached: true });
 
   try {
-    const fsqUrl = new URL('https://places-api.foursquare.com/places/search');
-    fsqUrl.searchParams.set('query', query);
-    fsqUrl.searchParams.set('limit', '10');
-    if (ll) fsqUrl.searchParams.set('ll', ll);
-    fsqUrl.searchParams.set('fields', 'fsq_place_id,name,latitude,longitude,categories,location,photos');
+    const photon = new URL('https://photon.komoot.io/api/');
+    photon.searchParams.set('q', query);
+    photon.searchParams.set('limit', '10');
+    photon.searchParams.set('lang', 'fr');
+    if (ll) {
+      const [lat, lon] = ll.split(',');
+      if (lat && lon) {
+        photon.searchParams.set('lat', lat);
+        photon.searchParams.set('lon', lon);
+      }
+    }
 
-    const res = await fetch(fsqUrl.toString(), {
-      headers: {
-        Authorization: `Bearer ${FSQ_KEY}`,
-        'X-Places-Api-Version': '2025-06-17',
-        accept: 'application/json',
-      },
+    const res = await fetch(photon.toString(), {
+      headers: { 'User-Agent': 'Lokadia trip planner (places-search)' },
     });
-
     if (!res.ok) {
       const detail = (await res.text()).slice(0, 200);
-      return json({ results: [], error: `Foursquare ${res.status}`, detail });
+      return json({ results: [], error: `Photon ${res.status}`, detail });
     }
 
     const data = await res.json();
