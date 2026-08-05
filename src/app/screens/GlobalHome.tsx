@@ -17,6 +17,7 @@ import { LiveAlertsBanner } from "../components/LiveAlertsBanner";
 import { getLiveAlertsSnapshot, subscribeToLiveAlerts } from "../lib/liveAlertsService";
 import { DesktopHomeExperience } from "./DesktopHomeExperience";
 import { useLokascore } from "../hooks/useLokascore";
+import { LokascoreBadge } from "../components/LokascoreBadge";
 
 interface PopularDestination {
   id: string;
@@ -35,9 +36,7 @@ function PopularDestinationCard({
   index: number;
   onClick: () => void;
 }) {
-  const { score, loading, level } = useLokascore(dest.id);
-  // Couleur 5-tiers Lokascore officielle
-  const scoreBackground = level.fillColor;
+  const { score, loading, sources, lastUpdate } = useLokascore(dest.id);
 
   return (
     <button
@@ -65,16 +64,15 @@ function PopularDestinationCard({
         </span>
       </div>
 
-      <div className="absolute top-2 right-2">
-        <div
-          className="w-7 h-7 rounded-full flex items-center justify-center backdrop-blur-md shadow-md"
-          style={{ background: scoreBackground }}
-        >
-          <span className="text-white text-[10px] font-extrabold tabular-nums">
-            {loading && score === null ? "..." : score ?? "--"}
-          </span>
-        </div>
-      </div>
+      {/* Lokascore (indicatif — sources et date dans l'infobulle) */}
+      <LokascoreBadge
+        className="absolute top-2 right-2"
+        score={score}
+        loading={loading}
+        sources={sources}
+        lastUpdate={lastUpdate}
+        variant="chip"
+      />
 
       <div className="absolute bottom-0 left-0 right-0 p-2.5">
         <p className="text-white font-bold text-sm leading-tight tracking-tight drop-shadow">{dest.city}</p>

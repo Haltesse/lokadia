@@ -6,12 +6,13 @@
  * directement vers les sites officiels que l'utilisateur peut consulter.
  *
  * Sources :
- *   - Numbeo Crime Index (source primaire du Lokascore)
  *   - France Diplomatie / MEAE (conseils aux voyageurs officiels)
+ *   - OSAC (US Department of State, Overseas Security)
  *   - GDACS (Global Disaster Alert and Coordination System, ONU)
  *   - WHO / OMS (alertes sanitaires)
- *   - OSAC (US Department of State, Overseas Security)
- *   - ECDC (Centre européen de prévention des maladies)
+ *   - CDC (avis sanitaires par destination)
+ *   - Numbeo (donnée complémentaire consultable — utilisée uniquement en
+ *     repli par le calcul serveur pour les destinations non couvertes)
  */
 
 export type SourceCategory = 'data' | 'security' | 'health' | 'disaster';
@@ -173,21 +174,7 @@ export function getOfficialSources(
 ): OfficialSource[] {
   const sources: OfficialSource[] = [];
 
-  // ─── 1. Numbeo (source primaire du Lokascore) ───
-  sources.push({
-    id: 'numbeo',
-    name: 'Crime Index Numbeo',
-    organization: 'Numbeo',
-    description:
-      'Indices Safety & Crime calculés à partir de plus de 600 000 contributeurs dans le monde. Source primaire du Lokascore.',
-    url: `https://www.numbeo.com/crime/in/${encodeURIComponent(
-      cityName.replace(/\s+/g, '-'),
-    )}`,
-    category: 'data',
-    logoUrl: 'https://www.numbeo.com/common/img/logo_numbeo_small.png',
-  });
-
-  // ─── 2. France Diplomatie ───
+  // ─── 1. France Diplomatie ───
   const fdSlug = FRANCE_DIPLOMATIE_SLUGS[countryName] || slug(countryName);
   sources.push({
     id: 'france-diplomatie',
@@ -246,31 +233,46 @@ export function getOfficialSources(
     category: 'security',
   });
 
+  // ─── 7. Numbeo (donnée complémentaire consultable) ───
+  sources.push({
+    id: 'numbeo',
+    name: 'Indices urbains Numbeo',
+    organization: 'Numbeo (collaboratif)',
+    description:
+      'Donnée collaborative complémentaire (criminalité perçue par ville). Utilisée uniquement en repli pour les destinations non couvertes par les sources officielles.',
+    url: `https://www.numbeo.com/crime/in/${encodeURIComponent(
+      cityName.replace(/\s+/g, '-'),
+    )}`,
+    category: 'data',
+    logoUrl: 'https://www.numbeo.com/common/img/logo_numbeo_small.png',
+  });
+
   return sources;
 }
 
 /**
- * Métadonnées descriptives pour la page LokascorePage (vue marketing).
+ * Métadonnées descriptives de la méthodologie Lokascore.
+ *
+ * Le calcul (formule, pondérations) vit côté serveur (`lokascore-compute`).
+ * Ici : uniquement ce qui est public — les 4 dimensions, les familles de
+ * sources officielles, l'échelle de lecture (alignée sur les 5 niveaux
+ * de `lib/lokascore.ts`).
  */
 export const LOKASCORE_METHODOLOGY = {
-  primarySource: {
-    name: 'Numbeo',
-    url: 'https://www.numbeo.com',
-    description:
-      "Plateforme leader de données urbaines crowdsourcées (600 000+ contributeurs, 9 000+ villes). Le Safety Index Numbeo est l'agrégateur le plus utilisé au monde pour mesurer la sécurité urbaine perçue.",
-    methodology: 'https://www.numbeo.com/crime/methodology.jsp',
-  },
   refreshInterval: '30 minutes',
   scoreRange: '0 à 100',
+  dimensions: [
+    { id: 'security', label: 'Sécurité', sources: 'MAE, FCDO, US State Department, DFAT' },
+    { id: 'health', label: 'Santé', sources: 'OMS, Lancet HAQ' },
+    { id: 'nature', label: 'Nature & catastrophes', sources: 'GDACS, EM-DAT, USGS' },
+    { id: 'infrastructure', label: 'Infrastructure & droit', sources: 'WJP, Transparency International, Banque mondiale, GSMA' },
+  ],
+  /** Échelle de lecture — mêmes bornes que LOKASCORE_LEVELS (lib/lokascore.ts) */
   thresholds: [
-    { min: 70, max: 100, level: 'safe', label: 'Sûr', color: '#10B981' },
-    {
-      min: 50,
-      max: 69,
-      level: 'vigilance',
-      label: 'Vigilance',
-      color: '#F59E0B',
-    },
-    { min: 0, max: 49, level: 'danger', label: 'Risque élevé', color: '#EF4444' },
+    { min: 80, max: 100, level: 'safe', label: 'Sécurisée', color: '#15803d' },
+    { min: 60, max: 79, level: 'vigilance', label: 'Vigilance', color: '#a16207' },
+    { min: 40, max: 59, level: 'risk', label: 'Risque élevé', color: '#c2410c' },
+    { min: 20, max: 39, level: 'high-risk', label: 'Très risqué', color: '#b91c1c' },
+    { min: 0, max: 19, level: 'forbidden', label: 'Interdit', color: '#111827' },
   ],
 };

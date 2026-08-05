@@ -19,6 +19,7 @@ import {
 import type { TripDashboard } from '../lib/tripBriefService';
 import type { TripWithChecklist } from '../lib/tripService';
 import { useLokascore } from '../hooks/useLokascore';
+import { LokascoreBadge } from './LokascoreBadge';
 
 interface Props {
   dashboard: TripDashboard;
@@ -47,7 +48,12 @@ const getEmergencyIcon = (emoji: string): LucideIcon => {
 export default function TripOverviewTab({ dashboard, trip }: Props) {
   const navigate = useNavigate();
   const { priorityActions, alerts, checklistProgress, transportSummary, destination } = dashboard;
-  const { score: liveLokascore, loading: scoreLoading } = useLokascore(trip.destinationId);
+  const {
+    score: liveLokascore,
+    loading: scoreLoading,
+    sources: lokascoreSources,
+    lastUpdate: lokascoreLastUpdate,
+  } = useLokascore(trip.destinationId);
 
   const getPriorityColor = (priority: string) => {
     if (priority === 'high') return 'border-l-red-500 bg-red-50';
@@ -62,25 +68,6 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
     return 'bg-blue-100 border-blue-300 text-blue-800';
   };
 
-  // Couleurs alignées sur les 5 niveaux Lokascore (80/60/40/20)
-  const lokascoreColor =
-    liveLokascore === null
-      ? 'text-gray-500'
-      : liveLokascore >= 80
-      ? 'text-green-600'
-      : liveLokascore >= 60
-      ? 'text-yellow-600'
-      : liveLokascore >= 40
-      ? 'text-orange-500'
-      : liveLokascore >= 20
-      ? 'text-red-500'
-      : 'text-gray-900';
-  const lokascoreText =
-    scoreLoading && liveLokascore === null
-      ? '...'
-      : liveLokascore !== null
-      ? `${liveLokascore}/100`
-      : 'Indisponible';
 
   return (
     <div className="space-y-6">
@@ -241,11 +228,15 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
               <span className="text-gray-600">Devise</span>
               <span className="font-medium text-gray-900">{destination.currency}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center gap-2">
               <span className="text-gray-600">Lokascore</span>
-              <span className={`font-bold ${lokascoreColor}`}>
-                {lokascoreText}
-              </span>
+              <LokascoreBadge
+                score={liveLokascore}
+                loading={scoreLoading}
+                sources={lokascoreSources}
+                lastUpdate={lokascoreLastUpdate}
+                variant="inline"
+              />
             </div>
           </div>
         </section>

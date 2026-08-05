@@ -98,7 +98,7 @@ export function PartnerBookingSection({
           </p>
         </div>
         <button
-          onClick={() => navigate('/partenaires')}
+          onClick={() => navigate('/services')}
           className="hidden md:flex items-center gap-1 text-sm font-medium whitespace-nowrap"
           style={{ color: 'var(--lokadia-primary)' }}
         >

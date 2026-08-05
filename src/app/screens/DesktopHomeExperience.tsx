@@ -14,6 +14,7 @@ import {
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { BOOKING_PARTNERS } from "../components/PartnerBookingSection";
 import { useLokascore } from "../hooks/useLokascore";
+import { LokascoreBadge } from "../components/LokascoreBadge";
 import { LiveAlertsBanner } from "../components/LiveAlertsBanner";
 
 const destinations = [
@@ -104,8 +105,7 @@ function DesktopDestinationFeature({
   onClick: () => void;
   slideIndex: number;
 }) {
-  const { score, loading, level } = useLokascore(destination.id);
-  const scoreBackground = level.fillColor;
+  const { score, loading, sources, lastUpdate } = useLokascore(destination.id);
 
   return (
     <button
@@ -160,12 +160,13 @@ function DesktopDestinationFeature({
             <Star className="h-4 w-4 fill-white" />
             {destination.tag}
           </div>
-          <div
-            className="rounded-full px-4 py-2 text-sm font-bold text-white shadow-lg"
-            style={{ background: scoreBackground }}
-          >
-            Lokascore {loading && score === null ? "..." : score !== null ? `${score}/100` : "--"}
-          </div>
+          <LokascoreBadge
+            score={score}
+            loading={loading}
+            sources={sources}
+            lastUpdate={lastUpdate}
+            variant="chip"
+          />
         </div>
 
         <div className="max-w-2xl">

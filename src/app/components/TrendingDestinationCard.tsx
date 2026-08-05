@@ -1,6 +1,7 @@
-import { Shield, MapPin, TrendingUp } from 'lucide-react';
+import { MapPin, TrendingUp } from 'lucide-react';
 import { useLokascore } from '../hooks/useLokascore';
 import { DestinationImage } from './DestinationImage';
+import { LokascoreBadge } from './LokascoreBadge';
 
 interface TrendingDestinationCardProps {
   destination: {
@@ -19,10 +20,7 @@ interface TrendingDestinationCardProps {
  */
 export function TrendingDestinationCard({ destination, index, onClick }: TrendingDestinationCardProps) {
   // Récupérer le Lokascore (modulé par profil) en temps réel
-  const { score: lokascore, loading, level } = useLokascore(destination.id);
-
-  const displayedScore = lokascore;
-  const badgeColor = level.fillColor;
+  const { score: lokascore, loading, sources, lastUpdate } = useLokascore(destination.id);
 
   // Stagger d'apparition basé sur l'index (max 6 pour cohérence)
   const delayClass = `lk-delay-${Math.min(index + 1, 6)}`;
@@ -47,30 +45,15 @@ export function TrendingDestinationCard({ destination, index, onClick }: Trendin
         {/* Gradient subtil pour lisibilité */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/55 lk-overlay-fade"></div>
 
-        {/* Safety Badge */}
-        <div
-          className="absolute top-2 right-2 px-2 py-1 rounded-full backdrop-blur-md flex items-center gap-1 shadow-md"
-          style={{
-            backgroundColor: "rgba(255, 255, 255, 0.92)",
-          }}
-        >
-          {loading && displayedScore === null ? (
-            <>
-              <div className="lk-skeleton h-3.5 w-3.5 rounded-full" />
-              <div className="lk-skeleton h-2.5 w-7 rounded" />
-            </>
-          ) : (
-            <>
-              <Shield className="h-3.5 w-3.5" strokeWidth={2.5} style={{ color: badgeColor }} />
-              <span
-                className="font-bold text-xs tabular-nums"
-                style={{ color: 'var(--lokadia-gray-900)' }}
-              >
-                {displayedScore ?? '--'}
-              </span>
-            </>
-          )}
-        </div>
+        {/* Lokascore (indicatif — sources et date dans l'infobulle) */}
+        <LokascoreBadge
+          className="absolute top-2 right-2"
+          score={lokascore}
+          loading={loading}
+          sources={sources}
+          lastUpdate={lastUpdate}
+          variant="chip"
+        />
 
         {/* City and Country - sur l'image */}
         <div className="absolute bottom-2 left-2.5 right-2.5">

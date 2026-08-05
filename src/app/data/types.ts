@@ -41,7 +41,7 @@ export interface DestinationDetails {
   name: string;
   country: string;
   image: string;
-  /** @deprecated Ne jamais afficher cette valeur — score officiel fourni exclusivement par Numbeo via useLokascore() */
+  /** @deprecated Ne jamais afficher cette valeur — le score est calculé côté serveur (lokascore-compute) et exposé via useLokascore() */
   lokascoreSeed?: number;
   safetyLevel: "safe" | "vigilance" | "danger";
   lastUpdate: string;

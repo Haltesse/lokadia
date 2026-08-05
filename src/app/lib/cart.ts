@@ -3,9 +3,10 @@
  * (vol, hôtel, train, e-SIM, assurance, activités) sans redirection externe.
  *
  * Architecture volontairement découplée : le panier ne connaît que des
- * "items" génériques. Les catalogues (bookingCatalog.ts) produisent ces items,
- * et le paiement (paymentService.ts) est branchable sur un vrai PSP (Stripe)
- * le jour où les contrats partenaires + le statut d'agence sont en place.
+ * "items" génériques. Les catalogues (bookingCatalog.ts) produisent ces items.
+ * Aucun paiement in-app : la sélection devient une demande de réservation
+ * (CheckoutScreen) réglée chez les partenaires. Un PSP (Stripe via Edge
+ * Function) sera branchable le jour où contrats + statut d'agence existent.
  */
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode, createElement } from 'react';
 import { Plane, Hotel, Train, Wifi, ShieldCheck, Ticket, type LucideIcon } from 'lucide-react';

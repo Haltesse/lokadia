@@ -3,9 +3,10 @@
  * sur la page d'une destination.
  *
  * Explique en clair :
- *   1. Comment le score est calculé (formule + source primaire)
- *   2. Liens cliquables vers les vraies sources officielles consultables
- *      par l'utilisateur (Numbeo, France Diplomatie, OMS, GDACS, OSAC, CDC)
+ *   1. Comment le score est calculé : 4 dimensions agrégées côté serveur
+ *      à partir de sources officielles et institutionnelles
+ *   2. Liens cliquables vers les vraies sources consultables par
+ *      l'utilisateur (France Diplomatie, OMS, GDACS, OSAC, CDC…)
  *
  * Aucune donnée inventée — chaque source mène à la vraie page officielle.
  */
@@ -95,34 +96,27 @@ export function LokascoreInfo({ cityName, countryName, score }: Props) {
               Méthodologie
             </h4>
             <p className="text-sm text-gray-700 leading-relaxed">
-              Le <strong>Lokascore</strong> est un indice de{' '}
-              <strong>{LOKASCORE_METHODOLOGY.scoreRange}</strong> calculé à partir
-              du <strong>Safety Index</strong> de{' '}
-              <a
-                href={LOKASCORE_METHODOLOGY.primarySource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-700 underline font-semibold"
-              >
-                Numbeo
-              </a>
-              , la base de données urbaine collaborative la plus utilisée au
-              monde (600 000+ contributeurs).
+              Le <strong>Lokascore</strong> est un indice{' '}
+              <strong>indicatif</strong> de{' '}
+              <strong>{LOKASCORE_METHODOLOGY.scoreRange}</strong>, calculé côté
+              serveur en agrégeant quatre dimensions à partir de sources
+              officielles et institutionnelles, puis enrichi en temps réel par
+              les conseils aux voyageurs.
             </p>
+            <ul className="space-y-1">
+              {LOKASCORE_METHODOLOGY.dimensions.map((d) => (
+                <li key={d.id} className="text-xs text-gray-600 leading-relaxed">
+                  <strong className="text-gray-800">{d.label}</strong> — {d.sources}
+                </li>
+              ))}
+            </ul>
             <p className="text-xs text-gray-600 leading-relaxed">
               Les données sont rafraîchies automatiquement toutes les{' '}
               <strong>{LOKASCORE_METHODOLOGY.refreshInterval}</strong>. Plus le
               score est haut, plus la destination est considérée comme sûre.
+              Ce score est indicatif : il ne remplace pas les recommandations
+              officielles listées ci-dessous.
             </p>
-            <a
-              href={LOKASCORE_METHODOLOGY.primarySource.methodology}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:underline"
-            >
-              Voir la méthodologie Numbeo détaillée
-              <ExternalLink size={11} />
-            </a>
           </div>
 
           {/* ─── Échelle des scores ─── */}

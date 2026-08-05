@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Shield, MapPin, TrendingUp, Search, X } from "lucide-react";
+import { MapPin, TrendingUp, Search, X } from "lucide-react";
+import { LokascoreBadge } from "../components/LokascoreBadge";
 import { destinationsDatabase } from "../data/destinationData";
 import { useLokascore } from "../hooks/useLokascore";
 import { DestinationImage } from "../components/DestinationImage";
@@ -17,9 +18,7 @@ interface DestinationCardProps {
 }
 
 function DestinationCard({ destination, onClick, index }: DestinationCardProps) {
-  const { score: lokascore, loading, level } = useLokascore(destination.id);
-  const displayedScore = lokascore;
-  const badgeColor = level.fillColor;
+  const { score: lokascore, loading, sources, lastUpdate } = useLokascore(destination.id);
 
   // Stagger compact (max delay-6) basé sur l'index
   const delayClass = `lk-delay-${Math.min((index % 6) + 1, 6)}`;
@@ -42,22 +41,15 @@ function DestinationCard({ destination, onClick, index }: DestinationCardProps) 
         />
         <div className="lk-overlay-fade absolute inset-0 bg-gradient-to-b from-transparent to-black/55"></div>
 
-        {/* Safety Badge */}
-        <div
-          className="absolute top-2 right-2 px-2 py-1 rounded-full backdrop-blur-md flex items-center gap-1 shadow-md"
-          style={{ backgroundColor: "rgba(255, 255, 255, 0.92)" }}
-        >
-          {loading && displayedScore === null ? (
-            <div className="lk-skeleton h-3 w-9 rounded" />
-          ) : (
-            <>
-              <Shield className="h-3 w-3" strokeWidth={2.5} style={{ color: badgeColor }} />
-              <span className="font-bold text-[11px] tabular-nums" style={{ color: 'var(--lokadia-gray-900)' }}>
-                {displayedScore ?? '--'}
-              </span>
-            </>
-          )}
-        </div>
+        {/* Lokascore (indicatif — sources et date dans l'infobulle) */}
+        <LokascoreBadge
+          className="absolute top-2 right-2"
+          score={lokascore}
+          loading={loading}
+          sources={sources}
+          lastUpdate={lastUpdate}
+          variant="chip"
+        />
 
         {/* Location */}
         <div className="absolute bottom-2 left-2.5 right-2.5">
@@ -79,7 +71,9 @@ function DestinationCard({ destination, onClick, index }: DestinationCardProps) 
 export function AllDestinationsScreen() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [allDestinations, setAllDestinations] = useState<any[]>([]);
+  const [allDestinations, setAllDestinations] = useState<
+    (typeof destinationsDatabase)[keyof typeof destinationsDatabase][]
+  >([]);
 
   useEffect(() => {
     const destinations = Object.values(destinationsDatabase);

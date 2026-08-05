@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, MapPin, CheckCircle, Search, Shield, X } from "lucide-react";
+import { ArrowLeft, MapPin, CheckCircle, Search, X } from "lucide-react";
+import { LokascoreBadge } from "../components/LokascoreBadge";
 import { destinationsDatabase, type DestinationDetails } from "../data/destinationData";
 import { motion } from "motion/react";
 import { HeroSlideshow } from "../components/HeroSlideshow";
@@ -13,10 +14,7 @@ interface DestinationListItemProps {
 }
 
 function DestinationListItem({ dest, onClick }: DestinationListItemProps) {
-  const { score, loading, level } = useLokascore(dest.id);
-  // Couleurs 5-tiers Lokascore (cf. lib/lokascore.ts)
-  const scoreColor = level.color;
-  const scoreBackground = level.bgColor;
+  const { score, loading, sources, lastUpdate } = useLokascore(dest.id);
 
   return (
     <button
@@ -48,16 +46,14 @@ function DestinationListItem({ dest, onClick }: DestinationListItemProps) {
             </div>
           </div>
         </div>
-        <div
-          className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold tabular-nums"
-          style={{
-            backgroundColor: scoreBackground,
-            color: scoreColor,
-          }}
-        >
-          <Shield className="h-3.5 w-3.5" />
-          {loading && score === null ? "..." : score !== null ? `${score}/100` : "--"}
-        </div>
+        <LokascoreBadge
+          className="flex-shrink-0"
+          score={score}
+          loading={loading}
+          sources={sources}
+          lastUpdate={lastUpdate}
+          variant="chip"
+        />
       </div>
     </button>
   );

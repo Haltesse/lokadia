@@ -22,10 +22,9 @@ import {
   ExternalLink
 } from "lucide-react";
 import { useWeather } from "../hooks/useWeather";
-import { useNumbeoSafety } from "../hooks/useNumbeoSafety";
 import { useLokascore } from "../hooks/useLokascore";
 import { WeatherCard, WeatherCardSkeleton } from "../components/WeatherCard";
-import { NumbeoLoadingIndicator } from "../components/NumbeoLoadingIndicator";
+import { LokascoreBadge } from "../components/LokascoreBadge";
 import { getDestinationData, type DestinationDetails } from "../data/destinationData";
 import { useLanguageSafe } from "../context/LanguageContext";
 import { DestinationImage } from "../components/DestinationImage";
@@ -47,11 +46,9 @@ export function DestinationScreen() {
 
   // Récupérer l'ID depuis l'URL ou utiliser Paris par défaut
   const requestedId = destinationId || "paris-france";
-  console.log("🔍 DestinationScreen - ID depuis URL:", requestedId);
 
-  // Charger les données de la destination depuis la base de données
+  // Charger les données de la destination
   const destination = getDestinationData(requestedId);
-  console.log("🔍 DestinationScreen - Destination trouvée:", destination?.name, destination?.country);
 
   // Si la destination n'existe pas, rediriger vers Paris avec replace pour ne pas polluer l'historique
   useEffect(() => {
@@ -85,7 +82,6 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
   // live: true → la fiche détail enrichit avec les advisories temps réel.
   const {
     score: lokascore,
-    safetyLevel,
     level: lokascoreLevel,
     loading: scoreLoading,
     lastUpdate: scoreLastUpdate,
@@ -96,18 +92,8 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
   } = useLokascore(destination.id, { live: true });
 
   const displayedScore = lokascore;
-  const displayedSafetyLevel = safetyLevel;
   const displayedLastUpdate = scoreLastUpdate;
   const hasLiveScore = displayedScore !== null;
-  // Mapping Lokascore 5-tiers → variant Badge legacy (safe / vigilance / urgent / neutral)
-  const scoreBadgeVariant: "safe" | "vigilance" | "urgent" | "neutral" = !hasLiveScore
-    ? "neutral"
-    : lokascoreLevel.level === "safe"
-    ? "safe"
-    : lokascoreLevel.level === "vigilance"
-    ? "vigilance"
-    : "urgent";
-  const scoreBadgeLabel = !hasLiveScore ? "Lokascore indisponible" : lokascoreLevel.label;
 
   const tabs = [
     { id: "overview", label: t.destination.overview_tab, icon: Info },
@@ -288,17 +274,17 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
                 </span>
               </div>
             </div>
-            <div className="flex flex-col items-end gap-2">
-              <Badge variant={scoreBadgeVariant} size="md">
-                <CheckCircle className="h-4 w-4 mr-1" />
-                {scoreBadgeLabel}
-              </Badge>
-              <div className="flex items-center gap-1 text-xs" style={{ color: "var(--lokadia-text-light)" }}>
-                <Clock className="h-3 w-3" />
-                {scoreLoading && !hasLiveScore ? "Actualisation..." : hasLiveScore ? displayedLastUpdate : "Indisponible"}
-              </div>
-            </div>
           </div>
+
+          {/* Niveau + mention « indicatif » + sources + date (contrainte produit) */}
+          <LokascoreBadge
+            className="mb-4"
+            score={displayedScore}
+            loading={scoreLoading}
+            sources={lokascoreSources}
+            lastUpdate={hasLiveScore ? displayedLastUpdate : undefined}
+            variant="full"
+          />
 
           {/* Badge profil voyage actif → invite à personnaliser */}
           <div className="flex items-center justify-between mb-4 pb-4 border-b" style={{ borderColor: 'var(--lokadia-gray-100)' }}>
@@ -655,85 +641,65 @@ function AlertsTab({ destination }: { destination: DestinationDetails }) {
 }
 
 function SafetyTab({ destination }: { destination: DestinationDetails }) {
-  const { safetyData, loading: safetyLoading, error: safetyError, refresh } = useNumbeoSafety(destination.id);
   const {
     score: liveLokascore,
     loading: lokascoreLoading,
     lastUpdate: lokascoreLastUpdate,
-    level: lokascoreLevel,
+    sources: lokascoreSources,
+    dimensions,
+    refresh,
   } = useLokascore(destination.id);
-  const displayedLokascore = liveLokascore;
-  // Mapping Lokascore 5-tiers → variant Badge legacy
-  const badgeVariant: "safe" | "vigilance" | "urgent" | "neutral" =
-    displayedLokascore === null
-      ? "neutral"
-      : lokascoreLevel.level === "safe"
-      ? "safe"
-      : lokascoreLevel.level === "vigilance"
-      ? "vigilance"
-      : "urgent";
-  const lokascoreLabel = displayedLokascore === null ? "Lokascore indisponible" : lokascoreLevel.label;
-  const handleSafetyRefresh = () => {
-    refresh();
-  };
-  
+
   return (
     <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-      {/* Lokascore Card (temps réel) */}
-      {safetyData && (
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 shadow-sm border-2 border-blue-100">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-xs font-medium mb-1 text-blue-600">
-                Lokascore (temps réel)
-              </h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-blue-900">
-                  {lokascoreLoading && displayedLokascore === null ? "..." : displayedLokascore ?? "--"}
-                </span>
-                <span className="text-lg text-blue-600">/100</span>
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <Badge
-                variant={badgeVariant}
-                size="md"
-              >
-                {lokascoreLabel}
-              </Badge>
-              <button
-                onClick={handleSafetyRefresh}
-                className="text-xs text-blue-600 underline hover:text-blue-800"
-              >
-                Actualiser
-              </button>
+      {/* Lokascore (temps réel, calcul serveur multi-sources officielles) */}
+      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 shadow-sm border-2 border-blue-100">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-xs font-medium mb-1 text-blue-600">
+              Lokascore (temps réel)
+            </h3>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold text-blue-900">
+                {lokascoreLoading && liveLokascore === null ? "..." : liveLokascore ?? "--"}
+              </span>
+              <span className="text-lg text-blue-600">/100</span>
             </div>
           </div>
-          
+          <button
+            onClick={() => refresh()}
+            className="text-xs text-blue-600 underline hover:text-blue-800"
+          >
+            Actualiser
+          </button>
+        </div>
+
+        {dimensions && (
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div className="bg-white/50 rounded-lg p-3">
-              <p className="text-xs text-gray-600 mb-1">Indice de criminalité</p>
-              <p className="text-lg font-bold text-red-700">{safetyData.crimeIndex.toFixed(1)}</p>
+              <p className="text-xs text-gray-600 mb-1">Sécurité</p>
+              <p className="text-lg font-bold tabular-nums" style={{ color: "var(--lokadia-gray-800)" }}>
+                {Math.round(dimensions.security)}
+              </p>
             </div>
-            {safetyData.healthCareIndex && (
-              <div className="bg-white/50 rounded-lg p-3">
-                <p className="text-xs text-gray-600 mb-1">Système de santé</p>
-                <p className="text-lg font-bold text-green-700">{safetyData.healthCareIndex.toFixed(1)}</p>
-              </div>
-            )}
+            <div className="bg-white/50 rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Santé</p>
+              <p className="text-lg font-bold tabular-nums" style={{ color: "var(--lokadia-gray-800)" }}>
+                {Math.round(dimensions.health)}
+              </p>
+            </div>
           </div>
-          
-          <div className="flex items-center justify-between text-xs text-blue-600">
-            <span>Source: Numbeo.com</span>
-            <span>MAJ: {liveLokascore !== null ? lokascoreLastUpdate : safetyData.lastUpdate}</span>
-          </div>
-        </div>
-      )}
-      
-      {safetyLoading && (
-        <NumbeoLoadingIndicator />
-      )}
-      
+        )}
+
+        <LokascoreBadge
+          score={liveLokascore}
+          loading={lokascoreLoading}
+          sources={lokascoreSources}
+          lastUpdate={liveLokascore !== null ? lokascoreLastUpdate : undefined}
+          variant="full"
+        />
+      </div>
+
       <div className="bg-white rounded-2xl p-5 shadow-sm">
         <h3 className="font-semibold mb-3" style={{ color: "var(--lokadia-text-dark)" }}>
           Quartiers à éviter

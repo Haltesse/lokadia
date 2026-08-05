@@ -12,7 +12,6 @@ export function LokascoreCacheInitializer() {
 
   useEffect(() => {
     if (!isReady) return;
-    console.log('✅ Système Lokascore prêt (calcul serveur sécurisé)');
     startLiveAlertsPolling();
   }, [isReady]);
 

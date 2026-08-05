@@ -106,6 +106,12 @@
   --lokadia-surface-elevated: #FFFFFF;
   --lokadia-background: #FAFAFA;
   --lokadia-background-subtle: #F5F5F5;
+
+  /* Bandes de risque Lokascore — toujours accompagnées d'un libellé + valeur,
+     jamais la couleur seule (a11y daltonisme) */
+  --risk-high: #DC2626;
+  --risk-mid: #F59E0B;
+  --risk-low: #059669;
   
   /* Spacing system */
   --spacing-xs: 0.25rem;   /* 4px */
