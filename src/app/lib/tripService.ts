@@ -1,7 +1,9 @@
 // Service de gestion des voyages avec Supabase
 import { supabase } from './supabase';
-import { deleteAllTripStops, getTripStops } from './tripStopService';
-import { handleAuthError, isAuthError } from './authErrorHandler';
+import type { Database } from './database.types';
+import { getTripStops } from './tripStopService';
+
+type TripRow = Database['public']['Tables']['trips']['Row'];
 
 // Re-exporter getTripStops pour faciliter l'import
 export { getTripStops } from './tripStopService';
@@ -40,6 +42,29 @@ export interface Trip {
   status: 'planned' | 'active' | 'completed' | 'cancelled';
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * Normalise une ligne DB → Trip applicatif (colonnes nullables ramenées
+ * à des valeurs sûres, profil voyageur Json typé).
+ */
+function mapTripRow(row: TripRow): Trip {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    destinationId: row.destination_id,
+    destinationName: row.destination_name,
+    countryDestinationId: row.country_destination_id,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    travelers: row.travelers ?? 1,
+    travelerProfile: (row.traveler_profile as Trip['travelerProfile']) ?? null,
+    activeCityDestinationId: row.active_city_destination_id,
+    notes: row.notes,
+    status: (row.status as Trip['status']) ?? 'planned',
+    createdAt: row.created_at ?? '',
+    updatedAt: row.updated_at ?? row.created_at ?? '',
+  };
 }
 
 export interface TripWithChecklist extends Trip {
@@ -82,23 +107,8 @@ export async function createTrip(trip: Omit<Trip, 'id' | 'createdAt' | 'updatedA
   }
 
   console.log('✅ Voyage créé:', data);
-  
-  return {
-    id: data.id,
-    userId: data.user_id,
-    destinationId: data.destination_id,
-    destinationName: data.destination_name,
-    countryDestinationId: data.country_destination_id,
-    startDate: data.start_date,
-    endDate: data.end_date,
-    travelers: data.travelers,
-    travelerProfile: data.traveler_profile,
-    activeCityDestinationId: data.active_city_destination_id,
-    notes: data.notes,
-    status: data.status,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-  };
+
+  return mapTripRow(data);
 }
 
 /**
@@ -116,22 +126,7 @@ export async function getUserTrips(userId: string): Promise<Trip[]> {
     throw error;
   }
 
-  return data.map(row => ({
-    id: row.id,
-    userId: row.user_id,
-    destinationId: row.destination_id,
-    destinationName: row.destination_name,
-    countryDestinationId: row.country_destination_id,
-    startDate: row.start_date,
-    endDate: row.end_date,
-    travelers: row.travelers,
-    travelerProfile: row.traveler_profile,
-    activeCityDestinationId: row.active_city_destination_id,
-    notes: row.notes,
-    status: row.status,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
+  return data.map(mapTripRow);
 }
 
 /**
@@ -176,7 +171,7 @@ export async function getActiveTrips(userId: string): Promise<Trip[]> {
  * Met à jour un voyage
  */
 export async function updateTrip(tripId: string, updates: Partial<Trip>): Promise<void> {
-  const dbUpdates: any = {};
+  const dbUpdates: Database['public']['Tables']['trips']['Update'] = {};
   
   if (updates.destinationId !== undefined) dbUpdates.destination_id = updates.destinationId;
   if (updates.destinationName !== undefined) dbUpdates.destination_name = updates.destinationName;

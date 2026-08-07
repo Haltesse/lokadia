@@ -38,6 +38,13 @@ const AllDestinationsScreen = lazy(() => import("./screens/AllDestinationsScreen
 const LoginScreen = lazy(() => import("./screens/LoginScreen").then((m) => ({ default: m.LoginScreen })));
 const NotFoundScreen = lazy(() => import("./screens/NotFoundScreen").then((m) => ({ default: m.NotFoundScreen })));
 
+// Back-office Lokadia Pro (chrome propre, hors RootLayout)
+const ProAppLayout = lazy(() => import("./pro/screens/ProAppLayout"));
+const ProDashboardScreen = lazy(() => import("./pro/screens/ProDashboardScreen"));
+const ProPeopleScreen = lazy(() => import("./pro/screens/ProPeopleScreen"));
+const ProMissionsScreen = lazy(() => import("./pro/screens/ProMissionsScreen"));
+const ProSettingsScreen = lazy(() => import("./pro/screens/ProSettingsScreen"));
+
 /** Fallback de chargement de route : squelette discret, pas de spinner plein écran. */
 function RouteFallback() {
   return (
@@ -125,6 +132,14 @@ function App() {
                 <Suspense fallback={<RouteFallback />}>
                   <Routes>
                     <Route path="/login" element={<LoginScreen />} />
+
+                    {/* Back-office Lokadia Pro — layout dédié desktop-first */}
+                    <Route path="/pro/app" element={<ProAppLayout />}>
+                      <Route index element={<ProDashboardScreen />} />
+                      <Route path="people" element={<ProPeopleScreen />} />
+                      <Route path="missions" element={<ProMissionsScreen />} />
+                      <Route path="settings" element={<ProSettingsScreen />} />
+                    </Route>
 
                     {/* Routes avec layout (TopBar desktop + BottomNav mobile) */}
                     <Route element={<RootLayout />}>

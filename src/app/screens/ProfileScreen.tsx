@@ -140,7 +140,7 @@ export function ProfileScreen() {
 
   // Calculer les statistiques de l'utilisateur
   const stats = getStats();
-  const activeTripsCount = trips.filter(t => t.status === 'active' || t.status === 'upcoming' || t.status === 'planned').length;
+  const activeTripsCount = trips.filter(t => t.status === 'active' || t.status === 'planned').length;
 
   // Adapter les trips pour l'affichage
   const displayTrips = trips.map(trip => {

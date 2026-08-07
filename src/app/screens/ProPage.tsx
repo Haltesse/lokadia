@@ -27,7 +27,7 @@ export default function ProPage() {
       id: "univ",
       icon: GraduationCap,
       title: "Écoles & universités",
-      price: "500 - 2 000 €",
+      price: "Starter · 500 €",
       unit: "/an",
       features: [
         "Suivi des étudiants en mobilité Erasmus",
@@ -42,7 +42,7 @@ export default function ProPage() {
       id: "ngo",
       icon: Heart,
       title: "ONG & humanitaires",
-      price: "1 500 - 4 000 €",
+      price: "Pro · 1 500 €",
       unit: "/an",
       features: [
         "Gestion missions terrain",
@@ -57,7 +57,7 @@ export default function ProPage() {
       id: "insurer",
       icon: Building2,
       title: "Assureurs (API white-label)",
-      price: "5 000 - 20 000 €",
+      price: "Enterprise · 4 000 €+",
       unit: "/an",
       features: [
         "API Lokascore intégrée à votre espace client",
@@ -73,7 +73,7 @@ export default function ProPage() {
       id: "airline",
       icon: Plane,
       title: "Compagnies aériennes",
-      price: "8 000 - 25 000 €",
+      price: "Enterprise · 4 000 €+",
       unit: "/an",
       features: [
         "Notifications Lokascore dans l'app passager",
@@ -88,7 +88,7 @@ export default function ProPage() {
       id: "mice",
       icon: Briefcase,
       title: "MICE & voyages affaires",
-      price: "2 000 - 6 000 €",
+      price: "Pro · 1 500 €",
       unit: "/an",
       features: [
         "Gestion risque groupes séminaires",
@@ -179,21 +179,31 @@ export default function ProPage() {
                 Pilotez le risque voyage comme un back-office.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-7 text-white/90 lg:text-lg">
-                Les offres Pro existantes, réorganisées pour un usage ordinateur : navigation latérale, détail plein écran et prise de contact toujours visible.
+                Votre organisation a l'obligation légale de protéger les personnes qu'elle envoie
+                à l'étranger — et de pouvoir le prouver. Lokadia Pro trace qui est où, alerte
+                quand la situation change, et produit la preuve de conformité.
               </p>
-              <button
-                onClick={() => navigate(`/pro/demo?offer=${activeOffer.id}`)}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold shadow-lg transition-transform hover:-translate-y-0.5"
-                style={{ color: "var(--lokadia-primary)" }}
-              >
-                <LayoutDashboard className="h-4 w-4" /> Voir la démo du tableau de bord Pro
-                <ArrowRight className="h-4 w-4" />
-              </button>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button
+                  onClick={() => navigate("/pro/app")}
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold shadow-lg transition-transform hover:-translate-y-0.5"
+                  style={{ color: "var(--lokadia-primary)" }}
+                >
+                  Démarrer le pilote gratuit (3 mois)
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => navigate(`/pro/demo?offer=${activeOffer.id}`)}
+                  className="inline-flex items-center gap-2 rounded-full bg-white/15 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition-transform hover:-translate-y-0.5"
+                >
+                  <LayoutDashboard className="h-4 w-4" /> Voir la démo
+                </button>
+              </div>
               <div className="mt-8 grid max-w-2xl grid-cols-3 gap-3">
                 {[
-                  { label: "Offres", value: offers.length },
-                  { label: "Réponse", value: "48h" },
-                  { label: "Usage", value: "B2B" },
+                  { label: "Pilote gratuit", value: "3 mois" },
+                  { label: "À partir de", value: "500 €/an" },
+                  { label: "Sources", value: "Officielles" },
                 ].map((stat) => (
                   <div key={stat.label} className="rounded-2xl bg-white/15 p-4 backdrop-blur">
                     <p className="text-2xl font-bold">{stat.value}</p>

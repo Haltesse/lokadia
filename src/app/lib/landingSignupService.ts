@@ -15,11 +15,13 @@ export async function registerLandingSignup(
   }
 
   try {
+    // ON CONFLICT DO NOTHING : un email déjà inscrit ne déclenche ni erreur
+    // ni mise à jour (la policy RLS n'autorise que l'insertion)
     const { error } = await supabase
       .from('landing_signups')
       .upsert(
-        { email: trimmed, source, created_at: new Date().toISOString() },
-        { onConflict: 'email' }
+        { email: trimmed, source },
+        { onConflict: 'email', ignoreDuplicates: true }
       );
 
     if (error) {
@@ -29,13 +31,15 @@ export async function registerLandingSignup(
         const existing = JSON.parse(localStorage.getItem('lokadia_landing_signups') || '[]');
         existing.push({ email: trimmed, source, at: Date.now() });
         localStorage.setItem('lokadia_landing_signups', JSON.stringify(existing));
-      } catch {}
+      } catch {
+        // localStorage indisponible : le lead est perdu, l'UX reste fluide
+      }
       return { ok: true }; // on dit OK pour l'UX — fallback local est fait
     }
 
     return { ok: true };
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('[landingSignup]', e);
-    return { ok: false, error: e?.message || 'Erreur réseau' };
+    return { ok: false, error: e instanceof Error ? e.message : 'Erreur réseau' };
   }
 }

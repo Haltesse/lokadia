@@ -1,0 +1,5 @@
+-- Placeholder d'alignement d'historique.
+-- Cette migration a été appliquée directement sur le projet distant
+-- (avant la mise en place des migrations versionnées dans le repo).
+-- Le schéma correspondant existe déjà en production ; ce fichier vide
+-- aligne l'historique local sans rien modifier.

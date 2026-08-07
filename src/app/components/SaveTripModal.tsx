@@ -66,6 +66,8 @@ export function SaveTripModal({
         userId: user.id,
         destinationId,
         destinationName,
+        // Voyage mono-destination : le pays de référence est la destination elle-même
+        countryDestinationId: destinationId,
         startDate,
         endDate,
         travelers,
