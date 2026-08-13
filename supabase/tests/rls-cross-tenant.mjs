@@ -136,11 +136,56 @@ try {
 
   const { data: ownCompliance } = await clientA.from('compliance_items').select('id').eq('org_id', orgA);
   check('A lit ses compliance_items (trigger mission non testé ici = 0 attendu)', (ownCompliance ?? []).length === 0);
+
+  console.log('6. Journal d\'audit — append-only et cloisonné…');
+  const { data: entry, error: auditInsErr } = await clientA
+    .from('audit_log')
+    .insert({
+      org_id: orgA, actor: userIds[0], actor_label: USERS[0].email,
+      action: 'test.entry', target_kind: 'test', target_id: null, detail: { origine: 'test RLS' },
+    })
+    .select('id').single();
+  check('A écrit dans son journal', !auditInsErr, auditInsErr?.message);
+
+  const { data: crossAudit } = await clientB.from('audit_log').select('id').eq('org_id', orgA);
+  check('B ne lit pas le journal de A', (crossAudit ?? []).length === 0);
+
+  const { error: spoofErr } = await clientB.from('audit_log').insert({
+    org_id: orgA, actor: userIds[1], actor_label: USERS[1].email, action: 'test.spoof',
+  });
+  check('B ne peut pas écrire dans le journal de A', !!spoofErr);
+
+  if (entry) {
+    // Append-only : même le service_role est bloqué par le trigger
+    const { error: updErr } = await admin
+      .from('audit_log').update({ action: 'test.altered' }).eq('id', entry.id);
+    check('Une entrée d\'audit ne peut pas être modifiée (même en service_role)', !!updErr, updErr ? '' : 'UPDATE accepté');
+
+    const { error: delErr } = await admin.from('audit_log').delete().eq('id', entry.id);
+    check('Une entrée d\'audit ne peut pas être supprimée (même en service_role)', !!delErr, delErr ? '' : 'DELETE accepté');
+  }
+
+  console.log('7. Accusés de briefing — read_at non falsifiable par le client…');
+  const { data: brief } = await clientA.from('briefings').insert({
+    org_id: orgA, country_iso: 'FR', country_name: 'France',
+    title: 'Briefing de test', content: 'Contenu de test suffisamment long pour la contrainte.',
+    source: 'France Diplomatie (MEAE)', created_by: userIds[0],
+  }).select('id').single();
+  check('A crée un briefing avec source officielle', !!brief);
+
+  const { error: noSourceErr } = await clientA.from('briefings').insert({
+    org_id: orgA, country_iso: 'ES', country_name: 'Espagne',
+    title: 'Sans source', content: 'Contenu de test suffisamment long pour la contrainte.',
+    source: '', created_by: userIds[0],
+  });
+  check('Un briefing sans source est refusé par la base', !!noSourceErr);
 } catch (err) {
   failures++;
   console.error(`Erreur d'exécution : ${err.message}`);
 } finally {
-  console.log('6. Nettoyage…');
+  console.log('8. Nettoyage…');
+  // Les entrées d'audit sont volontairement indestructibles : elles
+  // disparaissent avec l'organisation (cascade), jamais individuellement.
   await cleanup(orgIds, userIds);
 }
 
@@ -148,5 +193,5 @@ if (failures > 0) {
   console.error(`\n✘ ISOLATION NON PROUVÉE — ${failures} échec(s).`);
   process.exit(1);
 }
-console.log('\n✔ Isolation cross-tenant prouvée.');
+console.log('\n✔ Isolation cross-tenant et registre append-only prouvés.');
 process.exit(0);

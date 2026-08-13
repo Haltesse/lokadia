@@ -8,10 +8,11 @@
  */
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plane, Plus, X } from 'lucide-react';
+import { Plane, Plus, X, Send, Link2, Check } from 'lucide-react';
 import { useOrg } from '../OrgContext';
 import {
   fetchMissions, fetchTravelers, createMission, setComplianceStatus,
+  sendBriefings, briefingAckUrl,
   isMissionActiveToday, isMissionUpcoming, complianceComplete,
   type MissionWithCompliance, type Traveler, type NewMission,
 } from '../proService';
@@ -61,6 +62,9 @@ export default function ProMissionsScreen() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [errorMsg, setErrorMsg] = useState('');
 
+  const [briefingMsg, setBriefingMsg] = useState<string | null>(null);
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
+
   // Création
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({ traveler: '', destination: '', otherCountry: '', otherIso: '', start: '', end: '' });
@@ -100,7 +104,8 @@ export default function ProMissionsScreen() {
     }
   }, [missions, filter]);
 
-  async function toggleCompliance(itemId: string, done: boolean) {
+  async function toggleCompliance(missionId: string, itemId: string, kind: string, done: boolean) {
+    if (!org || !user) return;
     // Optimiste : l'UI bascule immédiatement, rollback si erreur
     setMissions((prev) => prev.map((m) => ({
       ...m,
@@ -108,9 +113,28 @@ export default function ProMissionsScreen() {
         c.id === itemId ? { ...c, status: done ? 'done' : 'pending', completed_at: done ? new Date().toISOString() : null } : c),
     })));
     try {
-      await setComplianceStatus(itemId, done);
+      await setComplianceStatus(org.id, { id: user.id, email: user.email }, itemId, kind, missionId, done);
     } catch {
       await load();
+    }
+  }
+
+  /** Génère les liens d'accusé de briefing pour les missions affichées. */
+  async function handleSendBriefings() {
+    if (!org || !user || visible.length === 0) return;
+    setBriefingMsg(null);
+    try {
+      const res = await sendBriefings(org.id, { id: user.id, email: user.email }, visible);
+      const parts: string[] = [];
+      if (res.created > 0) parts.push(`${res.created} lien${res.created > 1 ? 's' : ''} d'accusé généré${res.created > 1 ? 's' : ''}`);
+      if (res.alreadySent > 0) parts.push(`${res.alreadySent} déjà envoyé${res.alreadySent > 1 ? 's' : ''}`);
+      if (res.skippedNoBriefing.length > 0) {
+        parts.push(`aucun briefing rédigé pour : ${res.skippedNoBriefing.join(', ')}`);
+      }
+      setBriefingMsg(parts.join(' · ') || 'Rien à envoyer.');
+      if (res.created > 0) await load();
+    } catch (e) {
+      setBriefingMsg(e instanceof Error ? e.message : 'Génération impossible.');
     }
   }
 
@@ -147,7 +171,7 @@ export default function ProMissionsScreen() {
 
     setSaving(true);
     try {
-      await createMission(org.id, user.id, mission);
+      await createMission(org.id, { id: user.id, email: user.email }, mission);
       setCreateOpen(false);
       setForm({ traveler: '', destination: '', otherCountry: '', otherIso: '', start: '', end: '' });
       await load();
@@ -189,11 +213,28 @@ export default function ProMissionsScreen() {
           </p>
         </div>
         {canWrite && (
-          <button onClick={() => setCreateOpen(true)} className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-bold text-white" style={{ background: 'var(--lokadia-primary)' }}>
-            <Plus size={15} /> Nouvelle mission
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleSendBriefings}
+              disabled={visible.length === 0}
+              title="Génère un lien d'accusé de lecture nominatif pour chaque mission affichée qui n'en a pas encore."
+              className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold disabled:opacity-50"
+              style={{ borderColor: 'var(--lokadia-gray-200)', color: 'var(--lokadia-gray-700)' }}
+            >
+              <Send size={15} /> Envoyer les briefings ({visible.length})
+            </button>
+            <button onClick={() => setCreateOpen(true)} className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-bold text-white" style={{ background: 'var(--lokadia-primary)' }}>
+              <Plus size={15} /> Nouvelle mission
+            </button>
+          </div>
         )}
       </div>
+
+      {briefingMsg && (
+        <p className="rounded-xl px-4 py-2.5 text-sm font-semibold" style={{ background: 'var(--lokadia-info-bg)', color: 'var(--lokadia-gray-700)' }}>
+          {briefingMsg}
+        </p>
+      )}
 
       {/* Filtres (partagés par URL) */}
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filtres missions">
@@ -291,6 +332,7 @@ export default function ProMissionsScreen() {
                 <th className="px-4 py-2.5 font-bold">Destination</th>
                 <th className="px-4 py-2.5 font-bold">Dates</th>
                 <th className="px-4 py-2.5 font-bold">Statut</th>
+                <th className="px-4 py-2.5 font-bold">Briefing</th>
                 <th className="px-4 py-2.5 font-bold">Dossier de conformité</th>
               </tr>
             </thead>
@@ -315,6 +357,40 @@ export default function ProMissionsScreen() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
+                      {(() => {
+                        const receipt = m.briefing_receipts;
+                        if (!receipt) {
+                          return <span className="text-xs" style={{ color: 'var(--lokadia-gray-400)' }}>Non envoyé</span>;
+                        }
+                        if (receipt.read_at) {
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1 text-xs font-bold"
+                              style={{ color: '#047857' }}
+                              title={`Accusé signé par ${receipt.read_name ?? '—'} le ${new Date(receipt.read_at).toLocaleString('fr-FR')}`}
+                            >
+                              <Check size={13} /> Lu le {new Date(receipt.read_at).toLocaleDateString('fr-FR')}
+                            </span>
+                          );
+                        }
+                        return (
+                          <button
+                            onClick={async () => {
+                              await navigator.clipboard.writeText(briefingAckUrl(receipt.token));
+                              setCopiedToken(receipt.token);
+                              window.setTimeout(() => setCopiedToken(null), 2000);
+                            }}
+                            className="inline-flex items-center gap-1 text-xs font-semibold"
+                            style={{ color: 'var(--lokadia-primary)' }}
+                            title="Copier le lien d'accusé de lecture à transmettre au voyageur"
+                          >
+                            <Link2 size={13} />
+                            {copiedToken === receipt.token ? 'Lien copié' : 'En attente — copier le lien'}
+                          </button>
+                        );
+                      })()}
+                    </td>
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold tabular-nums" style={{ color: done === 4 ? '#059669' : '#B45309' }}>{done}/4</span>
                         <div className="flex flex-wrap gap-1.5">
@@ -332,7 +408,7 @@ export default function ProMissionsScreen() {
                                 type="checkbox"
                                 checked={c.status === 'done'}
                                 disabled={!canWrite}
-                                onChange={(e) => toggleCompliance(c.id, e.target.checked)}
+                                onChange={(e) => toggleCompliance(m.id, c.id, c.kind, e.target.checked)}
                                 className="h-3.5 w-3.5"
                               />
                               {COMPLIANCE_LABELS[c.kind]}

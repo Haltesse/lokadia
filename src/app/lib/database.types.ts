@@ -39,6 +39,165 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          actor: string | null
+          actor_label: string
+          created_at: string
+          detail: Json | null
+          id: number
+          org_id: string
+          target_id: string | null
+          target_kind: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          actor_label: string
+          created_at?: string
+          detail?: Json | null
+          id?: never
+          org_id: string
+          target_id?: string | null
+          target_kind?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          actor_label?: string
+          created_at?: string
+          detail?: Json | null
+          id?: never
+          org_id?: string
+          target_id?: string | null
+          target_kind?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      briefing_receipts: {
+        Row: {
+          briefing_id: string
+          id: string
+          mission_id: string
+          org_id: string
+          read_at: string | null
+          read_name: string | null
+          sent_at: string
+          token: string
+          traveler_id: string
+        }
+        Insert: {
+          briefing_id: string
+          id?: string
+          mission_id: string
+          org_id: string
+          read_at?: string | null
+          read_name?: string | null
+          sent_at?: string
+          token?: string
+          traveler_id: string
+        }
+        Update: {
+          briefing_id?: string
+          id?: string
+          mission_id?: string
+          org_id?: string
+          read_at?: string | null
+          read_name?: string | null
+          sent_at?: string
+          token?: string
+          traveler_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefing_receipts_briefing_id_fkey"
+            columns: ["briefing_id"]
+            isOneToOne: false
+            referencedRelation: "briefings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "briefing_receipts_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: true
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "briefing_receipts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "briefing_receipts_traveler_id_fkey"
+            columns: ["traveler_id"]
+            isOneToOne: false
+            referencedRelation: "travelers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      briefings: {
+        Row: {
+          content: string
+          country_iso: string
+          country_name: string
+          created_at: string
+          created_by: string
+          id: string
+          org_id: string
+          source: string
+          source_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          country_iso: string
+          country_name: string
+          created_at?: string
+          created_by: string
+          id?: string
+          org_id: string
+          source: string
+          source_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          country_iso?: string
+          country_name?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          org_id?: string
+          source?: string
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_items: {
         Row: {
           category: string

@@ -16,10 +16,18 @@ export type Department = Tables['departments']['Row'];
 export type Traveler = Tables['travelers']['Row'];
 export type Mission = Tables['missions']['Row'];
 export type ComplianceItem = Tables['compliance_items']['Row'];
+export type Briefing = Tables['briefings']['Row'];
+export type BriefingReceipt = Tables['briefing_receipts']['Row'];
+export type AuditEntry = Tables['audit_log']['Row'];
 
 export type MissionWithCompliance = Mission & {
   travelers: Pick<Traveler, 'id' | 'first_name' | 'last_name' | 'department_id'> | null;
   compliance_items: Pick<ComplianceItem, 'id' | 'kind' | 'status' | 'completed_at'>[];
+  /**
+   * Relation 1-1 (contrainte `unique (mission_id)`) : PostgREST renvoie donc
+   * un objet unique — un accusé au plus par mission, jamais un tableau.
+   */
+  briefing_receipts: Pick<BriefingReceipt, 'id' | 'token' | 'sent_at' | 'read_at' | 'read_name'> | null;
 };
 
 export interface TravelerImportRow {
@@ -97,7 +105,11 @@ export async function fetchDepartments(orgId: string): Promise<Department[]> {
  * Import d'effectif : crée les départements manquants puis insère les
  * voyageurs par lots. Retourne le nombre de lignes insérées.
  */
-export async function importTravelers(orgId: string, rows: TravelerImportRow[]): Promise<number> {
+export async function importTravelers(
+  orgId: string,
+  actor: { id: string; email: string },
+  rows: TravelerImportRow[],
+): Promise<number> {
   if (rows.length === 0) return 0;
 
   // 1. Départements manquants
@@ -132,6 +144,12 @@ export async function importTravelers(orgId: string, rows: TravelerImportRow[]):
     if (error) throw error;
     inserted += count ?? batch.length;
   }
+
+  await logAudit(orgId, actor, {
+    action: 'traveler.import',
+    target_kind: 'travelers',
+    detail: { count: inserted, departments_created: missing.length },
+  });
   return inserted;
 }
 
@@ -140,7 +158,9 @@ export async function importTravelers(orgId: string, rows: TravelerImportRow[]):
 export async function fetchMissions(orgId: string): Promise<MissionWithCompliance[]> {
   const { data, error } = await supabase
     .from('missions')
-    .select('*, travelers ( id, first_name, last_name, department_id ), compliance_items ( id, kind, status, completed_at )')
+    // Littéral d'une seule pièce : l'inférence de types Supabase ne sait pas
+    // analyser une chaîne concaténée à l'exécution.
+    .select('*, travelers ( id, first_name, last_name, department_id ), compliance_items ( id, kind, status, completed_at ), briefing_receipts ( id, token, sent_at, read_at, read_name )')
     .eq('org_id', orgId)
     .order('date_start', { ascending: false });
   if (error) throw error;
@@ -157,22 +177,258 @@ export interface NewMission {
   date_end: string;
 }
 
-export async function createMission(orgId: string, userId: string, m: NewMission): Promise<void> {
-  const { error } = await supabase.from('missions').insert({
-    org_id: orgId,
-    created_by: userId,
-    status: 'approved',
-    ...m,
-  });
+export async function createMission(
+  orgId: string,
+  actor: { id: string; email: string },
+  m: NewMission,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from('missions')
+    .insert({ org_id: orgId, created_by: actor.id, status: 'approved', ...m })
+    .select('id')
+    .single();
   if (error) throw error;
+
+  await logAudit(orgId, actor, {
+    action: 'mission.create',
+    target_kind: 'mission',
+    target_id: data.id,
+    detail: {
+      country: m.country_name,
+      city: m.city,
+      date_start: m.date_start,
+      date_end: m.date_end,
+      in_catalog: m.destination_id !== null,
+    },
+  });
 }
 
-export async function setComplianceStatus(itemId: string, done: boolean): Promise<void> {
+export async function setComplianceStatus(
+  orgId: string,
+  actor: { id: string; email: string },
+  itemId: string,
+  kind: string,
+  missionId: string,
+  done: boolean,
+): Promise<void> {
   const { error } = await supabase
     .from('compliance_items')
-    .update({ status: done ? 'done' : 'pending', completed_at: done ? new Date().toISOString() : null })
+    .update({
+      status: done ? 'done' : 'pending',
+      completed_at: done ? new Date().toISOString() : null,
+      evidence: done ? `Validé manuellement par ${actor.email}` : null,
+    })
     .eq('id', itemId);
   if (error) throw error;
+
+  await logAudit(orgId, actor, {
+    action: done ? 'compliance.validate' : 'compliance.revoke',
+    target_kind: 'mission',
+    target_id: missionId,
+    detail: { item: kind },
+  });
+}
+
+// ─── Journal d'audit ─────────────────────────────────────────────────────
+
+export interface AuditInput {
+  action: string;
+  target_kind?: string | null;
+  target_id?: string | null;
+  detail?: Record<string, unknown> | null;
+}
+
+/**
+ * Écrit une entrée dans le registre horodaté. Table append-only : ni
+ * modification ni suppression possible ensuite, y compris en service_role.
+ *
+ * L'échec d'écriture du journal ne doit jamais faire échouer l'action
+ * métier de l'utilisateur — on le remonte en console, sans exception.
+ */
+export async function logAudit(
+  orgId: string,
+  actor: { id: string; email: string },
+  entry: AuditInput,
+): Promise<void> {
+  const { error } = await supabase.from('audit_log').insert({
+    org_id: orgId,
+    actor: actor.id,
+    actor_label: actor.email,
+    action: entry.action,
+    target_kind: entry.target_kind ?? null,
+    target_id: entry.target_id ?? null,
+    detail: (entry.detail ?? null) as Database['public']['Tables']['audit_log']['Insert']['detail'],
+  });
+  if (error) console.warn('[audit]', error.message);
+}
+
+export async function fetchAuditLog(orgId: string, limit = 200): Promise<AuditEntry[]> {
+  const { data, error } = await supabase
+    .from('audit_log')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data ?? [];
+}
+
+// ─── Briefings pré-départ ────────────────────────────────────────────────
+
+export async function fetchBriefings(orgId: string): Promise<Briefing[]> {
+  const { data, error } = await supabase
+    .from('briefings')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('country_name');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export interface BriefingInput {
+  country_iso: string;
+  country_name: string;
+  title: string;
+  content: string;
+  source: string;
+  source_url: string | null;
+}
+
+export async function saveBriefing(
+  orgId: string,
+  actor: { id: string; email: string },
+  input: BriefingInput,
+  existingId?: string,
+): Promise<string> {
+  if (existingId) {
+    const { error } = await supabase
+      .from('briefings')
+      .update({ ...input, updated_at: new Date().toISOString() })
+      .eq('id', existingId);
+    if (error) throw error;
+    await logAudit(orgId, actor, {
+      action: 'briefing.update',
+      target_kind: 'briefing',
+      target_id: existingId,
+      detail: { country: input.country_name, source: input.source },
+    });
+    return existingId;
+  }
+
+  const { data, error } = await supabase
+    .from('briefings')
+    .insert({ org_id: orgId, created_by: actor.id, ...input })
+    .select('id')
+    .single();
+  if (error) throw error;
+  await logAudit(orgId, actor, {
+    action: 'briefing.create',
+    target_kind: 'briefing',
+    target_id: data.id,
+    detail: { country: input.country_name, source: input.source },
+  });
+  return data.id;
+}
+
+export async function deleteBriefing(
+  orgId: string,
+  actor: { id: string; email: string },
+  briefingId: string,
+  countryName: string,
+): Promise<void> {
+  const { error } = await supabase.from('briefings').delete().eq('id', briefingId);
+  if (error) throw error;
+  await logAudit(orgId, actor, {
+    action: 'briefing.delete',
+    target_kind: 'briefing',
+    target_id: briefingId,
+    detail: { country: countryName },
+  });
+}
+
+export interface SendBriefingResult {
+  created: number;
+  skippedNoBriefing: string[];   // pays sans briefing rédigé
+  alreadySent: number;
+}
+
+/**
+ * Génère les liens d'accusé de lecture pour une liste de missions.
+ * Une mission déjà pourvue d'un accusé n'est jamais réinitialisée (la
+ * preuve existante reste stable) ; les pays sans briefing sont signalés
+ * plutôt qu'ignorés silencieusement.
+ */
+export async function sendBriefings(
+  orgId: string,
+  actor: { id: string; email: string },
+  missions: MissionWithCompliance[],
+): Promise<SendBriefingResult> {
+  const briefings = await fetchBriefings(orgId);
+  const byIso = new Map(briefings.map((b) => [b.country_iso.toUpperCase(), b]));
+
+  const rows: Tables['briefing_receipts']['Insert'][] = [];
+  const skipped = new Set<string>();
+  let alreadySent = 0;
+
+  for (const m of missions) {
+    if (m.briefing_receipts) { alreadySent++; continue; }
+    const briefing = byIso.get(m.country_iso.toUpperCase());
+    if (!briefing) { skipped.add(m.country_name); continue; }
+    rows.push({
+      org_id: orgId,
+      briefing_id: briefing.id,
+      mission_id: m.id,
+      traveler_id: m.traveler_id,
+    });
+  }
+
+  if (rows.length > 0) {
+    const { error } = await supabase.from('briefing_receipts').insert(rows);
+    if (error) throw error;
+    await logAudit(orgId, actor, {
+      action: 'briefing.send',
+      target_kind: 'mission',
+      target_id: null,
+      detail: { count: rows.length, missions: rows.map((r) => r.mission_id) },
+    });
+  }
+
+  return { created: rows.length, skippedNoBriefing: [...skipped], alreadySent };
+}
+
+/** URL publique d'accusé de lecture à transmettre au voyageur. */
+export function briefingAckUrl(token: string): string {
+  return `${window.location.origin}/briefing/${token}`;
+}
+
+// ─── Invitations d'équipe (Edge Function invite-member) ──────────────────
+
+export interface InviteResult {
+  status: 'invited' | 'added';
+  /** Renseigné quand l'email n'a pas pu partir : lien à transmettre soi-même */
+  actionLink?: string;
+}
+
+export async function inviteMember(
+  orgId: string,
+  email: string,
+  role: string,
+  departmentId: string | null,
+): Promise<InviteResult> {
+  const { data, error } = await supabase.functions.invoke('invite-member', {
+    body: { org_id: orgId, email, role, department_id: departmentId },
+  });
+  if (error) {
+    // L'Edge Function renvoie un message lisible dans le corps de la réponse
+    const ctx = (error as { context?: Response }).context;
+    if (ctx && typeof ctx.json === 'function') {
+      const body = await ctx.json().catch(() => null) as { error?: string } | null;
+      if (body?.error) throw new Error(body.error);
+    }
+    throw error;
+  }
+  const res = data as { status?: 'invited' | 'added'; action_link?: string };
+  return { status: res.status ?? 'added', actionLink: res.action_link };
 }
 
 // ─── Agrégats dashboard ──────────────────────────────────────────────────

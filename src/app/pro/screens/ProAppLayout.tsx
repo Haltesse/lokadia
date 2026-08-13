@@ -10,6 +10,7 @@ import { NavLink } from 'react-router-dom';
 import { Navigate, Outlet, useNavigate } from 'react-router';
 import {
   LayoutDashboard, Users, Plane, Settings, ShieldCheck, ArrowLeft, Building2,
+  FileText, FileCheck2,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { OrgProvider, useOrg } from '../OrgContext';
@@ -20,6 +21,8 @@ const NAV = [
   { to: '/pro/app', end: true, label: 'Tableau de bord', Icon: LayoutDashboard },
   { to: '/pro/app/people', end: false, label: 'Effectif', Icon: Users },
   { to: '/pro/app/missions', end: false, label: 'Missions', Icon: Plane },
+  { to: '/pro/app/briefings', end: false, label: 'Briefings', Icon: FileText },
+  { to: '/pro/app/compliance', end: false, label: 'Conformité', Icon: FileCheck2 },
   { to: '/pro/app/settings', end: false, label: 'Réglages', Icon: Settings },
 ];
 

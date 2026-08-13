@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Upload, Download, Search, Users, X } from 'lucide-react';
 import { useOrg } from '../OrgContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   fetchTravelers, fetchDepartments, importTravelers,
   type Traveler, type Department,
@@ -18,6 +19,7 @@ import { parseTravelersCsv, CSV_TEMPLATE, type CsvParseResult } from '../csv';
 type SortKey = 'name' | 'department' | 'nationality';
 
 export default function ProPeopleScreen() {
+  const { user } = useAuth();
   const { org, membership, entitlements } = useOrg();
   const canWrite = membership?.role === 'admin' || membership?.role === 'manager';
 
@@ -78,7 +80,7 @@ export default function ProPeopleScreen() {
   }
 
   async function confirmImport() {
-    if (!org || !parsed || parsed.rows.length === 0) return;
+    if (!org || !user || !parsed || parsed.rows.length === 0) return;
     const cap = entitlements.maxTravelers;
     if (cap !== null && travelers.length + parsed.rows.length > cap) {
       setImportMsg(`Votre offre ${entitlements.label} est limitée à ${cap} personnes (actuellement ${travelers.length}). Passez à l'offre supérieure pour importer ${parsed.rows.length} personnes de plus.`);
@@ -86,7 +88,7 @@ export default function ProPeopleScreen() {
     }
     setImporting(true);
     try {
-      const n = await importTravelers(org.id, parsed.rows);
+      const n = await importTravelers(org.id, { id: user.id, email: user.email }, parsed.rows);
       setImportMsg(`${n} personne${n > 1 ? 's' : ''} importée${n > 1 ? 's' : ''}.`);
       setCsvText(''); setParsed(null);
       await load();
