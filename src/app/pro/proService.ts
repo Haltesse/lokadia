@@ -19,6 +19,15 @@ export type ComplianceItem = Tables['compliance_items']['Row'];
 export type Briefing = Tables['briefings']['Row'];
 export type BriefingReceipt = Tables['briefing_receipts']['Row'];
 export type AuditEntry = Tables['audit_log']['Row'];
+export type CrisisEvent = Tables['crisis_events']['Row'];
+export type CrisisLogEntry = Tables['crisis_log']['Row'];
+export type CheckinRequest = Tables['checkin_requests']['Row'];
+export type CheckinResponse = Tables['checkin_responses']['Row'];
+export type EscalationContact = Tables['escalation_contacts']['Row'];
+
+export type CheckinResponseWithTraveler = CheckinResponse & {
+  travelers: Pick<Traveler, 'id' | 'first_name' | 'last_name' | 'phone' | 'email'> | null;
+};
 
 export type MissionWithCompliance = Mission & {
   travelers: Pick<Traveler, 'id' | 'first_name' | 'last_name' | 'department_id'> | null;
@@ -429,6 +438,243 @@ export async function inviteMember(
   }
   const res = data as { status?: 'invited' | 'added'; action_link?: string };
   return { status: res.status ?? 'added', actionLink: res.action_link };
+}
+
+// ─── Gestion de crise ────────────────────────────────────────────────────
+
+export async function fetchCrisisEvents(orgId: string): Promise<CrisisEvent[]> {
+  const { data, error } = await supabase
+    .from('crisis_events')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('opened_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchCrisisLog(eventId: string): Promise<CrisisLogEntry[]> {
+  const { data, error } = await supabase
+    .from('crisis_log')
+    .select('*')
+    .eq('event_id', eventId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function openCrisisEvent(
+  orgId: string,
+  actor: { id: string; email: string },
+  input: {
+    title: string; description: string | null; country_iso: string | null;
+    city: string | null; severity: string; is_exercise: boolean;
+  },
+): Promise<string> {
+  const { data, error } = await supabase
+    .from('crisis_events')
+    .insert({ org_id: orgId, opened_by: actor.id, ...input })
+    .select('id')
+    .single();
+  if (error) throw error;
+
+  await supabase.from('crisis_log').insert({
+    org_id: orgId, event_id: data.id, actor_label: actor.email, kind: 'status',
+    entry: input.is_exercise
+      ? `Exercice ouvert : ${input.title}.`
+      : `Événement ouvert : ${input.title} (sévérité ${input.severity}).`,
+  });
+
+  await logAudit(orgId, actor, {
+    action: input.is_exercise ? 'crisis.exercise.open' : 'crisis.open',
+    target_kind: 'crisis_event', target_id: data.id,
+    detail: { title: input.title, severity: input.severity },
+  });
+  return data.id;
+}
+
+export async function closeCrisisEvent(
+  orgId: string,
+  actor: { id: string; email: string },
+  eventId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('crisis_events')
+    .update({ status: 'closed', closed_at: new Date().toISOString() })
+    .eq('id', eventId);
+  if (error) throw error;
+
+  await supabase.from('crisis_log').insert({
+    org_id: orgId, event_id: eventId, actor_label: actor.email,
+    kind: 'status', entry: 'Événement clos.',
+  });
+  await logAudit(orgId, actor, {
+    action: 'crisis.close', target_kind: 'crisis_event', target_id: eventId,
+  });
+}
+
+export async function addCrisisLogEntry(
+  orgId: string,
+  actor: { id: string; email: string },
+  eventId: string,
+  entry: string,
+  kind: 'note' | 'decision',
+): Promise<void> {
+  const { error } = await supabase.from('crisis_log').insert({
+    org_id: orgId, event_id: eventId, actor_label: actor.email, kind, entry,
+  });
+  if (error) throw error;
+}
+
+/** Personnes concernées par un ciblage — sert aussi à l'aperçu avant envoi. */
+export function targetsForScope(
+  missions: MissionWithCompliance[],
+  scope: { countryIso: string | null; missionsOnly: boolean },
+): { travelerId: string; missionId: string; countryName: string }[] {
+  const active = missions.filter((m) => isMissionActiveToday(m));
+  const pool = scope.missionsOnly ? active : missions.filter((m) => isMissionActiveToday(m) || isMissionUpcoming(m));
+  const filtered = scope.countryIso
+    ? pool.filter((m) => m.country_iso.toUpperCase() === scope.countryIso!.toUpperCase())
+    : pool;
+
+  // Une seule ligne par personne, même si elle a plusieurs missions
+  const byTraveler = new Map<string, { travelerId: string; missionId: string; countryName: string }>();
+  for (const m of filtered) {
+    if (!byTraveler.has(m.traveler_id)) {
+      byTraveler.set(m.traveler_id, {
+        travelerId: m.traveler_id, missionId: m.id, countryName: m.country_name,
+      });
+    }
+  }
+  return [...byTraveler.values()];
+}
+
+export interface NewCheckin {
+  eventId: string | null;
+  message: string;
+  scopeLabel: string;
+  isExercise: boolean;
+  askPosition: boolean;
+  targets: { travelerId: string; missionId: string }[];
+}
+
+export async function createCheckin(
+  orgId: string,
+  actor: { id: string; email: string },
+  input: NewCheckin,
+): Promise<string> {
+  const { data, error } = await supabase
+    .from('checkin_requests')
+    .insert({
+      org_id: orgId, event_id: input.eventId, message: input.message,
+      scope_label: input.scopeLabel, is_exercise: input.isExercise,
+      ask_position: input.askPosition, created_by: actor.id,
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+
+  const { error: rowsError } = await supabase.from('checkin_responses').insert(
+    input.targets.map((t) => ({
+      org_id: orgId, request_id: data.id,
+      traveler_id: t.travelerId, mission_id: t.missionId,
+    })),
+  );
+  if (rowsError) throw rowsError;
+
+  await logAudit(orgId, actor, {
+    action: input.isExercise ? 'checkin.exercise.create' : 'checkin.create',
+    target_kind: 'checkin_request', target_id: data.id,
+    detail: { cible: input.targets.length, scope: input.scopeLabel },
+  });
+  return data.id;
+}
+
+export async function fetchCheckins(orgId: string): Promise<CheckinRequest[]> {
+  const { data, error } = await supabase
+    .from('checkin_requests')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchCheckinResponses(requestId: string): Promise<CheckinResponseWithTraveler[]> {
+  const { data, error } = await supabase
+    .from('checkin_responses')
+    .select('*, travelers ( id, first_name, last_name, phone, email )')
+    .eq('request_id', requestId);
+  if (error) throw error;
+  return (data ?? []) as CheckinResponseWithTraveler[];
+}
+
+export interface DispatchResult {
+  targeted: number;
+  pushed: number;
+  without_push: number;
+  failed: number;
+  removed: number;
+}
+
+/** Déclenche l'envoi (ou la relance) via l'Edge Function crisis-dispatch. */
+export async function dispatchCheckin(
+  orgId: string,
+  requestId: string,
+  onlyPending = false,
+): Promise<DispatchResult> {
+  const { data, error } = await supabase.functions.invoke('crisis-dispatch', {
+    body: { org_id: orgId, request_id: requestId, only_pending: onlyPending },
+  });
+  if (error) {
+    const ctx = (error as { context?: Response }).context;
+    if (ctx && typeof ctx.json === 'function') {
+      const body = (await ctx.json().catch(() => null)) as { error?: string } | null;
+      if (body?.error) throw new Error(body.error);
+    }
+    throw error;
+  }
+  return data as DispatchResult;
+}
+
+/** URL personnelle de réponse, à transmettre si la personne n'a pas le push. */
+export function checkinUrl(token: string): string {
+  return `${window.location.origin}/checkin/${token}`;
+}
+
+// ─── Contacts d'escalade ─────────────────────────────────────────────────
+
+export async function fetchEscalationContacts(orgId: string): Promise<EscalationContact[]> {
+  const { data, error } = await supabase
+    .from('escalation_contacts')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('rank');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function saveEscalationContact(
+  orgId: string,
+  actor: { id: string; email: string },
+  input: { rank: number; name: string; role: string | null; phone: string | null; email: string | null; delay_min: number },
+): Promise<void> {
+  const { error } = await supabase.from('escalation_contacts').insert({ org_id: orgId, ...input });
+  if (error) throw error;
+  await logAudit(orgId, actor, {
+    action: 'escalation.add', target_kind: 'escalation', detail: { name: input.name, rank: input.rank },
+  });
+}
+
+export async function deleteEscalationContact(
+  orgId: string,
+  actor: { id: string; email: string },
+  id: string,
+  name: string,
+): Promise<void> {
+  const { error } = await supabase.from('escalation_contacts').delete().eq('id', id);
+  if (error) throw error;
+  await logAudit(orgId, actor, { action: 'escalation.remove', target_kind: 'escalation', detail: { name } });
 }
 
 // ─── Agrégats dashboard ──────────────────────────────────────────────────

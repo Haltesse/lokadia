@@ -198,6 +198,137 @@ export type Database = {
           },
         ]
       }
+      checkin_requests: {
+        Row: {
+          ask_position: boolean
+          created_at: string
+          created_by: string
+          event_id: string | null
+          id: string
+          is_exercise: boolean
+          message: string
+          org_id: string
+          scope_label: string
+        }
+        Insert: {
+          ask_position?: boolean
+          created_at?: string
+          created_by: string
+          event_id?: string | null
+          id?: string
+          is_exercise?: boolean
+          message: string
+          org_id: string
+          scope_label: string
+        }
+        Update: {
+          ask_position?: boolean
+          created_at?: string
+          created_by?: string
+          event_id?: string | null
+          id?: string
+          is_exercise?: boolean
+          message?: string
+          org_id?: string
+          scope_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "crisis_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkin_responses: {
+        Row: {
+          id: string
+          mission_id: string | null
+          note: string | null
+          org_id: string
+          position_accuracy_m: number | null
+          position_lat: number | null
+          position_lon: number | null
+          reminded_at: string | null
+          reminder_count: number
+          request_id: string
+          responded_at: string | null
+          status: string
+          token: string
+          traveler_id: string
+        }
+        Insert: {
+          id?: string
+          mission_id?: string | null
+          note?: string | null
+          org_id: string
+          position_accuracy_m?: number | null
+          position_lat?: number | null
+          position_lon?: number | null
+          reminded_at?: string | null
+          reminder_count?: number
+          request_id: string
+          responded_at?: string | null
+          status?: string
+          token?: string
+          traveler_id: string
+        }
+        Update: {
+          id?: string
+          mission_id?: string | null
+          note?: string | null
+          org_id?: string
+          position_accuracy_m?: number | null
+          position_lat?: number | null
+          position_lon?: number | null
+          reminded_at?: string | null
+          reminder_count?: number
+          request_id?: string
+          responded_at?: string | null
+          status?: string
+          token?: string
+          traveler_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_responses_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_responses_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_responses_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "checkin_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_responses_traveler_id_fkey"
+            columns: ["traveler_id"]
+            isOneToOne: false
+            referencedRelation: "travelers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_items: {
         Row: {
           category: string
@@ -291,6 +422,104 @@ export type Database = {
           },
         ]
       }
+      crisis_events: {
+        Row: {
+          city: string | null
+          closed_at: string | null
+          country_iso: string | null
+          description: string | null
+          id: string
+          is_exercise: boolean
+          opened_at: string
+          opened_by: string
+          org_id: string
+          severity: string
+          status: string
+          title: string
+        }
+        Insert: {
+          city?: string | null
+          closed_at?: string | null
+          country_iso?: string | null
+          description?: string | null
+          id?: string
+          is_exercise?: boolean
+          opened_at?: string
+          opened_by: string
+          org_id: string
+          severity?: string
+          status?: string
+          title: string
+        }
+        Update: {
+          city?: string | null
+          closed_at?: string | null
+          country_iso?: string | null
+          description?: string | null
+          id?: string
+          is_exercise?: boolean
+          opened_at?: string
+          opened_by?: string
+          org_id?: string
+          severity?: string
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crisis_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crisis_log: {
+        Row: {
+          actor_label: string
+          created_at: string
+          entry: string
+          event_id: string
+          id: number
+          kind: string
+          org_id: string
+        }
+        Insert: {
+          actor_label: string
+          created_at?: string
+          entry: string
+          event_id: string
+          id?: never
+          kind?: string
+          org_id: string
+        }
+        Update: {
+          actor_label?: string
+          created_at?: string
+          entry?: string
+          event_id?: string
+          id?: never
+          kind?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crisis_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "crisis_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crisis_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           created_at: string
@@ -313,6 +542,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "departments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escalation_contacts: {
+        Row: {
+          created_at: string
+          delay_min: number
+          email: string | null
+          id: string
+          name: string
+          org_id: string
+          phone: string | null
+          rank: number
+          role: string | null
+        }
+        Insert: {
+          created_at?: string
+          delay_min?: number
+          email?: string | null
+          id?: string
+          name: string
+          org_id: string
+          phone?: string | null
+          rank?: number
+          role?: string | null
+        }
+        Update: {
+          created_at?: string
+          delay_min?: number
+          email?: string | null
+          id?: string
+          name?: string
+          org_id?: string
+          phone?: string | null
+          rank?: number
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_contacts_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -637,6 +910,57 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          consented_at: string
+          endpoint: string
+          failure_count: number
+          id: string
+          last_used_at: string | null
+          org_id: string
+          p256dh: string
+          traveler_id: string
+        }
+        Insert: {
+          auth: string
+          consented_at?: string
+          endpoint: string
+          failure_count?: number
+          id?: string
+          last_used_at?: string | null
+          org_id: string
+          p256dh: string
+          traveler_id: string
+        }
+        Update: {
+          auth?: string
+          consented_at?: string
+          endpoint?: string
+          failure_count?: number
+          id?: string
+          last_used_at?: string | null
+          org_id?: string
+          p256dh?: string
+          traveler_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_traveler_id_fkey"
+            columns: ["traveler_id"]
+            isOneToOne: false
+            referencedRelation: "travelers"
             referencedColumns: ["id"]
           },
         ]

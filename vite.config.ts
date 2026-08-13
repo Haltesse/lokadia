@@ -1,7 +1,33 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
+import { readFileSync } from 'fs'
+
+/** Identifiant de projet Supabase — même source que utils/supabase/info.tsx */
+const SUPABASE_PROJECT_ID =
+  process.env.VITE_LOKADIA_SUPABASE_PROJECT_ID ?? 'yprdlcqwloydwzxihepw'
+
+/**
+ * Le handler push du service worker vit dans public/ (copié tel quel), il
+ * ne passe donc pas par la substitution d'env de Vite. Ce plugin y injecte
+ * l'URL de l'Edge Function au build, pour éviter de coder la même URL à
+ * deux endroits et de la voir dériver.
+ */
+function pushHandlerUrl(): Plugin {
+  const pendingUrl = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/push-pending`
+  return {
+    name: 'lokadia-push-handler-url',
+    generateBundle() {
+      const src = readFileSync(path.resolve(__dirname, 'public/push-handler.js'), 'utf8')
+      this.emitFile({
+        type: 'asset',
+        fileName: 'push-handler.js',
+        source: src.replace('__PENDING_URL__', pendingUrl),
+      })
+    },
+  }
+}
 
 /**
  * Stratégies de cache runtime.
@@ -72,6 +98,7 @@ const runtimeCaching = [
 export default defineConfig(({ command }) => ({
   plugins: [
     react(),
+    pushHandlerUrl(),
     VitePWA({
       registerType: 'prompt',           // l'utilisateur décide quand recharger
       includeAssets: ['lokadia-icon.svg', 'apple-touch-icon.png'],
@@ -101,9 +128,14 @@ export default defineConfig(({ command }) => ({
         ],
       },
       workbox: {
+        // Réception des notifications de sécurité (voir public/push-handler.js)
+        importScripts: ['/push-handler.js'],
         // Les gros fichiers de données destinations dépassent la limite par défaut
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // push-handler.js est émis par notre plugin : il ne doit pas être
+        // précaché sous son nom brut (le SW l'importe directement)
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globIgnores: ['push-handler.js'],
         navigateFallback: '/index.html',
         // Le back-office Pro et l'accusé de briefing exigent le réseau :
         // on ne sert jamais l'app shell en fallback pour ces routes.

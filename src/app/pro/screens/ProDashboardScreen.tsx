@@ -9,12 +9,15 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Users, ShieldAlert, FileCheck2, CalendarClock, Upload, Plane } from 'lucide-react';
+import { Users, ShieldAlert, FileCheck2, CalendarClock, Upload, Plane, Siren, Timer } from 'lucide-react';
 import { useOrg } from '../OrgContext';
 import {
-  fetchMissions, fetchTravelers, isMissionActiveToday, isMissionUpcoming,
+  fetchMissions, fetchTravelers, fetchCheckins, fetchCheckinResponses,
+  isMissionActiveToday, isMissionUpcoming,
   complianceComplete, type MissionWithCompliance, type Traveler,
+  type CheckinRequest, type CheckinResponseWithTraveler,
 } from '../proService';
+import { hasFeature } from '../entitlements';
 import { fetchLokascore, type LokascoreApiResult } from '../../lib/lokascoreApi';
 import { LokascoreBadge } from '../../components/LokascoreBadge';
 import type { DimensionSources } from '../../hooks/useLokascore';
@@ -104,6 +107,8 @@ export default function ProDashboardScreen() {
   const [scores, setScores] = useState<Record<string, LokascoreApiResult>>({});
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [errorMsg, setErrorMsg] = useState('');
+  const [lastCheckin, setLastCheckin] = useState<CheckinRequest | null>(null);
+  const [lastResponses, setLastResponses] = useState<CheckinResponseWithTraveler[]>([]);
 
   useEffect(() => {
     if (!org) return;
@@ -116,6 +121,16 @@ export default function ProDashboardScreen() {
         setTravelers(t);
         setMissions(m);
         setStatus('ready');
+
+        // Dernier check-in : alimente les indicateurs de réactivité
+        if (hasFeature(org.tier, 'crisis')) {
+          const checkins = await fetchCheckins(org.id);
+          if (!cancelled && checkins[0]) {
+            setLastCheckin(checkins[0]);
+            const r = await fetchCheckinResponses(checkins[0].id);
+            if (!cancelled) setLastResponses(r);
+          }
+        }
 
         // Scores des destinations couvertes par le catalogue (actifs uniquement)
         const ids = [...new Set(m.filter((x) => isMissionActiveToday(x) && x.destination_id).map((x) => x.destination_id as string))];
@@ -202,6 +217,30 @@ export default function ProDashboardScreen() {
       countryRows: [...byCountry.values()].sort((a, b) => b.travelerIds.size - a.travelerIds.size),
     };
   }, [missions, scores]);
+
+  /** Réactivité mesurée sur le dernier check-in — jamais une estimation. */
+  const crisis = useMemo(() => {
+    if (!lastCheckin || lastResponses.length === 0) return null;
+    const pending = lastResponses.filter((r) => r.status === 'pending');
+    const answered = lastResponses.filter((r) => r.responded_at);
+    const start = new Date(lastCheckin.created_at).getTime();
+    let medianMin: number | null = null;
+    if (answered.length > 0) {
+      const delays = answered
+        .map((r) => (new Date(r.responded_at as string).getTime() - start) / 60000)
+        .sort((a, b) => a - b);
+      medianMin = Math.round(delays[Math.floor(delays.length / 2)]);
+    }
+    const ageHours = Math.floor((Date.now() - start) / 3_600_000);
+    return {
+      pending: pending.length,
+      total: lastResponses.length,
+      medianMin,
+      ageHours,
+      isExercise: lastCheckin.is_exercise,
+      date: new Date(lastCheckin.created_at).toLocaleDateString('fr-FR'),
+    };
+  }, [lastCheckin, lastResponses]);
 
   if (status === 'loading') {
     return (
@@ -304,6 +343,29 @@ export default function ProDashboardScreen() {
           alert={agg.upcomingIncomplete > 0}
         />
       </div>
+
+      {/* Réactivité en crise — mesurée sur le dernier check-in réel */}
+      {crisis && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <StatTile
+            label="Sans réponse au dernier check-in"
+            value={`${crisis.pending} / ${crisis.total}`}
+            sub={`${crisis.isExercise ? 'Exercice' : 'Check-in'} du ${crisis.date}, il y a ${crisis.ageHours} h`}
+            method="Personnes interrogées lors du dernier check-in qui n'ont pas encore répondu. Décision : relancer, puis escalader vers les contacts d'astreinte."
+            Icon={Siren}
+            onClick={() => navigate('/pro/app/crisis')}
+            alert={crisis.pending > 0}
+          />
+          <StatTile
+            label="Délai médian de réponse"
+            value={crisis.medianMin !== null ? `${crisis.medianMin} min` : '—'}
+            sub={crisis.medianMin !== null ? 'sur le dernier check-in' : 'aucune réponse reçue'}
+            method="Médiane du délai entre l'envoi du check-in et la réponse de chaque personne, mesurée sur le dernier envoi réel ou exercice. Décision : reprogrammer un exercice si le délai se dégrade."
+            Icon={Timer}
+            onClick={() => navigate('/pro/app/crisis')}
+          />
+        </div>
+      )}
 
       {/* Répartition par pays — concentration du risque */}
       <section className="rounded-2xl bg-white" style={{ boxShadow: 'var(--shadow-sm)', border: '1px solid var(--lokadia-gray-100)' }}>

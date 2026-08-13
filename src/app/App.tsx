@@ -46,8 +46,10 @@ const ProPeopleScreen = lazy(() => import("./pro/screens/ProPeopleScreen"));
 const ProMissionsScreen = lazy(() => import("./pro/screens/ProMissionsScreen"));
 const ProBriefingsScreen = lazy(() => import("./pro/screens/ProBriefingsScreen"));
 const ProComplianceScreen = lazy(() => import("./pro/screens/ProComplianceScreen"));
+const ProCrisisScreen = lazy(() => import("./pro/screens/ProCrisisScreen"));
 const ProSettingsScreen = lazy(() => import("./pro/screens/ProSettingsScreen"));
 const BriefingAckScreen = lazy(() => import("./pro/screens/BriefingAckScreen"));
+const CheckinScreen = lazy(() => import("./pro/screens/CheckinScreen"));
 
 /** Fallback de chargement de route : squelette discret, pas de spinner plein écran. */
 function RouteFallback() {
@@ -140,8 +142,10 @@ function App() {
                   <Routes>
                     <Route path="/login" element={<LoginScreen />} />
 
-                    {/* Accusé de lecture du briefing — page publique tokenisée */}
+                    {/* Pages publiques tokenisées — sans compte, pour ne pas
+                        ajouter de friction au moment le plus critique */}
                     <Route path="/briefing/:token" element={<BriefingAckScreen />} />
+                    <Route path="/checkin/:token" element={<CheckinScreen />} />
 
                     {/* Back-office Lokadia Pro — layout dédié desktop-first */}
                     <Route path="/pro/app" element={<ProAppLayout />}>
@@ -150,6 +154,7 @@ function App() {
                       <Route path="missions" element={<ProMissionsScreen />} />
                       <Route path="briefings" element={<ProBriefingsScreen />} />
                       <Route path="compliance" element={<ProComplianceScreen />} />
+                      <Route path="crisis" element={<ProCrisisScreen />} />
                       <Route path="settings" element={<ProSettingsScreen />} />
                     </Route>
 
