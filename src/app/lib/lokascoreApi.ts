@@ -7,6 +7,8 @@
  * Aucune pondération ne transite par le navigateur.
  */
 
+import { cacheRead, cacheWrite } from './offlineCache';
+
 export interface LokascoreApiResult {
   destination: string;
   profile: string;
@@ -31,31 +33,39 @@ export interface LokascoreApiResult {
   natureAlert: 'orange' | 'red' | null;
   available: boolean;
   lastUpdate: string;
+  /** true = donnée servie depuis le cache local (réseau absent ou en échec) */
+  fromCache?: boolean;
+  /** Date de capture locale (ISO), à afficher quand fromCache est vrai */
+  capturedAt?: string;
 }
 
 const cache = new Map<string, { result: LokascoreApiResult; ts: number }>();
+/** Au-delà, on retente le réseau. En deçà, la donnée est servie telle quelle. */
 const CACHE_DURATION = 30 * 60 * 1000; // 30 min
-const inflight = new Map<string, Promise<LokascoreApiResult | null>>();
-const SESSION_KEY = 'lokadia_lokascore_api_v1';
 
-// ─── Persistance sessionStorage (survit aux navigations) ───
-function loadSession(): void {
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    if (!raw) return;
-    const stored = JSON.parse(raw) as Record<string, { result: LokascoreApiResult; ts: number }>;
-    const now = Date.now();
-    for (const [k, v] of Object.entries(stored)) {
-      if (now - v.ts < CACHE_DURATION) cache.set(k, v);
-    }
-  } catch { /* ignore */ }
+const inflight = new Map<string, Promise<LokascoreApiResult | null>>();
+
+/**
+ * Le cache mémoire est adossé au cache persistant (localStorage) : un score
+ * déjà consulté reste lisible hors-ligne, avec sa date de capture. C'est la
+ * contrainte « offline-first sur l'essentiel ».
+ */
+function persist(key: string, result: LokascoreApiResult): void {
+  cacheWrite('lokascore', key, result);
 }
-function persistSession(): void {
-  try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(Object.fromEntries(cache)));
-  } catch { /* ignore */ }
+
+/** Relit le cache persistant et signale explicitement la donnée périmée. */
+function readPersisted(key: string): { result: LokascoreApiResult; fresh: boolean } | null {
+  const entry = cacheRead<LokascoreApiResult>('lokascore', key);
+  if (!entry) return null;
+  const fresh = entry.ageMs < CACHE_DURATION;
+  return {
+    fresh,
+    result: fresh
+      ? entry.value
+      : { ...entry.value, fromCache: true, capturedAt: entry.capturedAt },
+  };
 }
-if (typeof window !== 'undefined') loadSession();
 
 // ─── Concurrence limitée (la liste charge 57 destinations d'un coup) ───
 const MAX_CONCURRENT = 6;
@@ -93,10 +103,17 @@ export async function fetchLokascore(
   const key = cacheKey(destinationId, profile, live);
 
   if (!opts.forceRefresh) {
-    const cached = cache.get(key);
-    if (cached && Date.now() - cached.ts < CACHE_DURATION) return cached.result;
+    const memo = cache.get(key);
+    if (memo && Date.now() - memo.ts < CACHE_DURATION) return memo.result;
+    const persisted = readPersisted(key);
+    if (persisted?.fresh) return persisted.result;
     const existing = inflight.get(key);
     if (existing) return existing;
+  }
+
+  // Hors-ligne : inutile de tenter le réseau, on sert le cache daté
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return readPersisted(key)?.result ?? null;
   }
 
   const promise = withLimit(async () => {
@@ -108,16 +125,19 @@ export async function fetchLokascore(
         headers: { Authorization: `Bearer ${anonKey}` },
         signal: AbortSignal.timeout(live ? 15000 : 9000),
       });
-      if (!res.ok) return null;
+      if (!res.ok) return readPersisted(key)?.result ?? null;
       const data = await res.json() as LokascoreApiResult;
       if (data.available) {
         cache.set(key, { result: data, ts: Date.now() });
-        persistSession();
+        persist(key, data);
+        return data;
       }
-      return data.available ? data : null;
-    } catch (e) {
-      console.warn(`⚠️ lokascore-compute indisponible pour ${destinationId}`, e);
       return null;
+    } catch (e) {
+      console.warn(`lokascore-compute indisponible pour ${destinationId}`, e);
+      // Réseau en échec : la dernière valeur connue vaut mieux qu'un vide,
+      // à condition d'être présentée comme telle (fromCache + capturedAt).
+      return readPersisted(key)?.result ?? null;
     } finally {
       inflight.delete(key);
     }
@@ -129,12 +149,14 @@ export async function fetchLokascore(
 
 /** Lecture synchrone du cache (sans déclencher de fetch) */
 export function getCachedLokascore(destinationId: string, profile: string, live = false): LokascoreApiResult | null {
-  const cached = cache.get(cacheKey(destinationId, profile, live));
-  if (cached && Date.now() - cached.ts < CACHE_DURATION) return cached.result;
-  // Fallback : version non-live si la version live n'est pas encore en cache
-  if (live) {
-    const fallback = cache.get(cacheKey(destinationId, profile, false));
-    if (fallback && Date.now() - fallback.ts < CACHE_DURATION) return fallback.result;
-  }
+  const key = cacheKey(destinationId, profile, live);
+  const memo = cache.get(key);
+  if (memo && Date.now() - memo.ts < CACHE_DURATION) return memo.result;
+
+  const persisted = readPersisted(key);
+  if (persisted) return persisted.result;
+
+  // Repli : version non-live si la version live n'a jamais été chargée
+  if (live) return readPersisted(cacheKey(destinationId, profile, false))?.result ?? null;
   return null;
 }

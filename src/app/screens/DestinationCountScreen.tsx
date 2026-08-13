@@ -14,7 +14,7 @@ interface DestinationListItemProps {
 }
 
 function DestinationListItem({ dest, onClick }: DestinationListItemProps) {
-  const { score, loading, sources, lastUpdate } = useLokascore(dest.id);
+  const { score, loading, sources, lastUpdate, fromCache, capturedAt } = useLokascore(dest.id);
 
   return (
     <button
@@ -52,6 +52,8 @@ function DestinationListItem({ dest, onClick }: DestinationListItemProps) {
           loading={loading}
           sources={sources}
           lastUpdate={lastUpdate}
+          fromCache={fromCache}
+          capturedAt={capturedAt}
           variant="chip"
         />
       </div>

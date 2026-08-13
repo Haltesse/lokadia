@@ -21,6 +21,10 @@ interface LokascoreBadgeProps {
   sources?: DimensionSources | null;
   /** Date de mise à jour déjà formatée (useLokascore.lastUpdate) */
   lastUpdate?: string;
+  /** true = donnée servie depuis le cache local (hors-ligne / réseau en échec) */
+  fromCache?: boolean;
+  /** Date de capture formatée, affichée quand fromCache est vrai */
+  capturedAt?: string | null;
   /**
    * chip   — pastille compacte pour cartes/listes (sources + date en infobulle)
    * inline — une ligne : score, niveau, « indicatif », MAJ
@@ -46,6 +50,8 @@ export function LokascoreBadge({
   loading = false,
   sources,
   lastUpdate,
+  fromCache = false,
+  capturedAt,
   variant = 'chip',
   className = '',
 }: LokascoreBadgeProps) {
@@ -53,11 +59,14 @@ export function LokascoreBadge({
   const Icon = level.Icon;
   const srcList = flatSources(sources);
   const srcText = srcList.length > 0 ? srcList.join(', ') : 'sources officielles';
+  // Hors-ligne, la date de capture prime : elle dit ce que l'utilisateur regarde
+  const offlineText = fromCache && capturedAt ? `Données enregistrées ${capturedAt}` : '';
   const majText = lastUpdate ? `MAJ ${lastUpdate}` : '';
   const tooltip =
     score === null
       ? 'Lokascore indisponible'
-      : `Lokascore ${score}/100 — ${level.label} (indicatif). Sources : ${srcText}.${majText ? ` ${majText}.` : ''}`;
+      : `Lokascore ${score}/100 — ${level.label} (indicatif). Sources : ${srcText}.` +
+        (offlineText ? ` ${offlineText}, hors connexion.` : majText ? ` ${majText}.` : '');
 
   // ─── Chargement ───
   if (loading && score === null) {
@@ -85,7 +94,7 @@ export function LokascoreBadge({
           {score ?? '--'}
         </span>
         <span className="text-[9px] font-semibold uppercase tracking-wide leading-none" style={{ color: 'var(--lokadia-gray-500)' }}>
-          indicatif
+          {fromCache ? 'hors ligne' : 'indicatif'}
         </span>
       </span>
     );
@@ -108,7 +117,7 @@ export function LokascoreBadge({
           </span>
         </span>
         <span className="text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>
-          indicatif{majText ? ` · ${majText}` : ''}
+          indicatif{offlineText ? ` · ${offlineText}` : majText ? ` · ${majText}` : ''}
         </span>
       </span>
     );
@@ -138,6 +147,14 @@ export function LokascoreBadge({
         Sources : {srcText}
         {majText ? ` · ${majText}` : ''}
       </p>
+      {offlineText && (
+        <p
+          className="text-xs mt-1 font-semibold leading-relaxed"
+          style={{ color: 'var(--lokadia-warning, #B45309)' }}
+        >
+          {offlineText} — affichées hors connexion, elles peuvent avoir changé depuis.
+        </p>
+      )}
     </div>
   );
 }

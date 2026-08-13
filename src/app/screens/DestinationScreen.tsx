@@ -85,6 +85,8 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
     level: lokascoreLevel,
     loading: scoreLoading,
     lastUpdate: scoreLastUpdate,
+    fromCache: scoreFromCache,
+    capturedAt: scoreCapturedAt,
     dimensions,
     sources: lokascoreSources,
     hasOfficialSource,
@@ -283,6 +285,8 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
             loading={scoreLoading}
             sources={lokascoreSources}
             lastUpdate={hasLiveScore ? displayedLastUpdate : undefined}
+            fromCache={scoreFromCache}
+            capturedAt={scoreCapturedAt}
             variant="full"
           />
 
@@ -645,6 +649,8 @@ function SafetyTab({ destination }: { destination: DestinationDetails }) {
     score: liveLokascore,
     loading: lokascoreLoading,
     lastUpdate: lokascoreLastUpdate,
+    fromCache: safetyFromCache,
+    capturedAt: safetyCapturedAt,
     sources: lokascoreSources,
     dimensions,
     refresh,
@@ -696,6 +702,8 @@ function SafetyTab({ destination }: { destination: DestinationDetails }) {
           loading={lokascoreLoading}
           sources={lokascoreSources}
           lastUpdate={liveLokascore !== null ? lokascoreLastUpdate : undefined}
+          fromCache={safetyFromCache}
+          capturedAt={safetyCapturedAt}
           variant="full"
         />
       </div>

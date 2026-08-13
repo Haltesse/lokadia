@@ -36,7 +36,7 @@ function PopularDestinationCard({
   index: number;
   onClick: () => void;
 }) {
-  const { score, loading, sources, lastUpdate } = useLokascore(dest.id);
+  const { score, loading, sources, lastUpdate, fromCache, capturedAt } = useLokascore(dest.id);
 
   return (
     <button
@@ -71,6 +71,8 @@ function PopularDestinationCard({
         loading={loading}
         sources={sources}
         lastUpdate={lastUpdate}
+        fromCache={fromCache}
+        capturedAt={capturedAt}
         variant="chip"
       />
 

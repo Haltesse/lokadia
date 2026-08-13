@@ -16,6 +16,7 @@ import {
 } from '../lib/lokascore';
 import { fetchLokascore, getCachedLokascore } from '../lib/lokascoreApi';
 import { getAlertsForCountry, type LiveAlert } from '../lib/liveAlertsService';
+import { formatCaptureDate } from '../lib/offlineCache';
 import { DESTINATION_TO_COUNTRY_ISO } from '../data/countryRiskData';
 import { useTravelProfile } from '../context/TravelProfileContext';
 
@@ -39,6 +40,10 @@ interface UseLokascoreResult {
   liveAlerts: LiveAlert[];
   loading: boolean;
   lastUpdate: string;
+  /** true = score servi depuis le cache local (hors-ligne ou réseau en échec) */
+  fromCache: boolean;
+  /** Date de capture locale formatée, quand fromCache est vrai */
+  capturedAt: string | null;
   refresh: () => void;
 }
 
@@ -67,6 +72,14 @@ export function useLokascore(
   const [usedLiveAdvisories, setUsedLiveAdvisories] = useState(false);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState('Chargement...');
+  const [fromCache, setFromCache] = useState(false);
+  const [capturedAt, setCapturedAt] = useState<string | null>(null);
+
+  /** Mémorise l'origine de la donnée pour l'afficher honnêtement. */
+  const applyOrigin = useCallback((r: { fromCache?: boolean; capturedAt?: string }) => {
+    setFromCache(!!r.fromCache);
+    setCapturedAt(r.capturedAt ? formatCaptureDate(r.capturedAt) : null);
+  }, []);
 
   const load = useCallback(async (forceRefresh = false) => {
     if (!destinationId) {
@@ -84,6 +97,7 @@ export function useLokascore(
       setHasOfficialSource(cached.hasOfficialSource);
       setUsedLiveAdvisories(cached.usedLiveAdvisories);
       setLastUpdate(fmt(cached.lastUpdate));
+      applyOrigin(cached);
       setLoading(false);
       // On rafraîchit quand même en arrière-plan si live (advisories peuvent bouger)
       if (!live) return;
@@ -100,6 +114,7 @@ export function useLokascore(
       setHasOfficialSource(result.hasOfficialSource);
       setUsedLiveAdvisories(result.usedLiveAdvisories);
       setLastUpdate(fmt(result.lastUpdate));
+      applyOrigin(result);
     } else if (!cached) {
       setScore(null);
       setDimensions(null);
@@ -107,7 +122,7 @@ export function useLokascore(
       setLastUpdate('Indisponible');
     }
     setLoading(false);
-  }, [destinationId, profile, live]);
+  }, [destinationId, profile, live, applyOrigin]);
 
   useEffect(() => {
     load();
@@ -144,7 +159,7 @@ export function useLokascore(
   return {
     score, safetyLevel, level, dimensions, sources,
     hasOfficialSource, usedLiveAdvisories, liveAlerts,
-    loading, lastUpdate, refresh,
+    loading, lastUpdate, fromCache, capturedAt, refresh,
   };
 }
 

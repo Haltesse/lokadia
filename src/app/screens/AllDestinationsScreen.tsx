@@ -18,7 +18,7 @@ interface DestinationCardProps {
 }
 
 function DestinationCard({ destination, onClick, index }: DestinationCardProps) {
-  const { score: lokascore, loading, sources, lastUpdate } = useLokascore(destination.id);
+  const { score: lokascore, loading, sources, lastUpdate, fromCache, capturedAt } = useLokascore(destination.id);
 
   // Stagger compact (max delay-6) basé sur l'index
   const delayClass = `lk-delay-${Math.min((index % 6) + 1, 6)}`;
@@ -48,6 +48,8 @@ function DestinationCard({ destination, onClick, index }: DestinationCardProps) 
           loading={loading}
           sources={sources}
           lastUpdate={lastUpdate}
+          fromCache={fromCache}
+          capturedAt={capturedAt}
           variant="chip"
         />
 

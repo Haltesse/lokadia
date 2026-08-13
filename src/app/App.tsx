@@ -11,6 +11,7 @@ import { AutoTranslate } from "./components/AutoTranslate";
 import { TranslationIndicator } from "./components/TranslationIndicator";
 import { LokascoreCacheInitializer } from "./components/LokascoreCacheInitializer";
 import { AuthErrorBoundary } from "./components/AuthErrorBoundary";
+import { PwaPrompts } from "./components/PwaPrompts";
 
 // ─── Code splitting : chaque écran est un chunk chargé à la demande ─────────
 const GlobalHome = lazy(() => import("./screens/GlobalHome").then((m) => ({ default: m.GlobalHome })));
@@ -125,6 +126,9 @@ function App() {
 
               {/* Polling des alertes live publiques en arrière-plan */}
               <LokascoreCacheInitializer />
+
+              {/* Installation sur l'écran d'accueil + mise à jour de l'app */}
+              <PwaPrompts />
 
               <BrowserRouter
                 future={{

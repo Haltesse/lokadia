@@ -20,7 +20,7 @@ interface TrendingDestinationCardProps {
  */
 export function TrendingDestinationCard({ destination, index, onClick }: TrendingDestinationCardProps) {
   // Récupérer le Lokascore (modulé par profil) en temps réel
-  const { score: lokascore, loading, sources, lastUpdate } = useLokascore(destination.id);
+  const { score: lokascore, loading, sources, lastUpdate, fromCache, capturedAt } = useLokascore(destination.id);
 
   // Stagger d'apparition basé sur l'index (max 6 pour cohérence)
   const delayClass = `lk-delay-${Math.min(index + 1, 6)}`;
@@ -52,6 +52,8 @@ export function TrendingDestinationCard({ destination, index, onClick }: Trendin
           loading={loading}
           sources={sources}
           lastUpdate={lastUpdate}
+          fromCache={fromCache}
+          capturedAt={capturedAt}
           variant="chip"
         />
 

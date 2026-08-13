@@ -105,7 +105,7 @@ function DesktopDestinationFeature({
   onClick: () => void;
   slideIndex: number;
 }) {
-  const { score, loading, sources, lastUpdate } = useLokascore(destination.id);
+  const { score, loading, sources, lastUpdate, fromCache, capturedAt } = useLokascore(destination.id);
 
   return (
     <button
@@ -165,6 +165,8 @@ function DesktopDestinationFeature({
             loading={loading}
             sources={sources}
             lastUpdate={lastUpdate}
+            fromCache={fromCache}
+            capturedAt={capturedAt}
             variant="chip"
           />
         </div>
