@@ -25,6 +25,7 @@ import { useWeather } from "../hooks/useWeather";
 import { useLokascore } from "../hooks/useLokascore";
 import { WeatherCard, WeatherCardSkeleton } from "../components/WeatherCard";
 import { LokascoreBadge } from "../components/LokascoreBadge";
+import { ProvenanceNote } from "../components/ProvenanceNote";
 import { getDestinationData, type DestinationDetails } from "../data/destinationData";
 import { useLanguageSafe } from "../context/LanguageContext";
 import { DestinationImage } from "../components/DestinationImage";
@@ -350,11 +351,20 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
       </div>
 
       {/* Comment ce score est-il calculé + sources officielles */}
-      <div className="mb-6 px-6 lg:mx-auto lg:max-w-5xl">
+      <div className="mb-4 px-6 lg:mx-auto lg:max-w-5xl">
         <LokascoreInfo
           cityName={destination.name}
           countryName={destination.country}
           score={displayedScore}
+        />
+      </div>
+
+      {/* D'où viennent ces informations et de quand elles datent */}
+      <div className="mb-6 px-6 lg:mx-auto lg:max-w-5xl">
+        <ProvenanceNote
+          destinationId={destination.id}
+          cityName={destination.name}
+          countryName={destination.country}
         />
       </div>
 

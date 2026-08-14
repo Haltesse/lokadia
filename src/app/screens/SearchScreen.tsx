@@ -1,283 +1,221 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Search, ArrowLeft, MapPin, TrendingUp } from "lucide-react";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { Search, ArrowLeft, MapPin, TrendingUp, X, Globe2 } from "lucide-react";
+import { DestinationImage } from "../components/DestinationImage";
+import { LokascoreBadge } from "../components/LokascoreBadge";
+import { useLokascore } from "../hooks/useLokascore";
+import {
+  searchDestinations, popularDestinations, type SearchHit,
+} from "../lib/destinationSearch";
+import type { DestinationDetails } from "../data/types";
 
-interface Country {
-  id: string;
-  name: string;
-  capital: string;
-  region: string;
-  flag: string;
-  popularCities: string[];
+/**
+ * SearchScreen — exploration des destinations.
+ *
+ * La version précédente filtrait une liste de 50 pays codée en dur dans ce
+ * fichier, avec un simple `includes` : « Japn » ne trouvait rien, et la
+ * liste divergeait du catalogue réel. On interroge désormais le catalogue,
+ * avec un moteur tolérant aux fautes et des résultats groupés.
+ */
+
+function ResultRow({
+  destination,
+  subtitle,
+  onClick,
+}: {
+  destination: DestinationDetails;
+  subtitle: string;
+  onClick: () => void;
+}) {
+  const { score, loading, sources, lastUpdate, fromCache, capturedAt } = useLokascore(destination.id);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-2xl bg-white p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]"
+      style={{ boxShadow: "var(--shadow-sm)", border: "1px solid var(--lokadia-gray-100)" }}
+    >
+      <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl">
+        <DestinationImage
+          src={destination.image}
+          alt={`${destination.name}, ${destination.country}`}
+          cityName={destination.name}
+          countryName={destination.country}
+          preferWikipedia
+          className="h-full w-full object-cover"
+        />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
+          {destination.name}
+        </p>
+        <p className="truncate text-xs" style={{ color: "var(--lokadia-gray-500)" }}>
+          {subtitle}
+        </p>
+      </div>
+      <LokascoreBadge
+        score={score}
+        loading={loading}
+        sources={sources}
+        lastUpdate={lastUpdate}
+        fromCache={fromCache}
+        capturedAt={capturedAt}
+        variant="chip"
+      />
+    </button>
+  );
 }
 
 export function SearchScreen() {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [query, setQuery] = useState("");
 
-  // 50 pays les plus touristiques au monde
-  const topCountries: Country[] = [
-    { id: "france", name: "France", capital: "Paris", region: "Europe", flag: "FR", popularCities: ["Paris", "Nice", "Lyon", "Marseille"] },
-    { id: "spain", name: "Espagne", capital: "Madrid", region: "Europe", flag: "ES", popularCities: ["Barcelone", "Madrid", "Séville", "Valence"] },
-    { id: "usa", name: "États-Unis", capital: "Washington", region: "Amérique du Nord", flag: "US", popularCities: ["New York", "Los Angeles", "Miami", "Las Vegas"] },
-    { id: "china", name: "Chine", capital: "Pékin", region: "Asie", flag: "CN", popularCities: ["Pékin", "Shanghai", "Hong Kong", "Xi'an"] },
-    { id: "italy", name: "Italie", capital: "Rome", region: "Europe", flag: "IT", popularCities: ["Rome", "Venise", "Florence", "Milan"] },
-    { id: "turkey", name: "Turquie", capital: "Ankara", region: "Asie/Europe", flag: "TR", popularCities: ["Istanbul", "Antalya", "Cappadoce", "Bodrum"] },
-    { id: "mexico", name: "Mexique", capital: "Mexico", region: "Amérique du Nord", flag: "MX", popularCities: ["Cancún", "Mexico", "Playa del Carmen", "Tulum"] },
-    { id: "thailand", name: "Thaïlande", capital: "Bangkok", region: "Asie", flag: "TH", popularCities: ["Bangkok", "Phuket", "Chiang Mai", "Pattaya"] },
-    { id: "germany", name: "Allemagne", capital: "Berlin", region: "Europe", flag: "DE", popularCities: ["Berlin", "Munich", "Francfort", "Hambourg"] },
-    { id: "uk", name: "Royaume-Uni", capital: "Londres", region: "Europe", flag: "GB", popularCities: ["Londres", "Édimbourg", "Manchester", "Liverpool"] },
-    { id: "austria", name: "Autriche", capital: "Vienne", region: "Europe", flag: "AT", popularCities: ["Vienne", "Salzbourg", "Innsbruck", "Graz"] },
-    { id: "japan", name: "Japon", capital: "Tokyo", region: "Asie", flag: "JP", popularCities: ["Tokyo", "Kyoto", "Osaka", "Hiroshima"] },
-    { id: "greece", name: "Grèce", capital: "Athènes", region: "Europe", flag: "GR", popularCities: ["Athènes", "Santorin", "Mykonos", "Rhodes"] },
-    { id: "malaysia", name: "Malaisie", capital: "Kuala Lumpur", region: "Asie", flag: "MY", popularCities: ["Kuala Lumpur", "Penang", "Langkawi", "Malacca"] },
-    { id: "portugal", name: "Portugal", capital: "Lisbonne", region: "Europe", flag: "PT", popularCities: ["Lisbonne", "Porto", "Algarve", "Madère"] },
-    { id: "russia", name: "Russie", capital: "Moscou", region: "Europe/Asie", flag: "RU", popularCities: ["Moscou", "Saint-Pétersbourg", "Kazan", "Sotchi"] },
-    { id: "canada", name: "Canada", capital: "Ottawa", region: "Amérique du Nord", flag: "CA", popularCities: ["Toronto", "Vancouver", "Montréal", "Québec"] },
-    { id: "poland", name: "Pologne", capital: "Varsovie", region: "Europe", flag: "PL", popularCities: ["Varsovie", "Cracovie", "Gdansk", "Wrocław"] },
-    { id: "netherlands", name: "Pays-Bas", capital: "Amsterdam", region: "Europe", flag: "NL", popularCities: ["Amsterdam", "Rotterdam", "La Haye", "Utrecht"] },
-    { id: "uae", name: "Émirats Arabes Unis", capital: "Abou Dhabi", region: "Moyen-Orient", flag: "AE", popularCities: ["Dubaï", "Abou Dhabi", "Sharjah", "Ras Al Khaimah"] },
-    { id: "singapore", name: "Singapour", capital: "Singapour", region: "Asie", flag: "SG", popularCities: ["Singapour"] },
-    { id: "south-korea", name: "Corée du Sud", capital: "Séoul", region: "Asie", flag: "KR", popularCities: ["Séoul", "Busan", "Jeju", "Incheon"] },
-    { id: "indonesia", name: "Indonésie", capital: "Jakarta", region: "Asie", flag: "ID", popularCities: ["Bali", "Jakarta", "Yogyakarta", "Lombok"] },
-    { id: "croatia", name: "Croatie", capital: "Zagreb", region: "Europe", flag: "HR", popularCities: ["Dubrovnik", "Split", "Zagreb", "Hvar"] },
-    { id: "vietnam", name: "Vietnam", capital: "Hanoï", region: "Asie", flag: "VN", popularCities: ["Hanoï", "Hô Chi Minh-Ville", "Hoi An", "Nha Trang"] },
-    { id: "morocco", name: "Maroc", capital: "Rabat", region: "Afrique", flag: "MA", popularCities: ["Marrakech", "Casablanca", "Fès", "Rabat"] },
-    { id: "czech", name: "République Tchèque", capital: "Prague", region: "Europe", flag: "CZ", popularCities: ["Prague", "Brno", "Český Krumlov", "Karlovy Vary"] },
-    { id: "switzerland", name: "Suisse", capital: "Berne", region: "Europe", flag: "CH", popularCities: ["Zurich", "Genève", "Berne", "Lucerne"] },
-    { id: "sweden", name: "Suède", capital: "Stockholm", region: "Europe", flag: "SE", popularCities: ["Stockholm", "Göteborg", "Malmö", "Uppsala"] },
-    { id: "denmark", name: "Danemark", capital: "Copenhague", region: "Europe", flag: "DK", popularCities: ["Copenhague", "Aarhus", "Odense", "Aalborg"] },
-    { id: "australia", name: "Australie", capital: "Canberra", region: "Océanie", flag: "AU", popularCities: ["Sydney", "Melbourne", "Brisbane", "Perth"] },
-    { id: "egypt", name: "Égypte", capital: "Le Caire", region: "Afrique", flag: "EG", popularCities: ["Le Caire", "Louxor", "Alexandrie", "Hurghada"] },
-    { id: "ireland", name: "Irlande", capital: "Dublin", region: "Europe", flag: "IE", popularCities: ["Dublin", "Cork", "Galway", "Limerick"] },
-    { id: "hungary", name: "Hongrie", capital: "Budapest", region: "Europe", flag: "HU", popularCities: ["Budapest", "Debrecen", "Szeged", "Pécs"] },
-    { id: "belgium", name: "Belgique", capital: "Bruxelles", region: "Europe", flag: "BE", popularCities: ["Bruxelles", "Bruges", "Anvers", "Gand"] },
-    { id: "brazil", name: "Brésil", capital: "Brasília", region: "Amérique du Sud", flag: "BR", popularCities: ["Rio de Janeiro", "São Paulo", "Salvador", "Brasília"] },
-    { id: "argentina", name: "Argentine", capital: "Buenos Aires", region: "Amérique du Sud", flag: "AR", popularCities: ["Buenos Aires", "Mendoza", "Córdoba", "Bariloche"] },
-    { id: "iceland", name: "Islande", capital: "Reykjavik", region: "Europe", flag: "IS", popularCities: ["Reykjavik", "Akureyri", "Vik", "Höfn"] },
-    { id: "norway", name: "Norvège", capital: "Oslo", region: "Europe", flag: "NO", popularCities: ["Oslo", "Bergen", "Tromsø", "Stavanger"] },
-    { id: "finland", name: "Finlande", capital: "Helsinki", region: "Europe", flag: "FI", popularCities: ["Helsinki", "Rovaniemi", "Tampere", "Turku"] },
-    { id: "new-zealand", name: "Nouvelle-Zélande", capital: "Wellington", region: "Océanie", flag: "NZ", popularCities: ["Auckland", "Wellington", "Queenstown", "Christchurch"] },
-    { id: "south-africa", name: "Afrique du Sud", capital: "Pretoria", region: "Afrique", flag: "ZA", popularCities: ["Le Cap", "Johannesburg", "Durban", "Pretoria"] },
-    { id: "india", name: "Inde", capital: "New Delhi", region: "Asie", flag: "IN", popularCities: ["New Delhi", "Mumbai", "Jaipur", "Agra"] },
-    { id: "peru", name: "Pérou", capital: "Lima", region: "Amérique du Sud", flag: "PE", popularCities: ["Lima", "Cusco", "Machu Picchu", "Arequipa"] },
-    { id: "chile", name: "Chili", capital: "Santiago", region: "Amérique du Sud", flag: "CL", popularCities: ["Santiago", "Valparaíso", "Atacama", "Patagonie"] },
-    { id: "colombia", name: "Colombie", capital: "Bogotá", region: "Amérique du Sud", flag: "CO", popularCities: ["Bogotá", "Carthagène", "Medellín", "Cali"] },
-    { id: "philippines", name: "Philippines", capital: "Manille", region: "Asie", flag: "PH", popularCities: ["Manille", "Cebu", "Boracay", "Palawan"] },
-    { id: "sri-lanka", name: "Sri Lanka", capital: "Colombo", region: "Asie", flag: "LK", popularCities: ["Colombo", "Kandy", "Galle", "Ella"] },
-    { id: "maldives", name: "Maldives", capital: "Malé", region: "Asie", flag: "MV", popularCities: ["Malé", "Atoll de Baa", "Atoll d'Ari", "Maafushi"] },
-    { id: "jordan", name: "Jordanie", capital: "Amman", region: "Moyen-Orient", flag: "JO", popularCities: ["Amman", "Petra", "Wadi Rum", "Aqaba"] },
-  ];
+  const results = useMemo(() => searchDestinations(query), [query]);
+  const popular = useMemo(() => popularDestinations(), []);
+  const trimmed = query.trim();
 
-  const filteredCountries = topCountries.filter((country) => {
-    const query = searchQuery.toLowerCase();
+  const open = (id: string) => navigate(`/destination/${id}`);
+
+  const renderGroup = (title: string, hits: SearchHit[], icon: typeof MapPin) => {
+    if (hits.length === 0) return null;
+    const Icon = icon;
     return (
-      country.name.toLowerCase().includes(query) ||
-      country.capital.toLowerCase().includes(query) ||
-      country.popularCities.some((city) => city.toLowerCase().includes(query))
+      <section className="space-y-2">
+        <h2
+          className="flex items-center gap-1.5 px-1 text-xs font-bold uppercase tracking-wide"
+          style={{ color: "var(--lokadia-gray-500)" }}
+        >
+          <Icon size={13} /> {title} · {hits.length}
+        </h2>
+        <div className="space-y-2">
+          {hits.map((hit) => (
+            <ResultRow
+              key={`${hit.group}-${hit.destination.id}`}
+              destination={hit.destination}
+              subtitle={
+                hit.group === "country"
+                  ? `${hit.destination.country} — via ${hit.destination.name}`
+                  : hit.destination.country
+              }
+              onClick={() => open(hit.destination.id)}
+            />
+          ))}
+        </div>
+      </section>
     );
-  });
-
-  // Mapper country ID vers destination ID (basé sur la capitale)
-  const mapCountryToDestinationId = (country: Country): string => {
-    const mapping: Record<string, string> = {
-      "france": "paris-france",
-      "japan": "tokyo-japan",
-      "usa": "new-york-usa",
-      "uk": "london-uk",
-      "uae": "dubai-uae",
-      "spain": "barcelona-spain",
-      "netherlands": "amsterdam-netherlands",
-      "singapore": "singapore-singapore",
-      "portugal": "lisbon-portugal",
-      "czech": "prague-czech",
-      "austria": "vienna-austria",
-      "greece": "athens-greece",
-      "turkey": "istanbul-turkey",
-      "thailand": "bangkok-thailand",
-      "germany": "berlin-germany",
-      "australia": "sydney-australia",
-      "italy": "rome-italy",
-      "morocco": "marrakech-morocco",
-      "south-korea": "seoul-south-korea",
-      "denmark": "copenhagen-denmark",
-      "mexico": "mexico-city-mexico",
-      "malaysia": "kuala-lumpur-malaysia",
-      "russia": "moscow-russia",
-      "canada": "toronto-canada",
-      "poland": "warsaw-poland",
-      "egypt": "cairo-egypt",
-      "ireland": "dublin-ireland",
-      "hungary": "budapest-hungary",
-      "belgium": "brussels-belgium",
-      "brazil": "rio-de-janeiro-brazil",
-      "argentina": "buenos-aires-argentina",
-      "iceland": "reykjavik-iceland",
-      "norway": "oslo-norway",
-      "finland": "helsinki-finland",
-      "new-zealand": "auckland-new-zealand",
-      "south-africa": "cape-town-south-africa",
-      "india": "new-delhi-india",
-      "peru": "lima-peru",
-      "chile": "santiago-chile",
-      "colombia": "bogota-colombia",
-      "philippines": "manila-philippines",
-      "sri-lanka": "colombo-sri-lanka",
-      "maldives": "male-maldives",
-      "jordan": "amman-jordan",
-      "china": "shanghai-china",
-      "indonesia": "bali-indonesia",
-      "croatia": "dubrovnik-croatia",
-      "vietnam": "hanoi-vietnam",
-      "switzerland": "zurich-switzerland",
-      "sweden": "stockholm-sweden",
-    };
-    
-    return mapping[country.id] || "paris-france"; // Fallback to Paris
   };
-
-  const handleCountryClick = (country: Country) => {
-    // Navigue vers la page destination avec l'ID dans l'URL
-    const destinationId = mapCountryToDestinationId(country);
-    console.log("🔍 SearchScreen - Pays cliqué:", country.name, "ID:", country.id);
-    console.log("🔍 SearchScreen - Destination ID mappé:", destinationId);
-    console.log("📍 Historique avant navigation:", window.history.length);
-    navigate(`/destination/${destinationId}`);
-    console.log("📍 Historique après navigate():", window.history.length);
-  };
-
-  const regionCounts = topCountries.reduce((acc, country) => {
-    acc[country.region] = (acc[country.region] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "var(--lokadia-soft-white)" }}>
-      {/* Header with Search */}
-      <div className="sticky top-0 z-10 px-6 pt-12 pb-6 bg-white lg:static lg:mx-auto lg:mt-6 lg:max-w-7xl lg:rounded-[32px] lg:border lg:px-8 lg:pt-8 lg:shadow-sm" style={{ borderColor: "var(--lokadia-gray-100)" }}>
+    <div className="min-h-screen pb-24" style={{ background: "var(--lokadia-background)" }}>
+      {/* En-tête + champ de recherche */}
+      <div
+        className="px-5 pt-6 pb-5 lg:mx-auto lg:mt-6 lg:max-w-4xl lg:rounded-[32px]"
+        style={{ background: "var(--gradient-primary)" }}
+      >
         <button
-          onClick={() => {
-            console.log("🔙 Retour cliqué - Navigation vers la page précédente");
-            navigate(-1);
-          }}
-          className="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-transform active:scale-95 mb-4 lg:hidden"
-          style={{ borderColor: "var(--lokadia-deep-blue)" }}
+          onClick={() => navigate(-1)}
+          className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-xs font-bold text-white backdrop-blur"
         >
-          <ArrowLeft className="h-5 w-5" style={{ color: "var(--lokadia-deep-blue)" }} />
+          <ArrowLeft className="h-3.5 w-3.5" /> Retour
         </button>
+        <h1 className="text-xl font-bold text-white lg:text-3xl">Explorer les destinations</h1>
 
-        <div className="hidden lg:flex items-start justify-between gap-8 mb-6">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--lokadia-primary)" }}>
-              Recherche
-            </p>
-            <h1 className="text-2xl font-bold tracking-tight md:text-4xl" style={{ color: "var(--lokadia-gray-900)" }}>
-              Trouver une destination
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
-              Parcourez les pays touristiques et accédez directement à la fiche destination correspondante.
-            </p>
-          </div>
-          <button
-            onClick={() => navigate("/global-home")}
-            className="rounded-full px-5 py-3 text-sm font-bold"
-            style={{ background: "var(--lokadia-info-bg)", color: "var(--lokadia-primary)" }}
-          >
-            Accueil
-          </button>
-        </div>
-
-        <div className="bg-white border-2 rounded-2xl p-4 flex items-center gap-3 shadow-md lg:max-w-3xl" style={{ borderColor: "#000000" }}>
-          <Search className="h-5 w-5 flex-shrink-0" style={{ color: "#000000" }} />
-          <input
-            type="text"
-            placeholder="Rechercher un pays ou une ville..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 outline-none text-base text-black"
-            autoFocus
+        <div className="lk-search relative mt-4 flex items-center rounded-2xl bg-white/95 pr-2 shadow-lg">
+          <Search
+            className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2"
+            style={{ color: "var(--lokadia-gray-500)" }}
           />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Ville, pays… (les fautes de frappe sont tolérées)"
+            autoComplete="off"
+            enterKeyHint="search"
+            aria-label="Rechercher une destination"
+            className="lk-input flex-1 rounded-2xl bg-transparent py-3 pl-11 pr-2 text-sm outline-none"
+            style={{ color: "var(--lokadia-gray-900)" }}
+          />
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              aria-label="Effacer la recherche"
+              className="rounded-full p-1.5 transition-colors hover:bg-gray-100"
+            >
+              <X className="h-4 w-4" style={{ color: "var(--lokadia-gray-500)" }} />
+            </button>
+          )}
         </div>
-
-        <p className="font-semibold text-base mt-3 text-black">
-          {filteredCountries.length} {filteredCountries.length > 1 ? "destinations" : "destination"}
-        </p>
       </div>
 
-      {/* Countries List */}
-      <div className="px-6 py-4 space-y-3 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6 lg:space-y-0 lg:px-0 lg:py-6">
-        <aside className="hidden lg:block">
-          <div className="sticky top-28 rounded-3xl bg-white p-5" style={{ border: "1px solid var(--lokadia-gray-100)", boxShadow: "var(--shadow-sm)" }}>
-            <h2 className="text-sm font-bold mb-4" style={{ color: "var(--lokadia-gray-900)" }}>
-              Répartition
+      <div className="mx-auto max-w-4xl space-y-5 px-5 pt-5">
+        {/* Champ vide : suggestions */}
+        {trimmed.length === 0 && (
+          <section className="space-y-2">
+            <h2
+              className="flex items-center gap-1.5 px-1 text-xs font-bold uppercase tracking-wide"
+              style={{ color: "var(--lokadia-gray-500)" }}
+            >
+              <TrendingUp size={13} /> Destinations populaires
             </h2>
             <div className="space-y-2">
-              {Object.entries(regionCounts).slice(0, 8).map(([region, count]) => (
-                <div key={region} className="flex items-center justify-between rounded-2xl px-3 py-2" style={{ background: "#F8FAFC" }}>
-                  <span className="text-sm font-bold" style={{ color: "var(--lokadia-gray-700)" }}>
-                    {region}
-                  </span>
-                  <span className="text-xs font-bold" style={{ color: "var(--lokadia-primary)" }}>
-                    {count}
-                  </span>
-                </div>
+              {popular.map((d) => (
+                <ResultRow
+                  key={d.id}
+                  destination={d}
+                  subtitle={d.country}
+                  onClick={() => open(d.id)}
+                />
               ))}
             </div>
-          </div>
-        </aside>
+          </section>
+        )}
 
-        <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-3">
-        {filteredCountries.map((country) => (
-          <button
-            key={country.id}
-            onClick={() => handleCountryClick(country)}
-            className="w-full bg-white rounded-2xl p-4 shadow-sm transition-all active:scale-98 text-left lg:min-h-[180px] lg:hover:-translate-y-0.5 lg:hover:shadow-lg"
+        {/* Une seule lettre : on le dit plutôt que de tout lister */}
+        {trimmed.length === 1 && (
+          <p className="px-1 text-sm" style={{ color: "var(--lokadia-gray-500)" }}>
+            Saisissez au moins deux lettres pour lancer la recherche.
+          </p>
+        )}
+
+        {/* Résultats groupés */}
+        {trimmed.length >= 2 && results.total > 0 && (
+          <>
+            {results.hasApproximate && (
+              <p
+                className="rounded-xl px-3.5 py-2 text-xs"
+                style={{ background: "var(--lokadia-info-bg)", color: "var(--lokadia-gray-700)" }}
+              >
+                Certains résultats correspondent approximativement à « {trimmed} ».
+              </p>
+            )}
+            {renderGroup("Villes", results.cities, MapPin)}
+            {renderGroup("Pays", results.countries, Globe2)}
+          </>
+        )}
+
+        {/* Aucun résultat */}
+        {trimmed.length >= 2 && results.total === 0 && (
+          <div
+            className="rounded-3xl bg-white p-10 text-center"
+            style={{ boxShadow: "var(--shadow-sm)", border: "1px solid var(--lokadia-gray-100)" }}
           >
-            <div className="flex items-start gap-4 lg:flex-col">
-              <div className="text-4xl">{country.flag}</div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-lg mb-1" style={{ color: "var(--lokadia-text-dark)" }}>
-                  {country.name}
-                </h3>
-                <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="h-4 w-4 flex-shrink-0" style={{ color: "var(--lokadia-text-light)" }} />
-                  <span className="text-sm" style={{ color: "var(--lokadia-text-light)" }}>
-                    {country.region} • {country.capital}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <TrendingUp className="h-4 w-4 flex-shrink-0" style={{ color: "var(--lokadia-blue)" }} />
-                  <div className="flex flex-wrap gap-2">
-                    {country.popularCities.slice(0, 3).map((city, idx) => (
-                      <span
-                        key={idx}
-                        className="text-xs px-2 py-1 rounded-full"
-                        style={{
-                          backgroundColor: "var(--lokadia-soft-white)",
-                          color: "var(--lokadia-blue)",
-                        }}
-                      >
-                        {city}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </button>
-        ))}
-        </div>
-
-        {filteredCountries.length === 0 && (
-          <div className="text-center py-12">
-            <Search className="h-16 w-16 mx-auto mb-4" style={{ color: "var(--lokadia-text-light)" }} />
-            <p className="text-lg font-medium mb-2" style={{ color: "var(--lokadia-text-dark)" }}>
-              Aucune destination trouvée
+            <Search className="mx-auto mb-3" size={30} style={{ color: "var(--lokadia-gray-300)" }} />
+            <p className="font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
+              Aucune destination pour « {trimmed} »
             </p>
-            <p className="text-sm" style={{ color: "var(--lokadia-text-light)" }}>
-              Essayez avec un autre nom de pays ou ville
+            <p className="mx-auto mt-1 max-w-sm text-sm" style={{ color: "var(--lokadia-gray-500)" }}>
+              Essayez le nom d'une grande ville ou d'un pays. Notre catalogue
+              s'enrichit régulièrement.
             </p>
+            <button
+              onClick={() => setQuery("")}
+              className="mt-5 rounded-xl px-5 py-2.5 text-sm font-bold text-white"
+              style={{ background: "var(--lokadia-primary)" }}
+            >
+              Voir les destinations populaires
+            </button>
           </div>
         )}
       </div>
