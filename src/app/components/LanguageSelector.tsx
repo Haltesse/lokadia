@@ -1,15 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Globe } from 'lucide-react';
-import { useLanguageSafe, SUPPORTED_LANGUAGES } from '../context/LanguageContext';
+import { useLanguageSafe } from '../context/LanguageContext';
+import { LANGUAGE_META } from '../translations';
 
 export function LanguageSelector() {
-  const context = useLanguageSafe();
+  // Seules les langues entièrement relues sont proposées (cf. `available`)
+  const { language, setLanguage, available } = useLanguageSafe();
   const [isOpen, setIsOpen] = useState(false);
-  
-  // Protection contre contexte non disponible
-  if (!context) return null;
-  
-  const { language, setLanguage } = context;
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fermer le dropdown quand on clique à l'extérieur
@@ -33,9 +30,9 @@ export function LanguageSelector() {
         aria-label="Changer de langue"
       >
         <Globe className="w-4 h-4 text-gray-600" />
-        <span className="text-xl">{SUPPORTED_LANGUAGES[language].flag}</span>
+        <span className="text-xl">{LANGUAGE_META[language].flag}</span>
         <span className="font-medium text-gray-700 text-sm hidden sm:inline">
-          {SUPPORTED_LANGUAGES[language].name}
+          {LANGUAGE_META[language].name}
         </span>
         <svg
           className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
@@ -56,11 +53,13 @@ export function LanguageSelector() {
           </div>
           
           <div className="py-1 max-h-80 overflow-y-auto">
-            {Object.entries(SUPPORTED_LANGUAGES).map(([code, { name, flag }]) => (
+            {available.map((code) => {
+              const { name, flag } = LANGUAGE_META[code];
+              return (
               <button
                 key={code}
                 onClick={() => {
-                  setLanguage(code as any);
+                  setLanguage(code);
                   setIsOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 transition-colors ${
@@ -81,7 +80,8 @@ export function LanguageSelector() {
                   </svg>
                 )}
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

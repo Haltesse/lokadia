@@ -24,58 +24,12 @@ export interface RealTimeAlert {
 }
 
 // ============================================================================
-// TRADUCTION VIA API (MyMemory - Plus fiable et gratuite)
+// TRADUCTION
 // ============================================================================
-const translationAPICache = new Map<string, string>();
-
-async function translateViaAPI(text: string, targetLang: string = 'fr'): Promise<string> {
-  if (!text || text.trim() === '') return text;
-  
-  // Limiter la taille du texte pour l'API (max 500 caractères)
-  const textToTranslate = text.length > 500 ? text.substring(0, 500) : text;
-  
-  // Vérifier le cache
-  const cacheKey = `${textToTranslate}_${targetLang}`;
-  if (translationAPICache.has(cacheKey)) {
-    return translationAPICache.get(cacheKey)!;
-  }
-  
-  // Essayer MyMemory API (gratuite et fiable)
-  try {
-    const sourceLang = 'en'; // La plupart des alertes WHO sont en anglais
-    const encodedText = encodeURIComponent(textToTranslate);
-    
-    const response = await fetch(
-      `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=${sourceLang}|${targetLang}`,
-      {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-      }
-    );
-    
-    if (!response.ok) {
-      throw new Error('MyMemory API failed');
-    }
-    
-    const data = await response.json();
-    
-    if (data.responseStatus === 200 && data.responseData?.translatedText) {
-      const translated = data.responseData.translatedText;
-      
-      // Sauvegarder dans le cache
-      translationAPICache.set(cacheKey, translated);
-      
-      return translated;
-    } else {
-      throw new Error('Invalid response from MyMemory');
-    }
-  } catch (error) {
-    console.log('🔄 MyMemory API indisponible, utilisation de la traduction locale');
-    return translateToFrench(text);
-  }
-}
+// Aucune traduction automatique par un service tiers : le texte des
+// sources officielles est affiché tel quel. Seuls les libellés de
+// catégorie (types d'événement) passent par un dictionnaire local,
+// défini plus bas dans ce fichier.
 
 // ============================================================================
 // SYSTÈME DE CACHE INTELLIGENT
@@ -1001,16 +955,20 @@ async function fetchWHOHealthAlerts(): Promise<RealTimeAlert[]> {
             level = 'vigilance';
           }
           
-          // Traduire via API avec fallback
-          const translatedTitle = await translateViaAPI(title, 'fr');
-          const translatedSummary = await translateViaAPI(description.substring(0, 200), 'fr');
-          
+          // Le libellé officiel de l'OMS n'est PAS traduit automatiquement :
+          // altérer le texte d'une source officielle par une traduction
+          // machine, c'est en changer le sens sans pouvoir en répondre.
+          // Il est présenté tel quel, avec sa source clairement citée.
+          const summary = description.length > 220
+            ? `${description.substring(0, 220).trim()}…`
+            : description.trim();
+
           return {
             id: `who-${Date.now()}-${index}`,
             type: 'health' as const,
             level: level,
-            title: translatedTitle,
-            summary: translatedSummary + '...',
+            title: title,
+            summary: `${summary} (texte original de l'OMS, en anglais)`,
             destination: matchedDest.name,
             country: matchedDest.country,
             date: formatDate(pubDate || new Date().toISOString()),

@@ -1,311 +1,119 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { translations, type Translations, type Language } from '../translations';
+import {
+  createContext, useCallback, useContext, useEffect, useMemo, useState,
+  type ReactNode,
+} from 'react';
+import {
+  translations, LANGUAGE_META, resolveCatalog, completeLanguages,
+  type Translations, type Language,
+} from '../translations';
+
+/**
+ * LanguageContext — internationalisation par catalogue clé-valeur.
+ *
+ * Aucune traduction automatique : tout le texte affiché vient d'un
+ * catalogue relu par des humains. La version précédente parcourait le DOM
+ * et envoyait chaque phrase visible — y compris du contenu saisi par
+ * l'utilisateur — à une API tierce gratuite, sans consentement ni contrat.
+ * C'était un risque RGPD, une qualité subie et une dépendance sans SLA.
+ *
+ * Le français est la langue source. Une clé absente d'une traduction
+ * retombe sur le français plutôt que d'afficher du vide.
+ */
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  translateText: (text: string, targetLang?: Language) => Promise<string>;
-  isTranslating: boolean;
+  /** Catalogue résolu pour la langue courante (repli français inclus) */
   t: Translations;
-  // Nouvelle fonction pour traduction instantanée avec cache
-  translate: (text: string) => string;
-  // Version du cache pour forcer les re-renders
-  cacheVersion: number;
+  /** Langues dont le catalogue est complet — les seules proposées */
+  available: Language[];
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-// Cache de traduction pour éviter les appels API répétés
-const translationCache = new Map<string, string>();
+const STORAGE_KEY = 'lokadia_language';
+/** Ancien cache de traduction machine — purgé au démarrage. */
+const LEGACY_CACHE_KEYS = ['lokadia_translation_cache_v2', 'lokadia_translation_cache'];
 
-// File d'attente pour les traductions en batch
-const translationQueue = new Set<string>();
-let translationTimer: NodeJS.Timeout | null = null;
-
-// Cache persistant dans localStorage
-const CACHE_KEY = 'lokadia_translation_cache_v2';
-
-const loadCacheFromStorage = () => {
+/** Langue initiale : choix mémorisé, sinon langue du navigateur, sinon français. */
+function initialLanguage(available: Language[]): Language {
   try {
-    const stored = localStorage.getItem(CACHE_KEY);
-    if (stored) {
-      const data = JSON.parse(stored);
-      Object.entries(data).forEach(([key, value]) => {
-        translationCache.set(key, value as string);
-      });
-    }
-  } catch (error) {
-    console.error('Erreur chargement cache:', error);
+    const saved = localStorage.getItem(STORAGE_KEY) as Language | null;
+    if (saved && available.includes(saved)) return saved;
+  } catch {
+    // Stockage indisponible : on poursuit sur la détection navigateur
   }
-};
-
-const saveCacheToStorage = () => {
   try {
-    const data = Object.fromEntries(translationCache);
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.error('Erreur sauvegarde cache:', error);
+    const nav = navigator.language.slice(0, 2).toLowerCase() as Language;
+    if (available.includes(nav)) return nav;
+  } catch {
+    // Pas de navigator : français
   }
-};
-
-// Sauvegarde débouncée (évite d'écrire localStorage à chaque mot traduit)
-let saveCacheTimer: ReturnType<typeof setTimeout> | null = null;
-const scheduleSaveCache = () => {
-  if (saveCacheTimer) return;
-  saveCacheTimer = setTimeout(() => {
-    saveCacheTimer = null;
-    saveCacheToStorage();
-  }, 1500);
-};
-
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  // Version du cache pour forcer les re-renders
-  const [cacheVersion, setCacheVersion] = useState(0);
-
-  const [language, setLanguageState] = useState<Language>('fr');
-  const [isTranslating, setIsTranslating] = useState(false);
-
-  // Débounce du bump de cacheVersion : au lieu de re-rendre toute l'app à
-  // CHAQUE mot traduit (cause du freeze), on ne re-rend qu'une fois par salve
-  // (toutes les ~600 ms max). Borne le nombre de re-renders globaux.
-  const cacheBumpTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const scheduleCacheBump = React.useCallback(() => {
-    if (cacheBumpTimer.current) return;
-    cacheBumpTimer.current = setTimeout(() => {
-      cacheBumpTimer.current = null;
-      setCacheVersion((v) => v + 1);
-    }, 600);
-  }, []);
-  
-  // Initialiser la langue et charger le cache au montage
-  useEffect(() => {
-    try {
-      // Charger le cache
-      loadCacheFromStorage();
-      
-      // Récupérer la langue sauvegardée ou détecter la langue du navigateur
-      const saved = localStorage.getItem('lokadia_language');
-      if (saved && saved in translations) {
-        setLanguageState(saved as Language);
-        return;
-      }
-      
-      const browserLang = navigator.language.split('-')[0];
-      const supportedLangs: Language[] = ['fr', 'en', 'es', 'de', 'it', 'pt', 'ja', 'zh', 'ar'];
-      if (supportedLangs.includes(browserLang as Language)) {
-        setLanguageState(browserLang as Language);
-      }
-    } catch (error) {
-      console.error('Erreur initialisation langue:', error);
-      setLanguageState('fr');
-    }
-  }, []);
-  
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    localStorage.setItem('lokadia_language', lang);
-    
-    // NE PAS vider le cache, juste sauvegarder
-    saveCacheToStorage();
-  };
-
-  // Obtenir les traductions pour la langue actuelle
-  const t = translations[language];
-
-  // Fonction de traduction SYNCHRONE avec cache (pour utilisation directe dans le JSX)
-  const translate = (text: string): string => {
-    if (!text || text.trim() === '') return text;
-    
-    // Si français, retourner tel quel
-    if (language === 'fr') return text;
-    
-    // Vérifier le cache
-    const cacheKey = `${text}_${language}`;
-    if (translationCache.has(cacheKey)) {
-      const cached = translationCache.get(cacheKey)!;
-      // Ne retourner que si c'est une vraie traduction, pas le placeholder
-      if (cached !== text) return cached;
-    }
-    
-    // Si pas en cache, lancer traduction en arrière-plan et retourner texte original
-    translateInBackground(text, language);
-    return text;
-  };
-
-  // Traduction en arrière-plan avec délai pour éviter de surcharger l'API
-  const translateInBackground = async (text: string, targetLang: Language) => {
-    const cacheKey = `${text}_${targetLang}`;
-    
-    // Si déjà traduit (pas juste un placeholder), ne pas relancer
-    const existing = translationCache.get(cacheKey);
-    if (existing && existing !== text) return;
-    
-    // Si déjà en cours de traduction (le placeholder est le texte original)
-    if (existing === text) return;
-    
-    // Marquer comme en cours avec le placeholder
-    translationCache.set(cacheKey, text);
-    
-    // Ajouter un petit délai aléatoire pour éviter de surcharger l'API
-    await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
-    
-    try {
-      const textToTranslate = text.length > 500 ? text.substring(0, 500) : text;
-      const encodedText = encodeURIComponent(textToTranslate);
-      
-      console.log('🔄 Traduction en cours:', text.substring(0, 50) + '...', '→', targetLang);
-      
-      const response = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=fr|${targetLang}`,
-        {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-        }
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.responseStatus === 200 && data.responseData?.translatedText) {
-          const translated = data.responseData.translatedText;
-          console.log('✅ Traduit:', text.substring(0, 30), '→', translated.substring(0, 30));
-          translationCache.set(cacheKey, translated);
-          scheduleSaveCache();
-          // Bump débouncé (1 re-render par salve, pas par mot)
-          scheduleCacheBump();
-        } else if (data.responseStatus === 403) {
-          console.warn('⚠️ Limite API atteinte, réessayera plus tard');
-          translationCache.delete(cacheKey);
-        }
-      }
-    } catch (error) {
-      console.warn('❌ Erreur traduction arrière-plan:', error);
-      // Retirer le placeholder en cas d'erreur pour réessayer plus tard
-      translationCache.delete(cacheKey);
-    }
-  };
-
-  // Fonction de traduction ASYNCHRONE (pour les cas spéciaux)
-  const translateText = async (text: string, targetLang?: Language): Promise<string> => {
-    if (!text || text.trim() === '') return text;
-    
-    const target = targetLang || language;
-    
-    // Si le texte est déjà en langue cible, le retourner directement
-    if (target === 'en' && /^[a-zA-Z0-9\s.,!?;:()\-'"]+$/.test(text)) {
-      return text;
-    }
-    
-    // Limiter la taille du texte
-    const textToTranslate = text.length > 500 ? text.substring(0, 500) : text;
-    
-    // Vérifier le cache
-    const cacheKey = `${textToTranslate}_${target}`;
-    if (translationCache.has(cacheKey)) {
-      return translationCache.get(cacheKey)!;
-    }
-    
-    try {
-      setIsTranslating(true);
-      
-      // API MyMemory (gratuite et fiable)
-      const encodedText = encodeURIComponent(textToTranslate);
-      const response = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=en|${target}`,
-        {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
-        }
-      );
-      
-      if (!response.ok) {
-        console.warn('Traduction API échouée, retour du texte original');
-        return text;
-      }
-      
-      const data = await response.json();
-      
-      if (data.responseStatus === 200 && data.responseData?.translatedText) {
-        const translated = data.responseData.translatedText;
-        
-        // Sauvegarder dans le cache
-        translationCache.set(cacheKey, translated);
-        saveCacheToStorage();
-        
-        return translated;
-      } else {
-        return text;
-      }
-    } catch (error) {
-      console.warn('Erreur de traduction:', error);
-      return text; // Retourner le texte original en cas d'erreur
-    } finally {
-      setIsTranslating(false);
-    }
-  };
-
-  return (
-    <LanguageContext.Provider value={{ language, setLanguage, translateText, isTranslating, t, translate, cacheVersion }}>
-      {children}
-    </LanguageContext.Provider>
-  );
+  return 'fr';
 }
 
-export function useLanguage() {
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const available = useMemo(() => completeLanguages(), []);
+  const [language, setLanguageState] = useState<Language>(() => initialLanguage(available));
+
+  // Purge unique de l'ancien cache de traduction machine
+  useEffect(() => {
+    for (const key of LEGACY_CACHE_KEYS) {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        // Rien à faire : le cache disparaîtra avec le stockage
+      }
+    }
+  }, []);
+
+  // L'attribut lang conditionne la césure, la synthèse vocale et le SEO ;
+  // dir gère l'écriture de droite à gauche.
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dir = LANGUAGE_META[language]?.rtl ? 'rtl' : 'ltr';
+  }, [language]);
+
+  const setLanguage = useCallback((lang: Language) => {
+    setLanguageState(lang);
+    try {
+      localStorage.setItem(STORAGE_KEY, lang);
+    } catch {
+      // Choix non mémorisé, mais appliqué pour la session
+    }
+  }, []);
+
+  const value = useMemo<LanguageContextType>(
+    () => ({ language, setLanguage, t: resolveCatalog(language), available }),
+    [language, setLanguage, available],
+  );
+
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+}
+
+/** Accès au catalogue. Lève si le provider est absent — c'est un bug de montage. */
+export function useLanguage(): LanguageContextType {
   const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within LanguageProvider');
-  }
+  if (!context) throw new Error('useLanguage doit être utilisé sous <LanguageProvider>');
   return context;
 }
 
-// Hook sécurisé qui retourne null si le provider n'est pas disponible (pour hot-reload)
-export function useLanguageSafe() {
+/**
+ * Variante tolérante pour les composants susceptibles d'être rendus hors
+ * du provider (pages publiques tokenisées, écrans d'erreur). Renvoie
+ * toujours un catalogue exploitable — jamais null, contrairement à la
+ * version précédente qui obligeait chaque appelant à gérer le cas.
+ */
+export function useLanguageSafe(): LanguageContextType {
   const context = useContext(LanguageContext);
-  return context || null;
+  if (context) return context;
+  return {
+    language: 'fr',
+    setLanguage: () => { /* hors provider : le choix n'est pas persistable */ },
+    t: translations.fr,
+    available: ['fr'],
+  };
 }
 
-// Hook pour traduire automatiquement un texte
-export function useTranslate(text: string): string {
-  const context = useLanguageSafe();
-  const [translated, setTranslated] = useState(text);
-
-  useEffect(() => {
-    if (!context) {
-      setTranslated(text);
-      return;
-    }
-    
-    let isMounted = true;
-    const { translateText, language } = context;
-
-    const translate = async () => {
-      const result = await translateText(text);
-      if (isMounted) {
-        setTranslated(result);
-      }
-    };
-
-    translate();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [text, context]);
-
-  return translated;
-}
-
-// Langues supportées avec leurs noms natifs
-export const SUPPORTED_LANGUAGES: Record<Language, { name: string; flag: string }> = {
-  fr: { name: 'Français', flag: 'FR' },
-  en: { name: 'English', flag: 'GB' },
-  es: { name: 'Español', flag: 'ES' },
-  de: { name: 'Deutsch', flag: 'DE' },
-  it: { name: 'Italiano', flag: 'IT' },
-  pt: { name: 'Português', flag: 'PT' },
-  ja: { name: '日本語', flag: 'JP' },
-  zh: { name: '中文', flag: 'CN' },
-  ar: { name: 'العربية', flag: 'SA' },
-};
+export { LANGUAGE_META };
+export type { Language };

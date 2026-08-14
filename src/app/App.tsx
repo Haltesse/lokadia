@@ -7,8 +7,6 @@ import { AuthProvider } from "./context/AuthContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { TravelProfileProvider } from "./context/TravelProfileContext";
 import { CartProvider } from "./lib/cart";
-import { AutoTranslate } from "./components/AutoTranslate";
-import { TranslationIndicator } from "./components/TranslationIndicator";
 import { LokascoreCacheInitializer } from "./components/LokascoreCacheInitializer";
 import { AuthErrorBoundary } from "./components/AuthErrorBoundary";
 import { PwaPrompts } from "./components/PwaPrompts";
@@ -123,10 +121,6 @@ function App() {
             <CurrencyProvider>
             <TravelProfileProvider>
             <CartProvider>
-              {/* Traduction automatique de toute l'application */}
-              <AutoTranslate />
-              <TranslationIndicator />
-
               {/* Polling des alertes live publiques en arrière-plan */}
               <LokascoreCacheInitializer />
 

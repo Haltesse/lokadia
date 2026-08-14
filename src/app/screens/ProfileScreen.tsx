@@ -44,7 +44,8 @@ import {
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { Badge } from "../components/Badge";
 import { Modal } from "../components/Modal";
-import { useLanguageSafe, SUPPORTED_LANGUAGES } from "../context/LanguageContext";
+import { useLanguageSafe } from "../context/LanguageContext";
+import { LANGUAGE_META as SUPPORTED_LANGUAGES } from "../translations";
 import type { Language as LanguageType } from "../translations";
 import { useAuth } from "../context/AuthContext";
 import { useUserData } from "../hooks/useUserData";
@@ -57,13 +58,9 @@ import { PROFILE_META } from "../lib/lokascore";
 
 export function ProfileScreen() {
   const navigate = useNavigate();
-  const context = useLanguageSafe();
-  
-  // Protection contre contexte non disponible
-  const t = (context?.t || { profile: {} }) as any;
-  const language = context?.language || 'fr';
-  const setLanguage = context?.setLanguage || (() => {});
-  const translate = context?.translate || ((text: string) => text);
+  // useLanguageSafe renvoie toujours un catalogue exploitable, repli
+  // français compris — plus besoin de valeurs de secours ici.
+  const { t, language, setLanguage, available } = useLanguageSafe();
   const { user: authUser, signOut, updateProfile: updateAuthProfile } = useAuth();
   const { profile: travelProfile } = useTravelProfile();
   const {
@@ -764,8 +761,8 @@ export function ProfileScreen() {
         </div>
       </Section>
 
-      {/* Langue & Traduction */}
-      <Section title={translate("Langue & Traduction")} icon={Globe}>
+      {/* Langue */}
+      <Section title="Langue" icon={Globe}>
         <div className="space-y-3">
           <button
             onClick={() => setShowLanguageModal(true)}
@@ -777,7 +774,7 @@ export function ProfileScreen() {
               </div>
               <div className="text-left">
                 <p className="font-semibold text-sm" style={{ color: "var(--lokadia-deep-blue)" }}>
-                  {translate("Langue actuelle")}
+                  Langue actuelle
                 </p>
                 <p className="text-xs" style={{ color: "var(--lokadia-text-light)" }}>
                   {SUPPORTED_LANGUAGES[language].name}
@@ -791,7 +788,8 @@ export function ProfileScreen() {
             <div className="flex items-start gap-2">
               <Globe className="h-4 w-4 mt-0.5 text-blue-600 flex-shrink-0" />
               <p className="text-xs text-blue-700 leading-relaxed">
-                {translate("L'application se traduit automatiquement dans votre langue via une API de traduction en temps réel.")}
+                Les textes de l'application sont traduits par nos soins, pas par
+                une machine. Seules les langues entièrement relues sont proposées.
               </p>
             </div>
           </div>
@@ -1391,14 +1389,15 @@ export function ProfileScreen() {
       <Modal 
         isOpen={showLanguageModal} 
         onClose={() => setShowLanguageModal(false)} 
-        title={translate("Choisir la langue")}
+        title="Choisir la langue"
       >
         <div className="space-y-2">
           <p className="text-xs mb-4 px-1" style={{ color: "var(--lokadia-text-light)" }}>
-            {translate("Sélectionnez votre langue préférée. L'interface sera automatiquement traduite.")}
+            Seules les langues dont la traduction est complète et relue sont
+            proposées. Les autres arriveront une fois terminées.
           </p>
-          
-          {(Object.keys(SUPPORTED_LANGUAGES) as LanguageType[]).map((lang) => {
+
+          {available.map((lang) => {
             const langInfo = SUPPORTED_LANGUAGES[lang];
             const isSelected = language === lang;
             
@@ -1432,8 +1431,11 @@ export function ProfileScreen() {
             <div className="flex items-start gap-2">
               <Sparkles className="h-4 w-4 mt-0.5 text-cyan-600 flex-shrink-0" />
               <div className="text-xs text-cyan-700 leading-relaxed">
-                <p className="font-semibold mb-1">{translate("Traduction automatique")}</p>
-                <p>{translate("Powered by MyMemory Translation API. Les traductions sont mises en cache pour une meilleure performance.")}</p>
+                <p className="font-semibold mb-1">Traductions relues</p>
+                <p>
+                  Aucun texte n'est envoyé à un service de traduction externe :
+                  vos données et vos saisies restent dans l'application.
+                </p>
               </div>
             </div>
           </div>

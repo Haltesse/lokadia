@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Shield, Search, Menu, X, Globe, User as UserIcon, Route as RouteIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../context/AuthContext";
+import { useLanguageSafe } from "../context/LanguageContext";
 
 /**
  * TopBar responsive style Airbnb — affichée sur tablette (md+) et desktop (lg+).
@@ -14,11 +15,12 @@ export function TopBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const auth = (() => { try { return useAuth(); } catch { return null; } })();
   const isAuth = !!auth?.user;
+  const { t } = useLanguageSafe();
 
   const navLinks: Array<{ id: string; label: string; onClick: () => void; active: boolean }> = [
-    { id: "home", label: "Accueil", onClick: () => navigate("/global-home"), active: location.pathname === "/global-home" },
-    { id: "trips", label: "Voyage", onClick: () => navigate("/trips"), active: location.pathname.startsWith("/trips") },
-    { id: "services", label: "Nos services", onClick: () => navigate("/services"), active: location.pathname === "/services" },
+    { id: "home", label: t.topnav.home, onClick: () => navigate("/global-home"), active: location.pathname === "/global-home" },
+    { id: "trips", label: t.topnav.trips, onClick: () => navigate("/trips"), active: location.pathname.startsWith("/trips") },
+    { id: "services", label: t.topnav.services, onClick: () => navigate("/services"), active: location.pathname === "/services" },
     { id: "lokascore", label: "Lokascore", onClick: () => navigate("/lokascore"), active: location.pathname === "/lokascore" },
     { id: "pro", label: "Pro", onClick: () => navigate("/pro"), active: location.pathname === "/pro" },
   ];
@@ -58,10 +60,10 @@ export function TopBar() {
             <Search className="h-4 w-4" style={{ color: "var(--lokadia-primary)" }} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
-                Rechercher une destination
+                {t.topnav.search}
               </p>
               <p className="truncate text-[11px]" style={{ color: "var(--lokadia-gray-500)" }}>
-                Quartier, commerce, monument
+                {t.topnav.searchHint}
               </p>
             </div>
           </button>
@@ -79,7 +81,7 @@ export function TopBar() {
               }}
             >
               <RouteIcon className="h-4 w-4" />
-              Planifier un voyage
+              {t.topnav.planTrip}
             </button>
 
             {/* Language */}
@@ -111,7 +113,7 @@ export function TopBar() {
                   color: "var(--lokadia-gray-900)",
                 }}
               >
-                Se connecter
+                {t.topnav.signIn}
               </button>
             )}
 

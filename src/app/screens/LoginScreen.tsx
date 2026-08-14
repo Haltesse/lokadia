@@ -6,14 +6,12 @@ import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { LanguageSelector } from "../components/LanguageSelector";
 import { useAuth } from "../context/AuthContext";
 import { getDemoCredentials } from "../lib/demo";
-import { useTranslation } from "../hooks/useTranslation";
 
 type ViewMode = "welcome" | "login" | "signup";
 
 export function LoginScreen() {
   const navigate = useNavigate();
   const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
-  const tr = useTranslation();
   const [viewMode, setViewMode] = useState<ViewMode>("welcome");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -47,30 +45,30 @@ export function LoginScreen() {
 
     // Validation
     if (!email) {
-      setError(tr("L'email est requis"));
+      setError("L'email est requis");
       return;
     }
     if (!validateEmail(email)) {
-      setError(tr("Email invalide"));
+      setError("Email invalide");
       return;
     }
     if (!password) {
-      setError(tr("Le mot de passe est requis"));
+      setError("Le mot de passe est requis");
       return;
     }
     if (password.length < 6) {
-      setError(tr("Le mot de passe doit contenir au moins 6 caractères"));
+      setError("Le mot de passe doit contenir au moins 6 caractères");
       return;
     }
 
     setIsLoading(true);
     try {
       await signIn(email, password);
-      setSuccess(tr("Connexion réussie!"));
+      setSuccess("Connexion réussie!");
       // La redirection sera gérée par le useEffect
     } catch (err: any) {
       console.error('❌ Login error:', err);
-      setError(err.message || tr("Erreur lors de la connexion"));
+      setError(err.message || "Erreur lors de la connexion");
     } finally {
       setIsLoading(false);
     }
@@ -88,11 +86,11 @@ export function LoginScreen() {
       console.log('🔐 Signing in with demo account...');
       await signIn(demo.email, demo.password);
       
-      setSuccess(tr("Connexion au compte démo réussie!"));
+      setSuccess("Connexion au compte démo réussie!");
       // La redirection sera gérée par le useEffect
     } catch (err: any) {
       console.error('❌ Demo login error:', err);
-      setError(err.message || tr("Erreur lors de la connexion au compte démo"));
+      setError(err.message || "Erreur lors de la connexion au compte démo");
     } finally {
       setIsLoading(false);
     }
@@ -105,47 +103,47 @@ export function LoginScreen() {
 
     // Validation
     if (!name) {
-      setError(tr("Le nom est requis"));
+      setError("Le nom est requis");
       return;
     }
     if (!email) {
-      setError(tr("L'email est requis"));
+      setError("L'email est requis");
       return;
     }
     if (!validateEmail(email)) {
-      setError(tr("Email invalide"));
+      setError("Email invalide");
       return;
     }
     if (!password) {
-      setError(tr("Le mot de passe est requis"));
+      setError("Le mot de passe est requis");
       return;
     }
     if (password.length < 6) {
-      setError(tr("Le mot de passe doit contenir au moins 6 caractères"));
+      setError("Le mot de passe doit contenir au moins 6 caractères");
       return;
     }
     if (!confirmPassword) {
-      setError(tr("Veuillez confirmer votre mot de passe"));
+      setError("Veuillez confirmer votre mot de passe");
       return;
     }
     if (password !== confirmPassword) {
-      setError(tr("Les mots de passe ne correspondent pas"));
+      setError("Les mots de passe ne correspondent pas");
       return;
     }
 
     setIsLoading(true);
     try {
       await signUp(email, password, name);
-      setSuccess(tr("Inscription réussie!"));
+      setSuccess("Inscription réussie!");
       // La redirection sera gérée par le useEffect
     } catch (err: any) {
       console.error('❌ Signup error:', err);
       
       // Gestion des erreurs spécifiques
       if (err.message.includes('déjà')) {
-        setError(err.message + tr(" Voulez-vous vous connecter ?"));
+        setError(err.message + " Voulez-vous vous connecter ?");
       } else {
-        setError(err.message || tr("Erreur lors de l'inscription"));
+        setError(err.message || "Erreur lors de l'inscription");
       }
     } finally {
       setIsLoading(false);

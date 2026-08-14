@@ -8,6 +8,17 @@ export interface Translations {
     community: string;
     profile: string;
   };
+
+  /** Barre de navigation supérieure (desktop) */
+  topnav: {
+    home: string;
+    trips: string;
+    services: string;
+    search: string;
+    searchHint: string;
+    signIn: string;
+    planTrip: string;
+  };
   
   home: {
     greeting: string;
@@ -202,13 +213,36 @@ export interface Translations {
   };
 }
 
-export const translations: Record<Language, Translations> = {
+/**
+ * Catalogue partiel : toute section ou clé peut manquer dans une langue
+ * autre que le français. `resolveCatalog()` comble avec la source.
+ */
+export type PartialCatalog = {
+  [Section in keyof Translations]?: Partial<Translations[Section]>;
+};
+
+/**
+ * Catalogues par langue. Le **français est la langue source** : il est
+ * complet par construction (le type l'impose). Les autres peuvent être
+ * partiels le temps d'être relus — ils ne sont simplement pas proposés à
+ * l'utilisateur tant qu'ils ne sont pas complets (cf. completeLanguages).
+ */
+export const translations: Record<Language, PartialCatalog> & { fr: Translations } = {
   fr: {
     nav: {
       home: 'Accueil',
       alerts: 'Alertes',
       community: 'Communauté',
       profile: 'Profil',
+    },
+    topnav: {
+      home: 'Accueil',
+      trips: 'Voyage',
+      services: 'Nos services',
+      search: 'Rechercher une destination',
+      searchHint: 'Quartier, commerce, monument',
+      planTrip: 'Planifier un voyage',
+      signIn: 'Se connecter',
     },
     home: {
       greeting: 'Organisez votre voyage, en toute sécurité.',
@@ -401,6 +435,15 @@ export const translations: Record<Language, Translations> = {
       community: 'Community',
       profile: 'Profile',
     },
+    topnav: {
+      home: 'Home',
+      trips: 'Trips',
+      services: 'Our services',
+      search: 'Search a destination',
+      searchHint: 'Neighbourhood, shop, landmark',
+      planTrip: 'Plan a trip',
+      signIn: 'Sign in',
+    },
     home: {
       greeting: 'Plan your trip, safely.',
       subtitle: 'Flights, stays, activities and e-SIM — with enhanced safety before, during and after.',
@@ -592,6 +635,15 @@ export const translations: Record<Language, Translations> = {
       community: 'Comunidad',
       profile: 'Perfil',
     },
+    topnav: {
+      home: 'Inicio',
+      trips: 'Viaje',
+      services: 'Nuestros servicios',
+      search: 'Buscar un destino',
+      searchHint: 'Barrio, comercio, monumento',
+      planTrip: 'Planificar un viaje',
+      signIn: 'Iniciar sesión',
+    },
     home: {
       greeting: '¡Hola!',
       subtitle: '¿Dónde te lleva tu próxima aventura?',
@@ -782,6 +834,15 @@ export const translations: Record<Language, Translations> = {
       alerts: 'Warnungen',
       community: 'Community',
       profile: 'Profil',
+    },
+    topnav: {
+      home: 'Startseite',
+      trips: 'Reise',
+      services: 'Unsere Leistungen',
+      search: 'Reiseziel suchen',
+      searchHint: 'Viertel, Geschäft, Sehenswürdigkeit',
+      planTrip: 'Reise planen',
+      signIn: 'Anmelden',
     },
     home: {
       greeting: 'Hallo!',
@@ -1537,3 +1598,90 @@ export const translations: Record<Language, Translations> = {
     },
   },
 };
+// ─────────────────────────────────────────────────────────────────────────
+//  Métadonnées de langue, couverture et repli
+// ─────────────────────────────────────────────────────────────────────────
+
+export interface LanguageMeta {
+  name: string;
+  flag: string;
+  /** Écriture de droite à gauche */
+  rtl?: boolean;
+}
+
+export const LANGUAGE_META: Record<Language, LanguageMeta> = {
+  fr: { name: 'Français', flag: '🇫🇷' },
+  en: { name: 'English', flag: '🇬🇧' },
+  es: { name: 'Español', flag: '🇪🇸' },
+  de: { name: 'Deutsch', flag: '🇩🇪' },
+  it: { name: 'Italiano', flag: '🇮🇹' },
+  pt: { name: 'Português', flag: '🇵🇹' },
+  ja: { name: '日本語', flag: '🇯🇵' },
+  zh: { name: '中文', flag: '🇨🇳' },
+  ar: { name: 'العربية', flag: '🇸🇦', rtl: true },
+};
+
+/** Compte récursif des chaînes réellement fournies par un catalogue. */
+function countStrings(node: unknown): number {
+  if (typeof node === 'string') return 1;
+  if (node && typeof node === 'object') {
+    return Object.values(node as Record<string, unknown>).reduce<number>(
+      (sum, v) => sum + countStrings(v),
+      0,
+    );
+  }
+  return 0;
+}
+
+/**
+ * Fusionne un catalogue partiel avec le français.
+ *
+ * Le français est la langue source : toute clé manquante ailleurs y
+ * retombe. Sans ce repli, une traduction incomplète afficherait du vide —
+ * pire qu'un mot resté en français.
+ */
+function mergeWithSource<T>(source: T, override: unknown): T {
+  if (typeof source === 'string') {
+    return (typeof override === 'string' && override.length > 0 ? override : source) as T;
+  }
+  if (source && typeof source === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(source as Record<string, unknown>)) {
+      const candidate = (override as Record<string, unknown> | undefined)?.[key];
+      out[key] = mergeWithSource(value, candidate);
+    }
+    return out as T;
+  }
+  return source;
+}
+
+const catalogCache = new Map<Language, Translations>();
+
+/** Catalogue prêt à l'emploi pour une langue, repli français appliqué. */
+export function resolveCatalog(language: Language): Translations {
+  if (language === 'fr') return translations.fr;
+  const cached = catalogCache.get(language);
+  if (cached) return cached;
+  const merged = mergeWithSource(translations.fr, translations[language]);
+  catalogCache.set(language, merged);
+  return merged;
+}
+
+/** Part des chaînes réellement traduites, entre 0 et 1. */
+export function coverage(language: Language): number {
+  if (language === 'fr') return 1;
+  const total = countStrings(translations.fr);
+  if (total === 0) return 1;
+  return countStrings(translations[language]) / total;
+}
+
+/**
+ * Langues proposées à l'utilisateur : uniquement celles dont le catalogue
+ * est complet. Une langue partiellement traduite donnerait une interface
+ * moitié française, ce qui se voit immédiatement — on préfère ne pas la
+ * proposer tant qu'elle n'est pas finie. Le calcul est dynamique : une
+ * langue complétée apparaît sans qu'aucune liste ne soit à mettre à jour.
+ */
+export function completeLanguages(): Language[] {
+  return (Object.keys(translations) as Language[]).filter((l) => coverage(l) >= 1);
+}
