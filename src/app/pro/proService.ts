@@ -24,6 +24,8 @@ export type CrisisLogEntry = Tables['crisis_log']['Row'];
 export type CheckinRequest = Tables['checkin_requests']['Row'];
 export type CheckinResponse = Tables['checkin_responses']['Row'];
 export type EscalationContact = Tables['escalation_contacts']['Row'];
+export type WatchedCountry = Tables['watched_countries']['Row'];
+export type WatchAlert = Tables['watch_alerts']['Row'];
 
 export type CheckinResponseWithTraveler = CheckinResponse & {
   travelers: Pick<Traveler, 'id' | 'first_name' | 'last_name' | 'phone' | 'email'> | null;
@@ -640,6 +642,108 @@ export async function dispatchCheckin(
 /** URL personnelle de réponse, à transmettre si la personne n'a pas le push. */
 export function checkinUrl(token: string): string {
   return `${window.location.origin}/checkin/${token}`;
+}
+
+// ─── Veille par pays suivi ───────────────────────────────────────────────
+
+export async function fetchWatchedCountries(orgId: string): Promise<WatchedCountry[]> {
+  const { data, error } = await supabase
+    .from('watched_countries')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('country_name');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchWatchAlerts(orgId: string, openOnly = false): Promise<WatchAlert[]> {
+  let query = supabase
+    .from('watch_alerts')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (openOnly) query = query.eq('status', 'open');
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function watchCountry(
+  orgId: string,
+  actor: { id: string; email: string },
+  countryIso: string,
+  countryName: string,
+  auto = false,
+): Promise<void> {
+  const { error } = await supabase.from('watched_countries').insert({
+    org_id: orgId, country_iso: countryIso.toUpperCase(),
+    country_name: countryName, auto, added_by: actor.id,
+  });
+  if (error) throw error;
+  if (!auto) {
+    await logAudit(orgId, actor, {
+      action: 'watch.add', target_kind: 'country', target_id: countryIso,
+      detail: { pays: countryName },
+    });
+  }
+}
+
+export async function unwatchCountry(
+  orgId: string,
+  actor: { id: string; email: string },
+  id: string,
+  countryName: string,
+): Promise<void> {
+  const { error } = await supabase.from('watched_countries').delete().eq('id', id);
+  if (error) throw error;
+  await logAudit(orgId, actor, {
+    action: 'watch.remove', target_kind: 'country', detail: { pays: countryName },
+  });
+}
+
+export async function acknowledgeWatchAlert(
+  orgId: string,
+  actor: { id: string; email: string },
+  alertId: string,
+  countryName: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('watch_alerts')
+    .update({
+      status: 'acknowledged',
+      acknowledged_by: actor.id,
+      acknowledged_at: new Date().toISOString(),
+    })
+    .eq('id', alertId);
+  if (error) throw error;
+  await logAudit(orgId, actor, {
+    action: 'watch.acknowledge', target_kind: 'watch_alert', target_id: alertId,
+    detail: { pays: countryName },
+  });
+}
+
+export interface ScanResult {
+  scanned: number;
+  changed: number;
+  alerts_created: number;
+  skipped_no_people: number;
+}
+
+/** Déclenche un balayage de veille via l'Edge Function watch-scan. */
+export async function runWatchScan(orgId: string): Promise<ScanResult> {
+  const { data, error } = await supabase.functions.invoke('watch-scan', {
+    body: { org_id: orgId },
+  });
+  if (error) {
+    const ctx = (error as { context?: Response }).context;
+    if (ctx && typeof ctx.json === 'function') {
+      const body = (await ctx.json().catch(() => null)) as { error?: string } | null;
+      if (body?.error) throw new Error(body.error);
+    }
+    throw error;
+  }
+  return data as ScanResult;
 }
 
 // ─── Contacts d'escalade ─────────────────────────────────────────────────

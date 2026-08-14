@@ -9,13 +9,16 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Users, ShieldAlert, FileCheck2, CalendarClock, Upload, Plane, Siren, Timer } from 'lucide-react';
+import {
+  Users, ShieldAlert, FileCheck2, CalendarClock, Upload, Plane, Siren, Timer,
+  BellRing, MapPinned,
+} from 'lucide-react';
 import { useOrg } from '../OrgContext';
 import {
   fetchMissions, fetchTravelers, fetchCheckins, fetchCheckinResponses,
-  isMissionActiveToday, isMissionUpcoming,
+  fetchWatchAlerts, isMissionActiveToday, isMissionUpcoming,
   complianceComplete, type MissionWithCompliance, type Traveler,
-  type CheckinRequest, type CheckinResponseWithTraveler,
+  type CheckinRequest, type CheckinResponseWithTraveler, type WatchAlert,
 } from '../proService';
 import { hasFeature } from '../entitlements';
 import { fetchLokascore, type LokascoreApiResult } from '../../lib/lokascoreApi';
@@ -109,6 +112,7 @@ export default function ProDashboardScreen() {
   const [errorMsg, setErrorMsg] = useState('');
   const [lastCheckin, setLastCheckin] = useState<CheckinRequest | null>(null);
   const [lastResponses, setLastResponses] = useState<CheckinResponseWithTraveler[]>([]);
+  const [openAlerts, setOpenAlerts] = useState<WatchAlert[]>([]);
 
   useEffect(() => {
     if (!org) return;
@@ -121,6 +125,12 @@ export default function ProDashboardScreen() {
         setTravelers(t);
         setMissions(m);
         setStatus('ready');
+
+        // Alertes de veille non traitées — la file qui doit faire mal
+        if (hasFeature(org.tier, 'watchlist')) {
+          const wa = await fetchWatchAlerts(org.id, true);
+          if (!cancelled) setOpenAlerts(wa);
+        }
 
         // Dernier check-in : alimente les indicateurs de réactivité
         if (hasFeature(org.tier, 'crisis')) {
@@ -217,6 +227,17 @@ export default function ProDashboardScreen() {
       countryRows: [...byCountry.values()].sort((a, b) => b.travelerIds.size - a.travelerIds.size),
     };
   }, [missions, scores]);
+
+  /** Âge de l'alerte la plus ancienne — c'est lui qui doit alerter, pas le nombre. */
+  const oldestAlertAge = useMemo(() => {
+    if (openAlerts.length === 0) return '';
+    const oldest = openAlerts.reduce((a, b) => (a.created_at < b.created_at ? a : b));
+    const hours = Math.floor((Date.now() - new Date(oldest.created_at).getTime()) / 3_600_000);
+    if (hours < 1) return "moins d'une heure";
+    if (hours < 24) return `${hours} h`;
+    const days = Math.floor(hours / 24);
+    return `${days} jour${days > 1 ? 's' : ''}`;
+  }, [openAlerts]);
 
   /** Réactivité mesurée sur le dernier check-in — jamais une estimation. */
   const crisis = useMemo(() => {
@@ -343,6 +364,33 @@ export default function ProDashboardScreen() {
           alert={agg.upcomingIncomplete > 0}
         />
       </div>
+
+      {/* Veille : la file d'alertes non traitées et son ancienneté */}
+      {hasFeature(org?.tier, 'watchlist') && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <StatTile
+            label="Alertes non traitées"
+            value={String(openAlerts.length)}
+            sub={
+              openAlerts.length === 0
+                ? 'aucun changement en attente'
+                : `la plus ancienne remonte à ${oldestAlertAge}`
+            }
+            method="Changements d'état constatés sur un pays suivi où vous avez des personnes, et non encore acquittés. Une alerte n'est créée que si la situation a réellement changé — pas à chaque analyse. Décision : traiter ou acquitter."
+            Icon={BellRing}
+            onClick={() => navigate('/pro/app/watch')}
+            alert={openAlerts.length > 0}
+          />
+          <StatTile
+            label="Personnes localisées"
+            value={`${agg.abroad}`}
+            sub="voir la carte « qui est où »"
+            method="Personnes en mission aujourd'hui. La carte distingue la présence déclarée (mission) du dernier point connu (position transmise volontairement lors d'un check-in), avec son ancienneté."
+            Icon={MapPinned}
+            onClick={() => navigate('/pro/app/watch')}
+          />
+        </div>
+      )}
 
       {/* Réactivité en crise — mesurée sur le dernier check-in réel */}
       {crisis && (

@@ -47,6 +47,7 @@ const ProMissionsScreen = lazy(() => import("./pro/screens/ProMissionsScreen"));
 const ProBriefingsScreen = lazy(() => import("./pro/screens/ProBriefingsScreen"));
 const ProComplianceScreen = lazy(() => import("./pro/screens/ProComplianceScreen"));
 const ProCrisisScreen = lazy(() => import("./pro/screens/ProCrisisScreen"));
+const ProWatchScreen = lazy(() => import("./pro/screens/ProWatchScreen"));
 const ProSettingsScreen = lazy(() => import("./pro/screens/ProSettingsScreen"));
 const BriefingAckScreen = lazy(() => import("./pro/screens/BriefingAckScreen"));
 const CheckinScreen = lazy(() => import("./pro/screens/CheckinScreen"));
@@ -155,6 +156,7 @@ function App() {
                       <Route path="briefings" element={<ProBriefingsScreen />} />
                       <Route path="compliance" element={<ProComplianceScreen />} />
                       <Route path="crisis" element={<ProCrisisScreen />} />
+                      <Route path="watch" element={<ProWatchScreen />} />
                       <Route path="settings" element={<ProSettingsScreen />} />
                     </Route>
 

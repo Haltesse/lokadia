@@ -422,6 +422,33 @@ export type Database = {
           },
         ]
       }
+      country_snapshots: {
+        Row: {
+          advisory: string | null
+          captured_at: string
+          country_iso: string
+          level: string | null
+          score: number | null
+          sources: string[] | null
+        }
+        Insert: {
+          advisory?: string | null
+          captured_at?: string
+          country_iso: string
+          level?: string | null
+          score?: number | null
+          sources?: string[] | null
+        }
+        Update: {
+          advisory?: string | null
+          captured_at?: string
+          country_iso?: string
+          level?: string | null
+          score?: number | null
+          sources?: string[] | null
+        }
+        Relationships: []
+      }
       crisis_events: {
         Row: {
           city: string | null
@@ -1236,6 +1263,106 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      watch_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          country_iso: string
+          country_name: string
+          created_at: string
+          current_value: string | null
+          id: string
+          kind: string
+          org_id: string
+          people_count: number
+          previous_value: string | null
+          severity: string
+          sources: string[] | null
+          status: string
+          summary: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          country_iso: string
+          country_name: string
+          created_at?: string
+          current_value?: string | null
+          id?: string
+          kind: string
+          org_id: string
+          people_count?: number
+          previous_value?: string | null
+          severity?: string
+          sources?: string[] | null
+          status?: string
+          summary: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          country_iso?: string
+          country_name?: string
+          created_at?: string
+          current_value?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          people_count?: number
+          previous_value?: string | null
+          severity?: string
+          sources?: string[] | null
+          status?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_alerts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      watched_countries: {
+        Row: {
+          added_by: string | null
+          auto: boolean
+          country_iso: string
+          country_name: string
+          created_at: string
+          id: string
+          org_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          auto?: boolean
+          country_iso: string
+          country_name: string
+          created_at?: string
+          id?: string
+          org_id: string
+        }
+        Update: {
+          added_by?: string | null
+          auto?: boolean
+          country_iso?: string
+          country_name?: string
+          created_at?: string
+          id?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watched_countries_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
