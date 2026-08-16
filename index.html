@@ -10,11 +10,37 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Lokadia" />
-    <title>Lokadia — Votre compagnon de voyage</title>
-    <meta name="description" content="Découvrez le monde avec Lokadia. Planifiez vos voyages, explorez des destinations et voyagez en toute sécurité." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- Balises par défaut. Elles portent `data-lk-seo` : le composant Seo
+         (src/app/lib/seo) les remplace par celles de la page affichée, et
+         le prérendu de build les réécrit pour les robots. -->
+    <title>Lokadia — Voyagez informé</title>
+    <meta
+      name="description"
+      data-lk-seo
+      content="Avant de partir : niveau de sécurité indicatif par destination, alertes issues de sources officielles, formalités d'entrée et itinéraires — consultables même hors connexion."
+    />
+    <meta name="robots" data-lk-seo content="index, follow, max-image-preview:large" />
+    <meta property="og:type" data-lk-seo content="website" />
+    <meta property="og:site_name" data-lk-seo content="Lokadia" />
+    <meta property="og:locale" data-lk-seo content="fr_FR" />
+    <meta property="og:title" data-lk-seo content="Lokadia — Voyagez informé" />
+    <meta
+      property="og:description"
+      data-lk-seo
+      content="Avant de partir : niveau de sécurité indicatif par destination, alertes issues de sources officielles, formalités d'entrée et itinéraires — consultables même hors connexion."
+    />
+    <meta property="og:image" data-lk-seo content="/og-default.png" />
+    <meta name="twitter:card" data-lk-seo content="summary_large_image" />
+    <!-- Police Inter auto-hébergée (voir scripts/fetch-fonts.mjs) : aucune
+         requête vers Google, donc aucune IP de visiteur transmise à un tiers.
+         Préchargement du sous-ensemble latin, celui du premier rendu. -->
+    <link
+      rel="preload"
+      href="/fonts/inter-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <style>
       html, body { height: 100%; margin: 0; background: #FAFAFA; }
       #root { height: 100%; }

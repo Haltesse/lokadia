@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 import { readFileSync } from 'fs'
+import { seoBuild } from './scripts/seo-build'
 
 /** Identifiant de projet Supabase — même source que utils/supabase/info.tsx */
 const SUPABASE_PROJECT_ID =
@@ -85,7 +86,9 @@ const runtimeCaching = [
     },
   },
   {
-    urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
+    // Sous-ensembles de police non précachés (alphabets non latins) —
+    // la police est auto-hébergée, ces requêtes sont donc de même origine.
+    urlPattern: /\/fonts\/.*\.woff2$/i,
     handler: 'CacheFirst' as const,
     options: {
       cacheName: 'lokadia-polices',
@@ -99,6 +102,10 @@ export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     pushHandlerUrl(),
+    // Avant VitePWA : le prérendu réécrit index.html, il faut que Workbox
+    // en calcule l'empreinte APRÈS coup, sinon le service worker sert un
+    // fichier dont la révision ne correspond plus.
+    seoBuild(),
     VitePWA({
       registerType: 'prompt',           // l'utilisateur décide quand recharger
       includeAssets: ['lokadia-icon.svg', 'apple-touch-icon.png'],
@@ -135,7 +142,19 @@ export default defineConfig(({ command }) => ({
         // push-handler.js est émis par notre plugin : il ne doit pas être
         // précaché sous son nom brut (le SW l'importe directement)
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        globIgnores: ['push-handler.js'],
+        // Les pages prérendues (<route>/index.html) ne sont pas précachées :
+        // ce sont 60 copies de l'app shell, utiles aux robots, inutiles au
+        // navigateur qui a déjà index.html en repli de navigation.
+        // Seuls les sous-ensembles latins de la police sont précachés : le
+        // cyrillique, le grec et le vietnamien ne servent à aucune des
+        // langues proposées et pèseraient 80 ko pour rien.
+        globIgnores: [
+          'push-handler.js',
+          '**/*/index.html',
+          'fonts/inter-cyrillic*.woff2',
+          'fonts/inter-greek*.woff2',
+          'fonts/inter-vietnamese.woff2',
+        ],
         navigateFallback: '/index.html',
         // Le back-office Pro et l'accusé de briefing exigent le réseau :
         // on ne sert jamais l'app shell en fallback pour ces routes.

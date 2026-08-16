@@ -84,7 +84,6 @@ export function ProfileScreen() {
   const [showBugReportModal, setShowBugReportModal] = useState(false);
   const [showImprovementModal, setShowImprovementModal] = useState(false);
   const [showFAQModal, setShowFAQModal] = useState(false);
-  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showDownloadDataModal, setShowDownloadDataModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
@@ -853,15 +852,19 @@ export function ProfileScreen() {
             label={t.profile.changePassword} 
             onClick={() => setShowChangePasswordModal(true)} 
           />
-          <MenuButton 
-            icon={FileText} 
-            label={t.profile.privacyPolicy} 
-            onClick={() => setShowPrivacyModal(true)} 
+          {/* La politique de confidentialité a sa page publique, opposable
+              et à jour — un résumé en modale finissait par diverger. */}
+          <MenuButton
+            icon={FileText}
+            label={t.profile.privacyPolicy}
+            onClick={() => navigate('/confidentialite')}
           />
-          <MenuButton 
-            icon={SettingsIcon} 
-            label={t.profile.manageCookies} 
-            onClick={() => showSuccess("Paramètres cookies mis à jour")} 
+          {/* Aucun cookie à régler : la page détaille le stockage local
+              réellement utilisé et permet de tout effacer. */}
+          <MenuButton
+            icon={SettingsIcon}
+            label={t.profile.manageCookies}
+            onClick={() => navigate('/confidentialite')}
           />
           <MenuButton
             icon={Trash2}
@@ -1352,36 +1355,6 @@ export function ProfileScreen() {
             question="Mes données sont-elles sécurisées ?"
             answer="Oui, toutes vos données sont chiffrées et stockées de manière sécurisée. Nous respectons le RGPD."
           />
-        </div>
-      </Modal>
-
-      {/* Modal Politique de Confidentialité */}
-      <Modal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} title="Politique de confidentialité">
-        <div className="space-y-4 text-sm" style={{ color: "var(--lokadia-text-dark)" }}>
-          <section>
-            <h3 className="font-semibold mb-2">1. Collecte des données</h3>
-            <p style={{ color: "var(--lokadia-text-light)" }}>
-              Nous collectons uniquement les données nécessaires au fonctionnement de l'application : email, préférences de voyage, et données de localisation (avec votre consentement).
-            </p>
-          </section>
-          <section>
-            <h3 className="font-semibold mb-2">2. Utilisation des données</h3>
-            <p style={{ color: "var(--lokadia-text-light)" }}>
-              Vos données sont utilisées pour personnaliser votre expérience, vous envoyer des alertes pertinentes, et améliorer nos services.
-            </p>
-          </section>
-          <section>
-            <h3 className="font-semibold mb-2">3. Partage des données</h3>
-            <p style={{ color: "var(--lokadia-text-light)" }}>
-              Nous ne vendons jamais vos données. Elles peuvent être partagées avec nos partenaires de sécurité uniquement pour améliorer les alertes.
-            </p>
-          </section>
-          <section>
-            <h3 className="font-semibold mb-2">4. Vos droits (RGPD)</h3>
-            <p style={{ color: "var(--lokadia-text-light)" }}>
-              Vous avez le droit d'accéder, modifier, ou supprimer vos données à tout moment depuis votre profil.
-            </p>
-          </section>
         </div>
       </Modal>
 

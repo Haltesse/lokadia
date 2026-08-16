@@ -35,6 +35,7 @@ import {
   PROFILE_META,
   PROFILE_ORDER,
 } from "../lib/lokascore";
+import { LOKASCORE_FAQ } from "../data/lokascoreFaq";
 
 export default function LokascorePage() {
   const navigate = useNavigate();
@@ -436,6 +437,34 @@ export default function LokascorePage() {
               </a>
             );
           })}
+        </div>
+      </section>
+
+      {/* ─── FAQ — affichée ici ET balisée en FAQPage (RouteSeo lit le
+          même tableau, les deux ne peuvent donc pas diverger) ─── */}
+      <section id="faq" className="mx-auto mt-10 max-w-7xl px-5 lg:px-0">
+        <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--lokadia-primary)" }}>
+          Questions fréquentes
+        </p>
+        <h2 className="mt-2 text-3xl font-bold tracking-tight" style={{ color: "var(--lokadia-gray-900)" }}>
+          Ce que le score dit — et ce qu'il ne dit pas
+        </h2>
+
+        <div className="mt-6 grid gap-3 md:grid-cols-2">
+          {LOKASCORE_FAQ.map((item) => (
+            <div
+              key={item.question}
+              className="rounded-2xl border p-5"
+              style={{ borderColor: "var(--lokadia-gray-100)", background: "white" }}
+            >
+              <h3 className="text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
+                {item.question}
+              </h3>
+              <p className="mt-2 text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
+                {item.answer}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
     </main>

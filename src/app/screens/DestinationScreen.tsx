@@ -27,6 +27,8 @@ import { WeatherCard, WeatherCardSkeleton } from "../components/WeatherCard";
 import { LokascoreBadge } from "../components/LokascoreBadge";
 import { ProvenanceNote } from "../components/ProvenanceNote";
 import { getDestinationData, type DestinationDetails } from "../data/destinationData";
+import { Seo, SITE_URL, destinationMeta } from "../lib/seo";
+import { breadcrumbJsonLd, touristDestinationJsonLd } from "../lib/seo/structuredData";
 import { useLanguageSafe } from "../context/LanguageContext";
 import { DestinationImage } from "../components/DestinationImage";
 import { LokascoreInfo } from "../components/LokascoreInfo";
@@ -65,7 +67,43 @@ export function DestinationScreen() {
     return null;
   }
 
-  return <DestinationScreenContent destination={destination} />;
+  return (
+    <>
+      <DestinationSeo destination={destination} />
+      <DestinationScreenContent destination={destination} />
+    </>
+  );
+}
+
+/**
+ * Métadonnées de la fiche : titre, description et fil d'Ariane balisé.
+ *
+ * Le canonique pointe toujours sur `/destination/<id>`, y compris quand on
+ * arrive par `/destination` sans identifiant (repli Paris) — sans quoi deux
+ * URL serviraient la même page.
+ *
+ * Le Lokascore n'apparaît ni dans le titre ni dans la description : hors de
+ * la page, il perdrait la mention « indicatif », ses sources et sa date.
+ */
+function DestinationSeo({ destination }: { destination: DestinationDetails }) {
+  const meta = destinationMeta(destination);
+  return (
+    <Seo
+      title={meta.title}
+      description={meta.description}
+      canonicalPath={meta.path}
+      image={destination.image}
+      type="article"
+      jsonLd={[
+        touristDestinationJsonLd(SITE_URL, destination, meta.description),
+        breadcrumbJsonLd(SITE_URL, [
+          { name: "Accueil", path: "/global-home" },
+          { name: "Destinations", path: "/all-destinations" },
+          { name: `${destination.name}, ${destination.country}`, path: meta.path },
+        ]),
+      ]}
+    />
+  );
 }
 
 function DestinationScreenContent({ destination }: { destination: DestinationDetails }) {

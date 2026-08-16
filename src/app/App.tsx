@@ -10,6 +10,8 @@ import { CartProvider } from "./lib/cart";
 import { LokascoreCacheInitializer } from "./components/LokascoreCacheInitializer";
 import { AuthErrorBoundary } from "./components/AuthErrorBoundary";
 import { PwaPrompts } from "./components/PwaPrompts";
+import { RouteSeo } from "./components/RouteSeo";
+import { StorageNotice } from "./components/StorageNotice";
 
 // ─── Code splitting : chaque écran est un chunk chargé à la demande ─────────
 const GlobalHome = lazy(() => import("./screens/GlobalHome").then((m) => ({ default: m.GlobalHome })));
@@ -36,6 +38,10 @@ const FavoritesScreen = lazy(() => import("./screens/FavoritesScreen").then((m) 
 const AllDestinationsScreen = lazy(() => import("./screens/AllDestinationsScreen").then((m) => ({ default: m.AllDestinationsScreen })));
 const LoginScreen = lazy(() => import("./screens/LoginScreen").then((m) => ({ default: m.LoginScreen })));
 const NotFoundScreen = lazy(() => import("./screens/NotFoundScreen").then((m) => ({ default: m.NotFoundScreen })));
+const LegalNoticeScreen = lazy(() => import("./screens/LegalNoticeScreen"));
+const TermsScreen = lazy(() => import("./screens/TermsScreen"));
+const PrivacyScreen = lazy(() => import("./screens/PrivacyScreen"));
+const StatusScreen = lazy(() => import("./screens/StatusScreen"));
 
 // Back-office Lokadia Pro (chrome propre, hors RootLayout)
 const ProAppLayout = lazy(() => import("./pro/screens/ProAppLayout"));
@@ -133,6 +139,13 @@ function App() {
                   v7_relativeSplatPath: true,
                 }}
               >
+                {/* Titre, description, canonique et JSON-LD par route —
+                    au-dessus du routeur, donc aucune page oubliée. */}
+                <RouteSeo />
+
+                {/* Information sur le stockage local (aucun traceur) */}
+                <StorageNotice />
+
                 <Suspense fallback={<RouteFallback />}>
                   <Routes>
                     <Route path="/login" element={<LoginScreen />} />
@@ -182,6 +195,13 @@ function App() {
                       <Route path="/profile" element={<ProfileScreen />} />
                       <Route path="/favorites" element={<FavoritesScreen />} />
                       <Route path="/all-destinations" element={<AllDestinationsScreen />} />
+
+                      {/* Pages obligatoires et transparence */}
+                      <Route path="/mentions-legales" element={<LegalNoticeScreen />} />
+                      <Route path="/cgu" element={<TermsScreen />} />
+                      <Route path="/confidentialite" element={<PrivacyScreen />} />
+                      <Route path="/statut" element={<StatusScreen />} />
+
                       <Route path="*" element={<NotFoundScreen />} />
                     </Route>
                   </Routes>

@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { useSearchParams } from "react-router-dom";
 import { Search, ArrowLeft, MapPin, TrendingUp, X, Globe2 } from "lucide-react";
 import { DestinationImage } from "../components/DestinationImage";
 import { LokascoreBadge } from "../components/LokascoreBadge";
@@ -69,7 +70,20 @@ function ResultRow({
 
 export function SearchScreen() {
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
+  // La recherche vit dans l'URL (`/search?q=`) : une recherche se partage,
+  // se met en favori et se recharge à l'identique. C'est aussi ce que
+  // décrit le balisage SearchAction du site — il fallait qu'il soit vrai.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
+
+  useEffect(() => {
+    const desired = query.trim();
+    if ((searchParams.get("q") ?? "") === desired) return;
+    const next = new URLSearchParams(searchParams);
+    if (desired) next.set("q", desired);
+    else next.delete("q");
+    setSearchParams(next, { replace: true });
+  }, [query, searchParams, setSearchParams]);
 
   const results = useMemo(() => searchDestinations(query), [query]);
   const popular = useMemo(() => popularDestinations(), []);

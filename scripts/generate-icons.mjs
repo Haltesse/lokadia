@@ -7,9 +7,9 @@
  * Lancer après toute modification de l'icône :  node scripts/generate-icons.mjs
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { deflateSync } from 'node:zlib';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { encodePng } from './png.mjs';
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
@@ -96,46 +96,6 @@ function raster(size, { safePadRatio = 0, fullBleed = false } = {}) {
   return px;
 }
 
-// ─── Encodage PNG (RGBA, filtre 0) ───
-function crc32(buf) {
-  let c, crc = 0xffffffff;
-  for (let n = 0; n < buf.length; n++) {
-    c = (crc ^ buf[n]) & 0xff;
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    crc = c ^ (crc >>> 8);
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function chunk(type, data) {
-  const len = Buffer.alloc(4);
-  len.writeUInt32BE(data.length);
-  const typeBuf = Buffer.from(type, 'ascii');
-  const body = Buffer.concat([typeBuf, data]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(body));
-  return Buffer.concat([len, body, crc]);
-}
-
-function encodePng(size, pixels) {
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
-  ihdr[8] = 8;    // profondeur 8 bits
-  ihdr[9] = 6;    // RGBA
-  const raw = Buffer.alloc((size * 4 + 1) * size);
-  for (let y = 0; y < size; y++) {
-    raw[y * (size * 4 + 1)] = 0;  // filtre None
-    pixels.copy(raw, y * (size * 4 + 1) + 1, y * size * 4, (y + 1) * size * 4);
-  }
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(raw, { level: 9 })),
-    chunk('IEND', Buffer.alloc(0)),
-  ]);
-}
-
 mkdirSync(OUT_DIR, { recursive: true });
 
 const TARGETS = [
@@ -148,7 +108,7 @@ const TARGETS = [
 ];
 
 for (const { file, size, opts } of TARGETS) {
-  const png = encodePng(size, raster(size, opts));
+  const png = encodePng(size, size, raster(size, opts));
   writeFileSync(join(OUT_DIR, file), png);
   console.log(`${file.padEnd(26)} ${size}×${size}  ${(png.length / 1024).toFixed(1)} ko`);
 }

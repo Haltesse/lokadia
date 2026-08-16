@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { BottomNav } from "./BottomNav";
 import { TopBar } from "./TopBar";
 import { NetworkStatus } from "./NetworkStatus";
+import { SiteFooter } from "./SiteFooter";
 
 /**
  * Routes en mode "plein écran" — la TopBar et la BottomNav sont masquées
@@ -50,8 +51,13 @@ export function RootLayout() {
           - mobile : full width (max-w-md centré historique)
           - md : max-w-3xl pour tablette
           - lg+ : max-w-7xl site complet */}
-      <div className="mx-auto w-full max-w-md md:max-w-3xl lg:max-w-7xl pb-24 md:pb-12">
+      <div className="mx-auto w-full max-w-md md:max-w-3xl lg:max-w-7xl">
         <Outlet />
+      </div>
+
+      {/* Pages légales, statut et maillage interne — accessibles partout */}
+      <div className="pb-24 md:pb-12">
+        <SiteFooter />
       </div>
 
       <BottomNav />
