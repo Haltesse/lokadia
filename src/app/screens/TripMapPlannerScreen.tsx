@@ -20,6 +20,7 @@ import 'leaflet/dist/leaflet.css';
 import {
   ArrowLeft, Search, Plane, Train, Bus, Car, Ship, X, ChevronLeft, ChevronRight,
   Save, Trash2, Users, MapPin, Plus, Check, Info, Loader2, CalendarDays,
+  List as ListIcon, GanttChart as GanttChartIcon,
 } from 'lucide-react';
 import { motion, useMotionValue, useMotionValueEvent, type PanInfo } from 'motion/react';
 import { STOP_CITIES, type StopCity } from '../data/stopCities';
@@ -30,7 +31,10 @@ import { addStopToTrip, createTripSegment } from '../lib/tripStopService';
 import { checkItinerary, type CheckableStop } from '../lib/itineraryChecks';
 import { ItineraryIssues } from '../components/ItineraryIssues';
 import { ReorderableList } from '../components/ReorderableList';
+import { ItineraryTimeline } from '../components/ItineraryTimeline';
+import { TripBudgetPanel } from '../components/TripBudgetPanel';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { EmirateDatePicker } from '../components/EmirateDatePicker';
 import { PlannerSuggestions } from '../components/PlannerSuggestions';
 import { searchPlaces } from '../lib/placesService';
@@ -284,10 +288,14 @@ function geoResultToStop(g: GeoResult): PlannerStop {
 export default function TripMapPlannerScreen() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { formatAmount } = useCurrency();
 
   // ── État du planificateur ──
   const [departureCityId, setDepartureCityId] = useState('paris');
   const [stops, setStops] = useState<PlannerStop[]>([]);
+  /** Vue de l'itinéraire et étape sélectionnée — partagées entre les vues */
+  const [itineraryView, setItineraryView] = useState<'list' | 'timeline'>('list');
+  const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [travelers, setTravelers] = useState(1);
@@ -1018,7 +1026,7 @@ export default function TripMapPlannerScreen() {
           {budget && (
             <div className="text-right pointer-events-none">
               <p className="text-[10px] text-gray-500 uppercase font-semibold">Budget</p>
-              <p className="font-bold text-blue-600">{budget.total}€</p>
+              <p className="font-bold text-blue-600">{formatAmount(budget.total, 'EUR')}</p>
             </div>
           )}
         </motion.div>
@@ -1080,6 +1088,30 @@ export default function TripMapPlannerScreen() {
                   <h3 className="text-sm font-bold text-gray-900">
                     Étapes du voyage <span className="text-gray-400 font-normal">({stops.length})</span>
                   </h3>
+
+                  {/* Bascule liste ↔ timeline. La sélection d'étape est
+                      partagée : changer de vue ne fait pas perdre le fil. */}
+                  <div className="flex gap-1" role="tablist" aria-label="Affichage de l'itinéraire">
+                    {([['list', 'Liste', ListIcon], ['timeline', 'Timeline', GanttChartIcon]] as const).map(
+                      ([id, label, Icon]) => (
+                        <button
+                          key={id}
+                          role="tab"
+                          aria-selected={itineraryView === id}
+                          onClick={() => setItineraryView(id)}
+                          title={label}
+                          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold transition-colors"
+                          style={{
+                            background: itineraryView === id ? 'var(--lokadia-primary)' : '#fff',
+                            color: itineraryView === id ? '#fff' : '#6B7280',
+                            border: '1px solid ' + (itineraryView === id ? 'var(--lokadia-primary)' : '#E5E7EB'),
+                          }}
+                        >
+                          <Icon size={11} /> {label}
+                        </button>
+                      ),
+                    )}
+                  </div>
                   {/* Bouton "Tout effacer" relocalisé ici, à côté des étapes individuelles.
                       Label explicite sur le contenu effacé. */}
                   <button
@@ -1132,8 +1164,26 @@ export default function TripMapPlannerScreen() {
                     <ItineraryIssues issues={itineraryIssues} className="mb-2" />
                   )}
 
+                  {/* Vue timeline : les temps de trajet intercalés */}
+                  {itineraryView === 'timeline' && (
+                    <ItineraryTimeline
+                      stops={stops.map((s, index) => ({
+                        id: s.id,
+                        destinationName: s.name,
+                        country: s.country,
+                        orderIndex: index,
+                        day: s.day,
+                        latitude: s.lat,
+                        longitude: s.lon,
+                      }))}
+                      dayColor={dayColor}
+                      selectedId={selectedStopId}
+                      onSelect={setSelectedStopId}
+                    />
+                  )}
+
                   {/* Étapes groupées par jour */}
-                  {Array.from({ length: dayCount }, (_, i) => i + 1).map((d) => {
+                  {itineraryView === 'list' && Array.from({ length: dayCount }, (_, i) => i + 1).map((d) => {
                     const dayStops = stops.filter((s) => s.day === d);
                     return (
                       <div key={`day-${d}`} className="space-y-1.5">
@@ -1277,21 +1327,11 @@ export default function TripMapPlannerScreen() {
 
             {/* ── Budget ── */}
             {budget && (
-              <div className="rounded-2xl p-4 text-white" style={{ background: 'linear-gradient(135deg,#0F4C81,#3B82F6)' }}>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold">Budget estimé</h3>
-                  <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">indicatif</span>
-                </div>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between"><span className="opacity-85">Transports ({budget.legCount}× × {travelers})</span><span className="font-semibold">{budget.flights}€</span></div>
-                  <div className="flex justify-between"><span className="opacity-85">Hôtels (~{nights} nuits)</span><span className="font-semibold">{budget.hotel}€</span></div>
-                  <div className="flex justify-between"><span className="opacity-85">Resto/activités</span><span className="font-semibold">{budget.food + budget.activities}€</span></div>
-                  <div className="flex justify-between text-base mt-1.5 pt-1.5 border-t border-white/25">
-                    <span className="font-bold">Total</span>
-                    <span className="font-bold text-2xl">{budget.total}€</span>
-                  </div>
-                </div>
-              </div>
+              <TripBudgetPanel
+                budget={budget}
+                travelers={travelers}
+                nights={Math.max(1, nights)}
+              />
             )}
 
             {/* ── Bouton sauvegarde ── */}
