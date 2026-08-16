@@ -27,6 +27,9 @@ import { calculateTransportOptions, type TransportOption } from '../lib/transpor
 import { computeBudgetEstimate, DEPARTURE_CITIES } from '../lib/travelOffers';
 import { createTrip } from '../lib/tripService';
 import { addStopToTrip, createTripSegment } from '../lib/tripStopService';
+import { checkItinerary, type CheckableStop } from '../lib/itineraryChecks';
+import { ItineraryIssues } from '../components/ItineraryIssues';
+import { ReorderableList } from '../components/ReorderableList';
 import { useAuth } from '../context/AuthContext';
 import { EmirateDatePicker } from '../components/EmirateDatePicker';
 import { PlannerSuggestions } from '../components/PlannerSuggestions';
@@ -384,6 +387,30 @@ export default function TripMapPlannerScreen() {
   }, [departure, stops]);
 
   // ── Legs avec modes faisables ──
+  /**
+   * Contrôles de cohérence. Le planner raisonne en numéros de jour, pas en
+   * dates réelles : on projette chaque jour sur une date synthétique pour
+   * que les règles de groupement par journée s'appliquent. La fenêtre de
+   * voyage n'est pas passée — sans dates réelles, ce contrôle produirait
+   * de fausses alertes.
+   */
+  const itineraryIssues = useMemo(() => {
+    const base = new Date();
+    const checkable: CheckableStop[] = stops.map((s, index) => {
+      const date = new Date(base);
+      date.setDate(base.getDate() + (s.day - 1));
+      return {
+        id: s.id,
+        destinationName: s.name,
+        orderIndex: index,
+        startDate: date.toISOString().slice(0, 10),
+        latitude: s.lat,
+        longitude: s.lon,
+      };
+    });
+    return checkItinerary(checkable);
+  }, [stops]);
+
   const legs = useMemo(() => {
     const out: Array<{
       key: string; fromId: string; toId: string; fromName: string; toName: string;
@@ -489,6 +516,29 @@ export default function TripMapPlannerScreen() {
     if (mapRef.current) {
       mapRef.current.flyTo([stop.lat, stop.lon], Math.max(mapRef.current.getZoom(), 6), { duration: 0.6 });
     }
+  }, []);
+
+  /**
+   * Réordonne les étapes d'une journée. Les autres jours sont conservés
+   * dans leur ordre, et les trajets sont recalculés automatiquement
+   * puisque `legs` dérive de `stops`.
+   */
+  const reorderWithinDay = useCallback((day: number, orderedIds: string[]) => {
+    setStops((prev) => {
+      const byId = new Map(prev.map((s) => [s.id, s]));
+      const reordered = orderedIds.map((id) => byId.get(id)).filter((s): s is PlannerStop => !!s);
+      const out: PlannerStop[] = [];
+      let cursor = 0;
+      for (const stop of prev) {
+        if (stop.day === day) {
+          // On réinjecte la nouvelle séquence aux emplacements de ce jour
+          out.push(reordered[cursor++] ?? stop);
+        } else {
+          out.push(stop);
+        }
+      }
+      return out;
+    });
   }, []);
 
   const removeStop = useCallback((id: string) => {
@@ -1077,6 +1127,11 @@ export default function TripMapPlannerScreen() {
                     </div>
                   </div>
 
+                  {/* Incohérences détectées sur l'itinéraire courant */}
+                  {stops.length >= 2 && (
+                    <ItineraryIssues issues={itineraryIssues} className="mb-2" />
+                  )}
+
                   {/* Étapes groupées par jour */}
                   {Array.from({ length: dayCount }, (_, i) => i + 1).map((d) => {
                     const dayStops = stops.filter((s) => s.day === d);
@@ -1098,10 +1153,15 @@ export default function TripMapPlannerScreen() {
                             Aucun lieu ce jour — déplace une étape ici avec ‹ ›
                           </p>
                         )}
-                        {dayStops.map((s) => {
+                        <ReorderableList
+                          items={dayStops}
+                          itemLabel={(s) => s.name}
+                          onReorder={(orderedIds) => reorderWithinDay(d, orderedIds)}
+                          className="space-y-1.5"
+                          renderItem={(s) => {
                           const num = stops.indexOf(s) + 2;
                           return (
-                            <div key={s.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200">
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200">
                               <div
                                 className="w-7 h-7 rounded-full text-white flex items-center justify-center text-xs font-bold flex-shrink-0"
                                 style={{ background: dayColor(s.day) }}
@@ -1130,7 +1190,8 @@ export default function TripMapPlannerScreen() {
                               </div>
                             </div>
                           );
-                        })}
+                        }}
+                        />
                       </div>
                     );
                   })}
