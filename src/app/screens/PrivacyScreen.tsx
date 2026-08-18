@@ -78,6 +78,13 @@ export default function PrivacyScreen() {
               position.
             </>,
             <>
+              <strong>Destinations suivies</strong> — la liste des destinations que vous
+              choisissez de suivre, et les changements de niveau de sécurité qui vous
+              sont signalés. Finalité : vous prévenir quand la situation évolue
+              réellement, jamais autrement. Base légale : exécution du contrat. Durée :
+              jusqu'à ce que vous retiriez la destination de votre liste.
+            </>,
+            <>
               <strong>Notifications</strong> — si vous les activez, un identifiant
               d'abonnement fourni par votre navigateur est enregistré. Les notifications
               envoyées ne contiennent <em>aucun contenu</em> : elles réveillent
@@ -114,10 +121,10 @@ export default function PrivacyScreen() {
           pas les données pour leur compte.
         </p>
         <p>
-          Certains de ces prestataires sont établis hors de l'Union européenne. Les
-          transferts éventuels s'appuient sur les clauses contractuelles types de la
-          Commission européenne. La région exacte d'hébergement des données est indiquée
-          dans les mentions légales dès qu'elle est confirmée.
+          La base de données et l'authentification sont hébergées dans l'Union
+          européenne, en région Paris. Certains prestataires restent des sociétés
+          établies hors de l'Union : les transferts éventuels s'appuient sur les
+          clauses contractuelles types de la Commission européenne.
         </p>
         <p>
           Lorsque vous cliquez sur une offre partenaire, vous quittez Lokadia : c'est

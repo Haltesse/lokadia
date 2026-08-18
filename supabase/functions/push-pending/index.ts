@@ -6,8 +6,13 @@
  * propre endpoint d'abonnement — une valeur opaque générée par le
  * navigateur, jamais un identifiant de personne.
  *
- * Ne renvoie que le check-in en attente le plus récent pour ce voyageur.
+ * Ne renvoie que le message en attente le plus récent pour cet abonnement.
  * Aucune donnée d'une autre personne ne peut être obtenue avec ce lien.
+ *
+ * Deux familles d'abonnements coexistent :
+ *   · `push_subscriptions`          — voyageur d'une organisation (check-in)
+ *   · `traveler_push_subscriptions` — compte grand public (destination suivie)
+ * L'endpoint étant unique, il désigne sans ambiguïté l'un ou l'autre.
  *
  * Déploiement : supabase functions deploy push-pending --no-verify-jwt
  */
@@ -31,6 +36,55 @@ interface PendingRow {
   organizations: { name: string } | null;
 }
 
+interface TravelerAlertRow {
+  id: string;
+  destination_id: string;
+  destination_label: string;
+  summary: string;
+  severity: string;
+}
+
+/**
+ * Message en attente pour un compte grand public : l'alerte non lue la
+ * plus récente parmi ses destinations suivies. Rien d'autre n'est
+ * accessible depuis cet endpoint.
+ */
+async function travelerPending(endpoint: string): Promise<Response> {
+  const subs = await dbSelect<{ id: string; user_id: string }>(
+    `traveler_push_subscriptions?endpoint=eq.${encodeURIComponent(endpoint)}&select=id,user_id`,
+  );
+  const sub = subs[0];
+  if (!sub) return json({ error: 'Abonnement inconnu.' }, 404);
+
+  await db(`traveler_push_subscriptions?id=eq.${sub.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ last_used_at: new Date().toISOString() }),
+  });
+
+  const pending = await dbSelect<TravelerAlertRow>(
+    `traveler_alerts?user_id=eq.${sub.user_id}&status=eq.unread` +
+      '&select=id,destination_id,destination_label,summary,severity' +
+      '&order=created_at.desc&limit=1',
+  );
+  const alert = pending[0];
+
+  if (!alert) {
+    return json({
+      title: 'Lokadia',
+      body: 'Ouvrez Lokadia pour consulter vos destinations suivies.',
+      url: '/alerts',
+    });
+  }
+
+  return json({
+    title: `${alert.destination_label} — la situation a changé`,
+    body: alert.summary,
+    url: `/destination/${alert.destination_id}`,
+    tag: `watch-${alert.id}`,
+    urgent: alert.severity === 'urgent',
+  });
+}
+
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS });
   if (!configured()) return json({ error: 'Fonction mal configurée.' }, 500);
@@ -43,7 +97,9 @@ serve(async (req: Request) => {
       `push_subscriptions?endpoint=eq.${encodeURIComponent(endpoint)}&select=id,traveler_id,org_id`,
     );
     const sub = subs[0];
-    if (!sub) return json({ error: 'Abonnement inconnu.' }, 404);
+
+    // Abonnement grand public : alerte sur une destination suivie.
+    if (!sub) return await travelerPending(endpoint);
 
     // Trace d'usage : permet de repérer les abonnements dormants
     await db(`push_subscriptions?id=eq.${sub.id}`, {

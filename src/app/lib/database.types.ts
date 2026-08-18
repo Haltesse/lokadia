@@ -576,6 +576,30 @@ export type Database = {
           },
         ]
       }
+      destination_snapshots: {
+        Row: {
+          captured_at: string
+          destination_id: string
+          level: string | null
+          score: number | null
+          sources: string[] | null
+        }
+        Insert: {
+          captured_at?: string
+          destination_id: string
+          level?: string | null
+          score?: number | null
+          sources?: string[] | null
+        }
+        Update: {
+          captured_at?: string
+          destination_id?: string
+          level?: string | null
+          score?: number | null
+          sources?: string[] | null
+        }
+        Relationships: []
+      }
       escalation_contacts: {
         Row: {
           created_at: string
@@ -991,6 +1015,111 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      traveler_alerts: {
+        Row: {
+          created_at: string
+          current_value: string | null
+          destination_id: string
+          destination_label: string
+          id: string
+          kind: string
+          previous_value: string | null
+          severity: string
+          sources: string[] | null
+          status: string
+          summary: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: string | null
+          destination_id: string
+          destination_label: string
+          id?: string
+          kind: string
+          previous_value?: string | null
+          severity?: string
+          sources?: string[] | null
+          status?: string
+          summary: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: string | null
+          destination_id?: string
+          destination_label?: string
+          id?: string
+          kind?: string
+          previous_value?: string | null
+          severity?: string
+          sources?: string[] | null
+          status?: string
+          summary?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      traveler_push_subscriptions: {
+        Row: {
+          auth: string
+          consented_at: string
+          endpoint: string
+          failure_count: number
+          id: string
+          last_used_at: string | null
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          consented_at?: string
+          endpoint: string
+          failure_count?: number
+          id?: string
+          last_used_at?: string | null
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          consented_at?: string
+          endpoint?: string
+          failure_count?: number
+          id?: string
+          last_used_at?: string | null
+          p256dh?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      traveler_watchlist: {
+        Row: {
+          country_iso: string | null
+          created_at: string
+          destination_id: string
+          destination_label: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          country_iso?: string | null
+          created_at?: string
+          destination_id: string
+          destination_label: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          country_iso?: string | null
+          created_at?: string
+          destination_id?: string
+          destination_label?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       travelers: {
         Row: {

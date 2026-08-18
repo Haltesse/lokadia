@@ -39,6 +39,8 @@ export interface LegalHost {
   role: string;
   address: LegalValue;
   url: string;
+  /** Région d'hébergement, quand elle est connue et vérifiée */
+  region?: LegalValue;
 }
 
 export const LEGAL = {
@@ -86,6 +88,8 @@ export const LEGAL = {
       role: "Base de données, authentification et fonctions serveur",
       address: null,
       url: 'https://supabase.com',
+      // Vérifié auprès du projet : région « West EU (Paris) ».
+      region: 'Union européenne — Paris',
     },
   ] satisfies LegalHost[] as LegalHost[],
 };

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { Link } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, User, Shield, Globe, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
@@ -795,9 +796,16 @@ export function LoginScreen() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
         >
+          {/* Un consentement renvoie à des textes consultables, sinon il
+              ne vaut rien : ces libellés étaient de faux liens. */}
           En continuant, vous acceptez nos{" "}
-          <span className="underline">Conditions d'utilisation</span> et notre{" "}
-          <span className="underline">Politique de confidentialité</span>
+          <Link to="/cgu" className="underline">
+            Conditions d'utilisation
+          </Link>{" "}
+          et notre{" "}
+          <Link to="/confidentialite" className="underline">
+            Politique de confidentialité
+          </Link>
         </motion.p>
       </div>
     </div>

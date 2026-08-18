@@ -36,6 +36,8 @@ import { LokascoreBreakdown } from "../components/LokascoreBreakdown";
 import { ActiveProfileBadge } from "../components/TravelProfileSelector";
 import { EntryRequirements } from "../components/EntryRequirements";
 import { EmergencyContacts } from "../components/EmergencyContacts";
+import { WatchDestinationButton } from "../components/WatchDestinationButton";
+import { findCountry } from "../data/countries";
 import { Badge } from "../components/Badge";
 import { Chip } from "../components/Chip";
 import { Modal } from "../components/Modal";
@@ -378,6 +380,16 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
               </span>
             )}
           </button>
+
+          {/* Suivi de la destination : alerte uniquement en cas de
+              changement réel du niveau de sécurité. */}
+          <div className="mt-3">
+            <WatchDestinationButton
+              destinationId={destination.id}
+              label={`${destination.name}, ${destination.country}`}
+              countryIso={findCountry(destination.country)?.iso2 ?? null}
+            />
+          </div>
         </div>
 
         {/* Aperçu par catégorie + sources officielles utilisées + alertes live */}

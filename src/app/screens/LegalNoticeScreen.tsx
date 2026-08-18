@@ -77,6 +77,7 @@ export default function LegalNoticeScreen() {
                 {host.url.replace('https://', '')}
               </a>{' '}
               — <LegalField value={host.address} label="Adresse postale" />
+              {host.region ? ` — données hébergées : ${host.region}.` : null}
             </>
           ))}
         />

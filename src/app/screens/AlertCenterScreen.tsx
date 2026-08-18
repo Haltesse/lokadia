@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { WatchedDestinations } from "../components/WatchedDestinations";
 import { motion } from "motion/react";
 import { fetchRealTimeAlerts, type RealTimeAlert } from "../services/alertService";
 import { WorldAlertsMap } from "../components/WorldAlertsMap";
@@ -330,6 +331,11 @@ export function AlertCenterScreen() {
             )}
           </div>
         </div>
+      </section>
+
+      {/* Destinations suivies : alertes personnelles, opt-in explicite */}
+      <section className="mx-5 mt-6 lg:mx-auto lg:max-w-7xl lg:px-0">
+        <WatchedDestinations />
       </section>
 
       {/* ───────── ALERTES MONDIALES TEMPS RÉEL (USGS + ReliefWeb) ───────── */}
