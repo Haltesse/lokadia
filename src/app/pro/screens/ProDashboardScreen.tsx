@@ -104,7 +104,7 @@ function OnboardingSteps({ hasTravelers }: { hasTravelers: boolean }) {
 
 export default function ProDashboardScreen() {
   const navigate = useNavigate();
-  const { org } = useOrg();
+  const { org, pilotDays } = useOrg();
   const [travelers, setTravelers] = useState<Traveler[]>([]);
   const [missions, setMissions] = useState<MissionWithCompliance[]>([]);
   const [scores, setScores] = useState<Record<string, LokascoreApiResult>>({});
@@ -228,6 +228,16 @@ export default function ProDashboardScreen() {
     };
   }, [missions, scores]);
 
+  /**
+   * Valeur produite pendant le pilote — comptée sur les donnees reelles de
+   * l'organisation, jamais sur des ordres de grandeur commerciaux.
+   */
+  const pilotValue = useMemo(() => ({
+    missions: missions.length,
+    acknowledged: missions.filter((m) => m.briefing_receipts?.read_at).length,
+    complete: missions.filter((m) => complianceComplete(m)).length,
+  }), [missions]);
+
   /** Âge de l'alerte la plus ancienne — c'est lui qui doit alerter, pas le nombre. */
   const oldestAlertAge = useMemo(() => {
     if (openAlerts.length === 0) return '';
@@ -300,6 +310,26 @@ export default function ProDashboardScreen() {
           {travelers.length} personne{travelers.length > 1 ? 's' : ''} dans l'effectif · données missions déclaratives
         </p>
       </div>
+
+      {/* Pilote : ce que l'organisation a REELLEMENT produit depuis
+          l'ouverture. Un compte a rebours seul ne dit pas si l'outil sert ;
+          ces trois chiffres, si. */}
+      {pilotDays !== null && (
+        <div className="rounded-2xl p-5" style={{ background: 'var(--lokadia-info-bg)', border: '1px solid var(--lokadia-gray-100)' }}>
+          <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--lokadia-primary)' }}>
+            Pilote gratuit — {pilotDays} jour{pilotDays > 1 ? 's' : ''} restant{pilotDays > 1 ? 's' : ''}
+          </p>
+          <p className="mt-1.5 text-sm leading-6" style={{ color: 'var(--lokadia-gray-700)' }}>
+            Depuis l'ouverture : <strong>{pilotValue.missions}</strong> mission(s) suivie(s),{' '}
+            <strong>{pilotValue.acknowledged}</strong> accusé(s) de briefing signé(s) et{' '}
+            <strong>{pilotValue.complete}</strong> dossier(s) de conformité complet(s).
+            {pilotValue.acknowledged === 0 && ' Aucun accusé signé pour l’instant : c’est la pièce qui prouve l’information, elle vaut le détour.'}
+          </p>
+          <p className="mt-1 text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>
+            Aucune carte bancaire demandée pendant le pilote.
+          </p>
+        </div>
+      )}
 
       {/* Bandeau : la question du décideur en 3 secondes */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

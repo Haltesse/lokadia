@@ -335,6 +335,31 @@ export default function ProDemoScreen() {
         </button>
       </div>
 
+      {/* Ce qui est simulé et ce qui ne l'est pas — dit avant qu'on le
+          demande. Une démo qui laisse croire que ses chiffres sont réels
+          se retourne contre le produit le jour de la vraie installation. */}
+      <div className="mx-auto mt-4 max-w-7xl px-5 lg:px-8">
+        <div className="rounded-2xl p-4" style={{ background: 'var(--lokadia-warning-bg)', border: '1px solid var(--lokadia-gray-100)' }}>
+          <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--lokadia-warning)' }}>
+            Environnement de démonstration
+          </p>
+          <p className="mt-1 text-sm leading-6" style={{ color: 'var(--lokadia-gray-700)' }}>
+            <strong>Simulés</strong> : l'effectif, les groupes, les confirmations de
+            sécurité et les chiffres de marché — ce sont des exemples, aucune personne
+            réelle n'apparaît ici. <strong>Réels</strong> : les Lokascore et les alertes,
+            calculés en direct par nos serveurs à partir des sources officielles.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/pro/app')}
+            className="mt-2 text-sm font-semibold underline"
+            style={{ color: 'var(--lokadia-primary)' }}
+          >
+            Ouvrir le vrai back-office avec vos données
+          </button>
+        </div>
+      </div>
+
       <div className="mx-auto max-w-7xl px-5 pt-6 lg:px-8">
         {/* Sélecteur d'offre */}
         <div className="mb-4 flex flex-wrap gap-2">

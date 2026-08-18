@@ -26,6 +26,7 @@ const NAV = [
   { to: '/pro/app/compliance', end: false, label: 'Conformité', Icon: FileCheck2 },
   { to: '/pro/app/crisis', end: false, label: 'Crise', Icon: Siren },
   { to: '/pro/app/watch', end: false, label: 'Veille', Icon: Eye },
+  { to: '/pro/app/privacy', end: false, label: 'Données & RGPD', Icon: ShieldCheck },
   { to: '/pro/app/settings', end: false, label: 'Réglages', Icon: Settings },
 ];
 
