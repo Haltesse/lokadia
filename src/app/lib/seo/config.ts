@@ -10,7 +10,7 @@
 import type { DestinationDetails } from '../../data/types';
 
 /** Domaine canonique par défaut — surchargeable par `VITE_LOKADIA_SITE_URL`. */
-export const DEFAULT_SITE_URL = 'https://lokadia.com';
+export const DEFAULT_SITE_URL = 'https://lokadia.fr';
 
 export const SITE_NAME = 'Lokadia';
 export const SITE_LOCALE = 'fr_FR';
