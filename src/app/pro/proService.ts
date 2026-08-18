@@ -797,3 +797,112 @@ export function isMissionUpcoming(m: Mission, today = new Date()): boolean {
 export function complianceComplete(m: MissionWithCompliance): boolean {
   return m.compliance_items.length >= 4 && m.compliance_items.every((c) => c.status === 'done');
 }
+
+// ─── Évaluation de risque par mission (P5, ISO 31030) ────────────────────
+
+export type RiskAssessment =
+  Database['public']['Tables']['mission_risk_assessments']['Row'];
+
+export async function fetchRiskAssessments(orgId: string): Promise<RiskAssessment[]> {
+  const { data, error } = await supabase
+    .from('mission_risk_assessments')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('updated_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export interface RiskDraft {
+  mission_id: string;
+  factors: { id: string; label: string; level: number; note?: string }[];
+  inherent_level: number;
+  mitigations: string[];
+  residual_level: number;
+  /** true = soumettre à validation, false = garder en brouillon */
+  submit: boolean;
+}
+
+/**
+ * Crée ou met à jour l'évaluation d'une mission.
+ *
+ * `upsert` sur `mission_id` : une mission n'a qu'une évaluation courante.
+ * La base refusera la modification si une décision a déjà été prise — la
+ * trace ne se réécrit pas après coup.
+ */
+export async function saveRiskAssessment(
+  orgId: string,
+  actor: { id: string; email: string },
+  draft: RiskDraft,
+): Promise<void> {
+  const { error } = await supabase.from('mission_risk_assessments').upsert(
+    {
+      org_id: orgId,
+      mission_id: draft.mission_id,
+      factors: draft.factors,
+      inherent_level: draft.inherent_level,
+      mitigations: draft.mitigations,
+      residual_level: draft.residual_level,
+      status: draft.submit ? 'submitted' : 'draft',
+      submitted_by: draft.submit ? actor.id : null,
+      submitted_at: draft.submit ? new Date().toISOString() : null,
+      created_by: actor.id,
+    },
+    { onConflict: 'mission_id' },
+  );
+  if (error) throw error;
+
+  await logAudit(orgId, actor, {
+    action: draft.submit ? 'risk.submit' : 'risk.draft',
+    target_kind: 'mission',
+    target_id: draft.mission_id,
+    detail: {
+      inherent_level: draft.inherent_level,
+      residual_level: draft.residual_level,
+      mitigations: draft.mitigations.length,
+    },
+  });
+}
+
+/**
+ * Décision hiérarchique. La séparation des tâches (le validateur n'est pas
+ * l'auteur) est garantie par une contrainte SQL : si elle est violée, la
+ * base refuse, et le message le dit franchement plutôt que de laisser
+ * croire à un bug.
+ */
+export async function decideRiskAssessment(
+  orgId: string,
+  actor: { id: string; email: string },
+  assessment: RiskAssessment,
+  decision: 'approved' | 'refused',
+  note: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('mission_risk_assessments')
+    .update({
+      status: decision,
+      decided_by: actor.id,
+      decided_at: new Date().toISOString(),
+      decision_note: note.trim() || null,
+    })
+    .eq('id', assessment.id);
+
+  if (error) {
+    if (error.message.includes('risk_decider_is_not_submitter')) {
+      throw new Error(
+        "Vous avez rédigé cette évaluation : la validation doit venir d'une autre personne. C'est ce qui lui donne sa valeur.",
+      );
+    }
+    throw error;
+  }
+
+  await logAudit(orgId, actor, {
+    action: decision === 'approved' ? 'risk.approve' : 'risk.refuse',
+    target_kind: 'mission',
+    target_id: assessment.mission_id,
+    detail: {
+      residual_level: assessment.residual_level,
+      note: note.trim() || null,
+    },
+  });
+}

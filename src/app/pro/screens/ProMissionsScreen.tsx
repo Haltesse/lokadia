@@ -8,17 +8,20 @@
  */
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plane, Plus, X, Send, Link2, Check } from 'lucide-react';
+import { Plane, Plus, X, Send, Link2, Check, ShieldAlert } from 'lucide-react';
 import { useOrg } from '../OrgContext';
 import {
   fetchMissions, fetchTravelers, createMission, setComplianceStatus,
   sendBriefings, briefingAckUrl,
   isMissionActiveToday, isMissionUpcoming, complianceComplete,
-  type MissionWithCompliance, type Traveler, type NewMission,
+  fetchRiskAssessments, saveRiskAssessment, decideRiskAssessment,
+  type MissionWithCompliance, type Traveler, type NewMission, type RiskAssessment,
 } from '../proService';
 import { destinationsDatabase } from '../../data/destinationData';
 import { DESTINATION_TO_COUNTRY_ISO } from '../../data/countryRiskData';
 import { useAuth } from '../../context/AuthContext';
+import { MissionRiskPanel } from '../components/MissionRiskPanel';
+import { RISK_LEVELS, RISK_STATUS_LABEL, type RiskLevel, type RiskStatus } from '../risk';
 
 const FILTERS = [
   { id: 'all', label: 'Toutes' },
@@ -58,6 +61,8 @@ export default function ProMissionsScreen() {
   const filter = (FILTERS.find((f) => f.id === searchParams.get('filter'))?.id ?? 'all') as FilterId;
 
   const [missions, setMissions] = useState<MissionWithCompliance[]>([]);
+  const [risks, setRisks] = useState<RiskAssessment[]>([]);
+  const [riskMissionId, setRiskMissionId] = useState<string | null>(null);
   const [travelers, setTravelers] = useState<Traveler[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [errorMsg, setErrorMsg] = useState('');
@@ -75,9 +80,14 @@ export default function ProMissionsScreen() {
     if (!org) return;
     setStatus('loading');
     try {
-      const [m, t] = await Promise.all([fetchMissions(org.id), fetchTravelers(org.id)]);
+      const [m, t, r] = await Promise.all([
+        fetchMissions(org.id),
+        fetchTravelers(org.id),
+        fetchRiskAssessments(org.id),
+      ]);
       setMissions(m);
       setTravelers(t);
+      setRisks(r);
       setStatus('ready');
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : 'Chargement impossible.');
@@ -334,6 +344,7 @@ export default function ProMissionsScreen() {
                 <th className="px-4 py-2.5 font-bold">Statut</th>
                 <th className="px-4 py-2.5 font-bold">Briefing</th>
                 <th className="px-4 py-2.5 font-bold">Dossier de conformité</th>
+                <th className="px-4 py-2.5 font-bold">Risque</th>
               </tr>
             </thead>
             <tbody>
@@ -417,6 +428,36 @@ export default function ProMissionsScreen() {
                         </div>
                       </div>
                     </td>
+
+                    {/* Évaluation de risque (P5) */}
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const risk = risks.find((r) => r.mission_id === m.id);
+                        const level = (risk?.residual_level ?? 1) as RiskLevel;
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => setRiskMissionId(riskMissionId === m.id ? null : m.id)}
+                            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-bold"
+                            style={
+                              risk
+                                ? { background: RISK_LEVELS[level].bg, color: RISK_LEVELS[level].color }
+                                : { background: 'var(--lokadia-gray-100)', color: 'var(--lokadia-gray-500)' }
+                            }
+                            title={
+                              risk
+                                ? `${RISK_STATUS_LABEL[risk.status as RiskStatus]} — risque résiduel ${RISK_LEVELS[level].label.toLowerCase()}`
+                                : "Aucune évaluation : le départ n'a pas été évalué"
+                            }
+                          >
+                            <ShieldAlert size={13} />
+                            {risk
+                              ? `${RISK_LEVELS[level].label} · ${RISK_STATUS_LABEL[risk.status as RiskStatus]}`
+                              : 'À évaluer'}
+                          </button>
+                        );
+                      })()}
+                    </td>
                   </tr>
                 );
               })}
@@ -424,6 +465,41 @@ export default function ProMissionsScreen() {
           </table>
         </div>
       )}
+
+      {/* Panneau d'évaluation de risque de la mission sélectionnée */}
+      {riskMissionId && (() => {
+        const mission = missions.find((m) => m.id === riskMissionId);
+        if (!mission) return null;
+        const risk = risks.find((r) => r.mission_id === riskMissionId) ?? null;
+        const label = `${mission.travelers ? mission.travelers.last_name.toUpperCase() : '—'} · ${mission.country_name}`;
+        return (
+          <div className="mt-5">
+            <MissionRiskPanel
+              assessment={risk}
+              missionLabel={label}
+              // Le score de la destination sert de suggestion pour le
+              // facteur sécuritaire ; il n'est pas connu hors catalogue.
+              lokascore={null}
+              canWrite={canWrite}
+              currentUserId={user?.id ?? ''}
+              onClose={() => setRiskMissionId(null)}
+              onSave={async (draft) => {
+                if (!org || !user) return;
+                await saveRiskAssessment(org.id, { id: user.id, email: user.email }, {
+                  mission_id: riskMissionId,
+                  ...draft,
+                });
+                await load();
+              }}
+              onDecide={async (decision, note) => {
+                if (!org || !user || !risk) return;
+                await decideRiskAssessment(org.id, { id: user.id, email: user.email }, risk, decision, note);
+                await load();
+              }}
+            />
+          </div>
+        );
+      })()}
     </div>
   );
 }

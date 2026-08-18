@@ -759,6 +759,78 @@ export type Database = {
         }
         Relationships: []
       }
+      mission_risk_assessments: {
+        Row: {
+          created_at: string
+          created_by: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          factors: Json
+          id: string
+          inherent_level: number
+          mission_id: string
+          mitigations: string[]
+          org_id: string
+          residual_level: number
+          status: string
+          submitted_at: string | null
+          submitted_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          factors?: Json
+          id?: string
+          inherent_level: number
+          mission_id: string
+          mitigations?: string[]
+          org_id: string
+          residual_level: number
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          factors?: Json
+          id?: string
+          inherent_level?: number
+          mission_id?: string
+          mitigations?: string[]
+          org_id?: string
+          residual_level?: number
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_risk_assessments_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: true
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_risk_assessments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       missions: {
         Row: {
           city: string | null
