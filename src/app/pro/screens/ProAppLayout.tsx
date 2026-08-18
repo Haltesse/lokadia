@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { OrgProvider, useOrg } from '../OrgContext';
+import { readBranding } from '../components/BrandingPanel';
 import { createOrganization } from '../proService';
 import { TIER_PRICING, type OrgTier } from '../entitlements';
 
@@ -156,8 +157,19 @@ function LayoutInner() {
     admin: 'Admin', manager: 'Gestionnaire', viewer: 'Lecture seule', dept_lead: 'Référent département',
   };
 
+  // Marque blanche : la couleur choisie par l'organisation redefinit le
+  // token primaire pour tout le back-office — un reglage qui ne changerait
+  // rien a l'ecran ne serait qu'une case a cocher.
+  const branding = readBranding(org?.settings);
+
   return (
-    <div className="min-h-screen lg:flex" style={{ background: 'var(--lokadia-background)' }}>
+    <div
+      className="min-h-screen lg:flex"
+      style={{
+        background: 'var(--lokadia-background)',
+        ...(branding.accent ? { ['--lokadia-primary' as string]: branding.accent } : {}),
+      } as React.CSSProperties}
+    >
       {/* Sidebar */}
       <aside className="flex flex-col border-b bg-white lg:h-screen lg:w-60 lg:border-b-0 lg:border-r lg:sticky lg:top-0" style={{ borderColor: 'var(--lokadia-gray-100)' }}>
         <div className="flex items-center gap-2.5 px-5 py-4">
@@ -165,7 +177,7 @@ function LayoutInner() {
             <ShieldCheck className="h-4.5 w-4.5 text-white" size={18} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold leading-tight" style={{ color: 'var(--lokadia-gray-900)' }}>Lokadia Pro</p>
+            <p className="text-sm font-bold leading-tight" style={{ color: 'var(--lokadia-gray-900)' }}>{branding.displayName || 'Lokadia Pro'}</p>
             <p className="truncate text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>{entitlements.label}</p>
           </div>
         </div>

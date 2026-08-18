@@ -6,11 +6,13 @@
  * (annoncés honnêtement, pas simulés).
  */
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Building2, Users, ShieldCheck, Clock, UserPlus, Copy } from 'lucide-react';
+import { Building2, Users, ShieldCheck, Clock, UserPlus, Copy, Plug, Palette } from 'lucide-react';
 import { useOrg } from '../OrgContext';
 import { supabase } from '../../lib/supabase';
 import { fetchDepartments, fetchMembers, inviteMember, type Department, type OrgMember } from '../proService';
-import { TIER_PRICING } from '../entitlements';
+import { TIER_PRICING, hasFeature } from '../entitlements';
+import { IntegrationsPanel } from '../components/IntegrationsPanel';
+import { BrandingPanel } from '../components/BrandingPanel';
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrateur', manager: 'Gestionnaire',
@@ -275,6 +277,36 @@ export default function ProSettingsScreen() {
           </p>
         )}
       </section>
+
+      {/* Marque blanche — Enterprise */}
+      {org && hasFeature(org.tier, "api") && (
+        <section className="rounded-2xl bg-white p-5" style={{ boxShadow: "var(--shadow-sm)", border: "1px solid var(--lokadia-gray-100)" }}>
+          <div className="mb-4 flex items-center gap-2">
+            <Palette size={17} style={{ color: "var(--lokadia-primary)" }} />
+            <h2 className="text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>Marque</h2>
+          </div>
+          <BrandingPanel orgId={org.id} settings={org.settings} isAdmin={isAdmin} onSaved={refresh} />
+        </section>
+      )}
+
+      {/* Intégrations — API et webhooks */}
+      {org && (
+        <section className="rounded-2xl bg-white p-5" style={{ boxShadow: "var(--shadow-sm)", border: "1px solid var(--lokadia-gray-100)" }}>
+          <div className="mb-4 flex items-center gap-2">
+            <Plug size={17} style={{ color: "var(--lokadia-primary)" }} />
+            <h2 className="text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>Intégrations</h2>
+          </div>
+          {hasFeature(org.tier, "api") ? (
+            <IntegrationsPanel orgId={org.id} isAdmin={isAdmin} />
+          ) : (
+            <p className="text-sm leading-6" style={{ color: "var(--lokadia-gray-600)" }}>
+              L’API et les webhooks font partie de l’offre Enterprise. Ils exposent
+              en lecture les missions, l’effectif, les alertes de veille et les
+              évaluations de risque.
+            </p>
+          )}
+        </section>
+      )}
     </div>
   );
 }
