@@ -56,6 +56,7 @@ import { TravelProfileSelector } from "../components/TravelProfileSelector";
 import { NationalitySelector } from "../components/NationalitySelector";
 import { useTravelProfile } from "../context/TravelProfileContext";
 import { PROFILE_META } from "../lib/lokascore";
+import { SITE_URL } from "../lib/seo";
 
 export function ProfileScreen() {
   const navigate = useNavigate();
@@ -911,10 +912,13 @@ export function ProfileScreen() {
             label={t.profile.suggestImprovement} 
             onClick={() => setShowImprovementModal(true)} 
           />
-          <MenuButton 
-            icon={Star} 
-            label={t.profile.rateApp} 
-            onClick={() => window.open('https://lokadia.com/rate', '_blank')} 
+          {/* Le domaine vient de la configuration SEO : une adresse en dur
+              se serait périmée au prochain changement de domaine, comme
+              celle-ci l'avait fait. */}
+          <MenuButton
+            icon={Star}
+            label={t.profile.rateApp}
+            onClick={() => window.open(`${SITE_URL}/rate`, '_blank', 'noopener')}
           />
         </div>
       </Section>
