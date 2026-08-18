@@ -28,6 +28,7 @@ import {
   loadChecklistFromStorage,
   ChecklistItem,
 } from "../lib/checklist-generator";
+import { useNationality } from "../context/NationalityContext";
 
 interface TripData {
   id: string;
@@ -40,6 +41,8 @@ interface TripData {
 }
 
 export function ChecklistScreen() {
+  // La checklist dépend des conditions d'entrée, donc de la nationalité.
+  const { nationality } = useNationality();
   const navigate = useNavigate();
   const { destinationId } = useParams<{ destinationId: string }>();
   const location = useLocation();
@@ -133,11 +136,11 @@ export function ChecklistScreen() {
       
       // Sinon, générer une nouvelle checklist adaptée
       console.log('✨ Génération d\'une nouvelle checklist pour', actualDestinationId);
-      return generateChecklistForDestination(actualDestinationId);
+      return generateChecklistForDestination(actualDestinationId, nationality);
     }
     
     // Checklist par défaut si pas de destination
-    return generateChecklistForDestination('');
+    return generateChecklistForDestination('', nationality);
   });
 
   // Sauvegarder automatiquement la checklist quand elle change

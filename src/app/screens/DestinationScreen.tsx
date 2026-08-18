@@ -34,6 +34,8 @@ import { DestinationImage } from "../components/DestinationImage";
 import { LokascoreInfo } from "../components/LokascoreInfo";
 import { LokascoreBreakdown } from "../components/LokascoreBreakdown";
 import { ActiveProfileBadge } from "../components/TravelProfileSelector";
+import { EntryRequirements } from "../components/EntryRequirements";
+import { EmergencyContacts } from "../components/EmergencyContacts";
 import { Badge } from "../components/Badge";
 import { Chip } from "../components/Chip";
 import { Modal } from "../components/Modal";
@@ -846,43 +848,26 @@ function HealthTab({ destination }: { destination: DestinationDetails }) {
   );
 }
 
+/**
+ * Conditions d'entrée — désormais lues pour la nationalité déclarée.
+ *
+ * L'ancienne version affichait une coche verte « Pas de visa nécessaire »
+ * à partir d'un booléen de la fiche, écrit depuis un point de vue
+ * occidental implicite : faux, et dangereux, pour une bonne partie des
+ * lecteurs. Le raisonnement vit maintenant dans `lib/formalities.ts`.
+ */
 function EntryTab({ destination }: { destination: DestinationDetails }) {
+  const legacy = destination as DestinationDetails & {
+    visaDetails?: string;
+    entryDocuments?: string;
+  };
+
   return (
-    <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-      <div className="bg-white rounded-2xl p-5 shadow-sm">
-        <h3 className="font-semibold mb-3" style={{ color: "var(--lokadia-text-dark)" }}>
-          Conditions d'entrée
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            {destination.visaRequired ? (
-              <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
-            ) : (
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-            )}
-            <div>
-              <p className="font-medium text-sm mb-1" style={{ color: "var(--lokadia-text-dark)" }}>
-                {destination.visaRequired ? "Visa requis" : "Pas de visa nécessaire"}
-              </p>
-              <p className="text-sm" style={{ color: "var(--lokadia-text-light)" }}>
-                {destination.visaDetails}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <FileText className="h-5 w-5 mt-0.5 flex-shrink-0" style={{ color: "var(--lokadia-blue)" }} />
-            <div>
-              <p className="font-medium text-sm mb-1" style={{ color: "var(--lokadia-text-dark)" }}>
-                Documents requis
-              </p>
-              <p className="text-sm" style={{ color: "var(--lokadia-text-light)" }}>
-                {destination.entryDocuments}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <EntryRequirements
+      destinationCountry={destination.country}
+      editorialNote={legacy.visaDetails}
+      documentsNote={legacy.entryDocuments}
+    />
   );
 }
 
@@ -942,47 +927,11 @@ function ScamsTab({ destination }: { destination: DestinationDetails }) {
 
 function EmergencyTab({ destination }: { destination: DestinationDetails }) {
   return (
-    <div className="space-y-5 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
-        <h3 className="font-semibold mb-5 text-base" style={{ color: "var(--lokadia-text-dark)" }}>
-          Numéros d'urgence
-        </h3>
-        <div className="space-y-3">
-          {destination.emergencyNumbers.map((emergency, i) => (
-            <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-red-50 border-2 border-red-100">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{emergency.icon}</span>
-                <span className="font-medium text-sm" style={{ color: "#0A2545" }}>
-                  {emergency.name}
-                </span>
-              </div>
-              <a
-                href={`tel:${emergency.number}`}
-                className="px-5 py-2.5 rounded-xl font-bold text-white shadow-sm"
-                style={{ backgroundColor: "#DC2626" }}
-              >
-                {emergency.number}
-              </a>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
-        <h3 className="font-semibold mb-4 text-base" style={{ color: "var(--lokadia-text-dark)" }}>
-          Consulat
-        </h3>
-        <p className="text-sm mb-4 leading-relaxed" style={{ color: "var(--lokadia-text-light)" }}>
-          {destination.consulateInfo}
-        </p>
-        <button
-          className="w-full py-3 rounded-xl font-semibold text-white"
-          style={{ backgroundColor: "#0A2545" }}
-        >
-          Contacter le consulat
-        </button>
-      </div>
-    </div>
+    <EmergencyContacts
+      destinationCountry={destination.country}
+      numbers={destination.emergencyNumbers}
+      consulateNote={destination.consulateInfo}
+    />
   );
 }
 

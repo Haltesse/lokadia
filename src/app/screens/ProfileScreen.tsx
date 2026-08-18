@@ -53,6 +53,7 @@ import { useComments } from "../hooks/useComments";
 import { getUserTrips, deleteTrip as deleteTripService, type Trip } from "../lib/tripService";
 import { getChecklistItemsForTrip } from "../lib/checklistService";
 import { TravelProfileSelector } from "../components/TravelProfileSelector";
+import { NationalitySelector } from "../components/NationalitySelector";
 import { useTravelProfile } from "../context/TravelProfileContext";
 import { PROFILE_META } from "../lib/lokascore";
 
@@ -678,6 +679,18 @@ export function ProfileScreen() {
           </p>
 
           <TravelProfileSelector variant="list" />
+        </div>
+      </Section>
+
+      {/* Nationalité — conditionne les formalités d'entrée affichées */}
+      <Section title="Nationalité et formalités" icon={Globe}>
+        <div className="space-y-3">
+          <p className="px-1 text-xs leading-relaxed" style={{ color: 'var(--lokadia-gray-600)' }}>
+            Les conditions d'entrée dépendent entièrement de votre nationalité.
+            Sans elle, les fiches destination affichent les sources officielles
+            sans conclure à votre place.
+          </p>
+          <NationalitySelector />
         </div>
       </Section>
 

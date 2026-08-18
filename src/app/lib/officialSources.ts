@@ -15,6 +15,13 @@
  *     repli par le calcul serveur pour les destinations non couvertes)
  */
 
+import { ISO3_TO_ISO2 } from './countryIsoMapping';
+import { findCountry } from '../data/countries';
+
+/** Base des fiches pays « Conseils aux voyageurs » du MAE. */
+const MAE_COUNTRY_BASE =
+  'https://www.diplomatie.gouv.fr/fr/conseils-aux-voyageurs/conseils-par-pays-destination';
+
 export type SourceCategory = 'data' | 'security' | 'health' | 'disaster';
 
 export interface OfficialSource {
@@ -28,134 +35,33 @@ export interface OfficialSource {
   logoUrl?: string;
 }
 
-const slug = (s: string) =>
-  s
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
+/**
+ * Les deux tables qui vivaient ici (slugs France Diplomatie et codes OMS)
+ * étaient indexées sur des noms de pays ANGLAIS alors que le jeu de
+ * données les nomme en français (« Japon », « États-Unis ») : elles ne
+ * servaient donc quasiment jamais, et l'OMS recevait tout le monde sur sa
+ * page d'accueil. La résolution passe désormais par la table pays
+ * canonique (`data/countries.ts`), dont les slugs sont vérifiés par
+ * `npm run check:links`.
+ */
 
-// ─── Mapping pays → slug France Diplomatie ───
-// La structure d'URL est :
-// https://www.diplomatie.gouv.fr/fr/conseils-aux-voyageurs/conseils-par-pays-destination/<slug>/
-// Le slug n'est pas standardisé — on mappe les principaux ; sinon fallback à la liste pays.
-const FRANCE_DIPLOMATIE_SLUGS: Record<string, string> = {
-  France: 'france',
-  Japan: 'japon',
-  'United States': 'etats-unis-d-amerique',
-  USA: 'etats-unis-d-amerique',
-  'United Kingdom': 'royaume-uni',
-  UK: 'royaume-uni',
-  Spain: 'espagne',
-  Italy: 'italie',
-  'United Arab Emirates': 'emirats-arabes-unis',
-  UAE: 'emirats-arabes-unis',
-  Singapore: 'singapour',
-  Thailand: 'thailande',
-  Australia: 'australie',
-  Germany: 'allemagne',
-  Netherlands: 'pays-bas',
-  Turkey: 'turquie',
-  China: 'chine',
-  India: 'inde',
-  Egypt: 'egypte',
-  Brazil: 'bresil',
-  Russia: 'russie',
-  Canada: 'canada',
-  Morocco: 'maroc',
-  Portugal: 'portugal',
-  'Czech Republic': 'republique-tcheque',
-  Czechia: 'republique-tcheque',
-  Austria: 'autriche',
-  Greece: 'grece',
-  Denmark: 'danemark',
-  Sweden: 'suede',
-  Belgium: 'belgique',
-  Iceland: 'islande',
-  Norway: 'norvege',
-  Switzerland: 'suisse',
-  Ireland: 'irlande',
-  Finland: 'finlande',
-  Poland: 'pologne',
-  'South Korea': 'coree-du-sud',
-  'Hong Kong': 'hong-kong',
-  Malaysia: 'malaisie',
-  Indonesia: 'indonesie',
-  Vietnam: 'vietnam',
-  Philippines: 'philippines',
-  Taiwan: 'taiwan',
-  Mexico: 'mexique',
-  Argentina: 'argentine',
-  Colombia: 'colombie',
-  Peru: 'perou',
-  Chile: 'chili',
-  'South Africa': 'afrique-du-sud',
-  Israel: 'israel-territoires-palestiniens',
-  Tunisia: 'tunisie',
-  Kenya: 'kenya',
-  Qatar: 'qatar',
-  'Saudi Arabia': 'arabie-saoudite',
-};
+/**
+ * Territoires sans fiche pays à l'OMS parce qu'ils n'en sont pas membres —
+ * Hong Kong est une région administrative spéciale, pas un État membre.
+ */
+const WITHOUT_WHO_PROFILE = new Set(['HK']);
 
-// ─── Codes ISO pour WHO ───
-const WHO_COUNTRY_CODES: Record<string, string> = {
-  France: 'fr',
-  Japan: 'jp',
-  'United States': 'us',
-  USA: 'us',
-  'United Kingdom': 'gb',
-  UK: 'gb',
-  Spain: 'es',
-  Italy: 'it',
-  'United Arab Emirates': 'ae',
-  UAE: 'ae',
-  Singapore: 'sg',
-  Thailand: 'th',
-  Australia: 'au',
-  Germany: 'de',
-  Netherlands: 'nl',
-  Turkey: 'tr',
-  China: 'cn',
-  India: 'in',
-  Egypt: 'eg',
-  Brazil: 'br',
-  Russia: 'ru',
-  Canada: 'ca',
-  Morocco: 'ma',
-  Portugal: 'pt',
-  'Czech Republic': 'cz',
-  Czechia: 'cz',
-  Austria: 'at',
-  Greece: 'gr',
-  Denmark: 'dk',
-  Sweden: 'se',
-  Belgium: 'be',
-  Iceland: 'is',
-  Norway: 'no',
-  Switzerland: 'ch',
-  Ireland: 'ie',
-  Finland: 'fi',
-  Poland: 'pl',
-  'South Korea': 'kr',
-  Mexico: 'mx',
-  Argentina: 'ar',
-  Colombia: 'co',
-  Peru: 'pe',
-  Chile: 'cl',
-  'South Africa': 'za',
-  Israel: 'il',
-  Tunisia: 'tn',
-  Kenya: 'ke',
-  Qatar: 'qa',
-  'Saudi Arabia': 'sa',
-};
+/** ISO2 → ISO3, pour les fiches pays de l'OMS (indexées en alpha-3). */
+const ISO2_TO_ISO3: Record<string, string> = Object.fromEntries(
+  Object.entries(ISO3_TO_ISO2).map(([iso3, iso2]) => [iso2, iso3]),
+);
 
 // ─── URLs des sites officiels (constantes) ───
 export const SOURCE_HOMEPAGES = {
   numbeo: 'https://www.numbeo.com/crime/',
-  franceDiplomatie:
-    'https://www.diplomatie.gouv.fr/fr/conseils-aux-voyageurs/conseils-par-pays-destination/',
+  // L'index des fiches pays du MAE : `.../conseils-par-pays-destination/`
+  // seul renvoie une 404, c'est bien la racine « conseils-aux-voyageurs ».
+  franceDiplomatie: 'https://www.diplomatie.gouv.fr/fr/conseils-aux-voyageurs/',
   gdacs: 'https://www.gdacs.org/',
   who: 'https://www.who.int/countries',
   osac: 'https://www.osac.gov/',
@@ -173,16 +79,19 @@ export function getOfficialSources(
   countryName: string,
 ): OfficialSource[] {
   const sources: OfficialSource[] = [];
+  const country = findCountry(countryName);
 
   // ─── 1. France Diplomatie ───
-  const fdSlug = FRANCE_DIPLOMATIE_SLUGS[countryName] || slug(countryName);
+  // Slug inconnu ou pays sans fiche (la France) → index, jamais une 404.
   sources.push({
     id: 'france-diplomatie',
     name: 'Conseils aux voyageurs',
     organization: 'France Diplomatie (MEAE)',
     description:
       "Recommandations officielles du Ministère de l'Europe et des Affaires Étrangères : sécurité, santé, formalités d'entrée, zones à éviter.",
-    url: `${SOURCE_HOMEPAGES.franceDiplomatie}${fdSlug}/`,
+    url: country?.maeSlug
+      ? `${MAE_COUNTRY_BASE}/${country.maeSlug}/`
+      : SOURCE_HOMEPAGES.franceDiplomatie,
     category: 'security',
   });
 
@@ -198,7 +107,13 @@ export function getOfficialSources(
   });
 
   // ─── 4. WHO / OMS ───
-  const whoCode = WHO_COUNTRY_CODES[countryName];
+  // Les fiches pays de l'OMS sont indexées en ISO alpha-3, sans slash
+  // final : /countries/jpn répond, /countries/jp/ renvoie une 404.
+  // Les territoires qui ne sont pas États membres n'ont pas de fiche.
+  const whoCode =
+    country && !WITHOUT_WHO_PROFILE.has(country.iso2)
+      ? ISO2_TO_ISO3[country.iso2]
+      : undefined;
   sources.push({
     id: 'who',
     name: 'Recommandations sanitaires',
@@ -206,7 +121,7 @@ export function getOfficialSources(
     description:
       "Vaccins recommandés, épidémies actives, situation sanitaire — fiche officielle pays de l'OMS.",
     url: whoCode
-      ? `https://www.who.int/countries/${whoCode}/`
+      ? `https://www.who.int/countries/${whoCode.toLowerCase()}`
       : SOURCE_HOMEPAGES.who,
     category: 'health',
   });

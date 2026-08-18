@@ -2,6 +2,7 @@
 
 import { getDestinationData, type DestinationDetails } from '../data/destinationData';
 import { getCachedLokascore } from './lokascoreApi';
+import { assessEntry } from './formalities';
 
 export interface ChecklistItem {
   id: number;
@@ -17,11 +18,22 @@ interface ChecklistCategory {
 }
 
 /**
- * Génère une checklist personnalisée en fonction de la destination
+ * Génère une checklist personnalisée en fonction de la destination.
+ *
+ * Les items « documents » dépendent de la nationalité : la version
+ * précédente affichait « Passeport valide (min. 6 mois) » à tout le monde
+ * — une exigence qui n'existe pas pour un voyage intra-européen, et qui
+ * n'est pas toujours de six mois ailleurs — et ajoutait un item « Visa »
+ * à partir d'un booléen de la fiche écrit sans savoir qui voyageait.
+ *
+ * @param nationality code ISO2 déclaré par le voyageur, ou null
  */
-export function generateChecklistForDestination(destinationId: string): ChecklistItem[] {
+export function generateChecklistForDestination(
+  destinationId: string,
+  nationality: string | null = null,
+): ChecklistItem[] {
   const destination = getDestinationData(destinationId);
-  
+
   if (!destination) {
     return getDefaultChecklist();
   }
@@ -32,21 +44,34 @@ export function generateChecklistForDestination(destinationId: string): Checklis
   const documents: ChecklistCategory = {
     name: 'Documents',
     items: [
-      { category: 'Documents', label: 'Passeport valide (min. 6 mois)', priority: 'high' },
-      { category: 'Documents', label: 'Carte d\'identité', priority: 'high' },
-      { category: 'Documents', label: 'Réservations d\'hôtel imprimées', priority: 'medium' },
-      { category: 'Documents', label: 'Billets d\'avion', priority: 'high' },
+      { category: 'Documents', label: 'Réservations d\'hébergement (accessibles hors connexion)', priority: 'medium' },
+      { category: 'Documents', label: 'Billets de transport', priority: 'high' },
       { category: 'Documents', label: 'Assurance voyage', priority: 'high' },
     ]
   };
 
-  // Ajouter visa si requis
-  if (destination.visaRequired) {
+  // Conditions d'entrée : on reprend le verdict du moteur de formalités
+  // plutôt que d'affirmer quoi que ce soit ici.
+  const entry = assessEntry(nationality, destination.country);
+  if (entry.verdict === 'free-movement' || entry.verdict === 'own-country') {
     documents.items.unshift({
       category: 'Documents',
-      label: `Visa ${destination.country}`,
-      priority: 'high'
+      label: 'Carte d\'identité ou passeport en cours de validité',
+      priority: 'high',
     });
+  } else {
+    documents.items.unshift(
+      {
+        category: 'Documents',
+        label: `Vérifier les conditions d'entrée en ${destination.country} pour votre nationalité`,
+        priority: 'high',
+      },
+      {
+        category: 'Documents',
+        label: 'Vérifier la validité de passeport exigée (souvent 3 à 6 mois après le retour)',
+        priority: 'high',
+      },
+    );
   }
 
   checklist.push(documents);

@@ -6,6 +6,7 @@ import { CurrencyProvider } from "./context/CurrencyContext";
 import { AuthProvider } from "./context/AuthContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { TravelProfileProvider } from "./context/TravelProfileContext";
+import { NationalityProvider } from "./context/NationalityContext";
 import { CartProvider } from "./lib/cart";
 import { LokascoreCacheInitializer } from "./components/LokascoreCacheInitializer";
 import { AuthErrorBoundary } from "./components/AuthErrorBoundary";
@@ -126,6 +127,7 @@ function App() {
           <LanguageProvider>
             <CurrencyProvider>
             <TravelProfileProvider>
+            <NationalityProvider>
             <CartProvider>
               {/* Polling des alertes live publiques en arrière-plan */}
               <LokascoreCacheInitializer />
@@ -208,6 +210,7 @@ function App() {
                 </Suspense>
               </BrowserRouter>
             </CartProvider>
+            </NationalityProvider>
             </TravelProfileProvider>
             </CurrencyProvider>
           </LanguageProvider>
