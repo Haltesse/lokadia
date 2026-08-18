@@ -46,6 +46,7 @@ const LegalNoticeScreen = lazy(() => import("./screens/LegalNoticeScreen"));
 const TermsScreen = lazy(() => import("./screens/TermsScreen"));
 const PrivacyScreen = lazy(() => import("./screens/PrivacyScreen"));
 const StatusScreen = lazy(() => import("./screens/StatusScreen"));
+const RateScreen = lazy(() => import("./screens/RateScreen"));
 
 // Back-office Lokadia Pro (chrome propre, hors RootLayout)
 const ProAppLayout = lazy(() => import("./pro/screens/ProAppLayout"));
@@ -213,6 +214,7 @@ function App() {
                       <Route path="/cgu" element={<TermsScreen />} />
                       <Route path="/confidentialite" element={<PrivacyScreen />} />
                       <Route path="/statut" element={<StatusScreen />} />
+                      <Route path="/rate" element={<RateScreen />} />
 
                       <Route path="*" element={<NotFoundScreen />} />
                     </Route>

@@ -126,6 +126,14 @@ export const STATIC_PAGES: PageMeta[] = [
     changefreq: 'yearly',
   },
   {
+    path: '/rate',
+    title: 'Noter Lokadia',
+    description:
+      "Donnez votre avis sur Lokadia : ce qui vous a servi, ce qui vous a manqué. Les retours décident de ce qui sera construit ensuite.",
+    priority: 0.3,
+    changefreq: 'monthly',
+  },
+  {
     path: '/statut',
     title: 'Statut des services et des sources',
     description:

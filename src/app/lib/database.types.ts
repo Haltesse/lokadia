@@ -86,6 +86,33 @@ export type Database = {
           },
         ]
       }
+      app_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -1709,6 +1736,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      app_rating_summary: {
+        Args: never
+        Returns: {
+          average: number
+          total: number
+        }[]
+      }
       can_see_department: {
         Args: { p_department: string; p_org: string }
         Returns: boolean

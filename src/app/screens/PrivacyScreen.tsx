@@ -93,6 +93,14 @@ export default function PrivacyScreen() {
               d'Apple. Durée : jusqu'à désactivation.
             </>,
             <>
+              <strong>Avis sur l'application</strong> — la note et le commentaire que
+              vous déposez sur la page « Noter Lokadia ». Finalité : décider quoi
+              construire ensuite. Base légale : consentement, et vous pouvez les
+              modifier ou les supprimer à tout moment depuis cette même page. Ils
+              ne sont jamais publiés à votre nom : seule une moyenne agrégée est
+              visible, à partir de dix avis.
+            </>,
+            <>
               <strong>Demandes de contact professionnel</strong> — si vous sollicitez une
               démonstration de l'offre entreprise, les coordonnées que vous saisissez
               sont conservées le temps de traiter la demande, puis trois ans au plus au

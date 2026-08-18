@@ -17,6 +17,7 @@ const LINKS: { to: string; label: string }[] = [
   { to: '/all-destinations', label: 'Toutes les destinations' },
   { to: '/services', label: 'Nos services' },
   { to: '/pro', label: 'Lokadia Pro' },
+  { to: '/rate', label: 'Donner mon avis' },
   { to: '/statut', label: 'Statut des services' },
   { to: '/mentions-legales', label: 'Mentions légales' },
   { to: '/cgu', label: "Conditions d'utilisation" },
