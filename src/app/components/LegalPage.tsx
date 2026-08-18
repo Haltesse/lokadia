@@ -29,7 +29,7 @@ export function LegalField({ value, label }: { value: LegalValue; label: string 
   return (
     <span
       className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[13px] font-semibold"
-      style={{ background: 'var(--lokadia-warning-bg)', color: '#92400E' }}
+      style={{ background: 'var(--lokadia-warning-bg)', color: 'var(--lokadia-category-culture)' }}
     >
       {label} — à compléter
     </span>
@@ -93,8 +93,8 @@ export function LegalPage({
           className="mt-6 flex gap-3 rounded-2xl p-4"
           style={{ background: 'var(--lokadia-warning-bg)', border: '1px solid #FDE68A' }}
         >
-          <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" style={{ color: '#B45309' }} />
-          <div className="text-sm leading-6" style={{ color: '#92400E' }}>
+          <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" style={{ color: 'var(--lokadia-warning)' }} />
+          <div className="text-sm leading-6" style={{ color: 'var(--lokadia-category-culture)' }}>
             <p className="font-bold">Informations légales incomplètes</p>
             <p className="mt-1">
               Ces éléments sont obligatoires (article 6 III de la LCEN) et n'ont pas

@@ -37,18 +37,18 @@ const CATEGORY_META: Record<
   SourceCategory,
   { label: string; color: string; bg: string; Icon: typeof Database }
 > = {
-  data: { label: 'Données', color: '#1E40AF', bg: '#DBEAFE', Icon: Database },
+  data: { label: 'Données', color: 'var(--lokadia-category-safety)', bg: 'var(--lokadia-category-safety-bg)', Icon: Database },
   security: {
     label: 'Sécurité',
-    color: '#92400E',
-    bg: '#FEF3C7',
+    color: 'var(--lokadia-category-culture)',
+    bg: 'var(--lokadia-category-culture-bg)',
     Icon: Shield,
   },
-  health: { label: 'Santé', color: '#6D28D9', bg: '#EDE9FE', Icon: Heart },
+  health: { label: 'Santé', color: 'var(--lokadia-category-transport)', bg: 'var(--lokadia-category-transport-bg)', Icon: Heart },
   disaster: {
     label: 'Catastrophes',
-    color: '#991B1B',
-    bg: '#FEE2E2',
+    color: 'var(--lokadia-danger)',
+    bg: 'var(--lokadia-danger-bg)',
     Icon: AlertTriangle,
   },
 };

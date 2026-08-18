@@ -491,7 +491,7 @@ export function ProfileScreen() {
               </button>
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold mb-2" style={{ color: "#1a1a1a" }}>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--lokadia-gray-900)" }}>
                 {authUser?.name || "Utilisateur"}
               </h2>
               <div className="flex items-center gap-2 mb-3">
@@ -515,7 +515,7 @@ export function ProfileScreen() {
 
           {authUser?.isPremium && authUser?.premiumExpiry && (
             <div className="p-4 rounded-xl bg-blue-50 flex items-center justify-between border-2 border-blue-200">
-              <span className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>
+              <span className="text-sm font-semibold" style={{ color: "var(--lokadia-gray-900)" }}>
                 {t.profile.expiresOn}
               </span>
               <span className="text-sm font-bold" style={{ color: "var(--lokadia-deep-blue)" }}>
@@ -526,7 +526,7 @@ export function ProfileScreen() {
 
           {/* Résumé rapide */}
           <div className="mt-5 border-t-2 border-gray-200 pt-5">
-            <h3 className="text-sm font-bold mb-4" style={{ color: "#1a1a1a" }}>
+            <h3 className="text-sm font-bold mb-4" style={{ color: "var(--lokadia-gray-900)" }}>
               {t.profile.quickSummary}
             </h3>
             <div className="grid grid-cols-3 gap-3">
@@ -534,7 +534,7 @@ export function ProfileScreen() {
                 <div className="text-3xl font-bold mb-2" style={{ color: "var(--lokadia-deep-blue)" }}>
                   {activeTripsCount}
                 </div>
-                <div className="text-xs font-semibold" style={{ color: "#1a1a1a" }}>
+                <div className="text-xs font-semibold" style={{ color: "var(--lokadia-gray-900)" }}>
                   {t.profile.activeTrips}
                 </div>
               </div>
@@ -542,15 +542,15 @@ export function ProfileScreen() {
                 <div className="text-3xl font-bold mb-2" style={{ color: "var(--lokadia-emergency-orange)" }}>
                   0
                 </div>
-                <div className="text-xs font-semibold" style={{ color: "#1a1a1a" }}>
+                <div className="text-xs font-semibold" style={{ color: "var(--lokadia-gray-900)" }}>
                   {t.profile.importantAlerts}
                 </div>
               </div>
               <div className="text-center p-4 rounded-xl bg-gray-50 border-2 border-gray-200">
-                <div className="text-3xl font-bold mb-2" style={{ color: "#1a1a1a" }}>
+                <div className="text-3xl font-bold mb-2" style={{ color: "var(--lokadia-gray-900)" }}>
                   0
                 </div>
-                <div className="text-xs font-semibold" style={{ color: "#1a1a1a" }}>
+                <div className="text-xs font-semibold" style={{ color: "var(--lokadia-gray-900)" }}>
                   {t.profile.checklistItemsRemaining}
                 </div>
               </div>
@@ -712,7 +712,7 @@ export function ProfileScreen() {
                   </label>
                   <span className="text-base font-bold px-3 py-1 rounded-lg" style={{ 
                     color: "white",
-                    backgroundColor: "var(--lokadia-secondary)"
+                    backgroundColor: "var(--lokadia-secondary-dark)"
                   }}>
                     {alertRadius} km
                   </span>
@@ -1445,7 +1445,7 @@ function Section({
     <div className="px-6 pb-6 lg:px-0">
       <div className="flex items-center gap-2 mb-3">
         <Icon className="h-5 w-5" style={{ color: "var(--lokadia-deep-blue)" }} />
-        <h2 className="text-lg font-bold" style={{ color: "#1a1a1a" }}>
+        <h2 className="text-lg font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
           {title}
         </h2>
       </div>
@@ -1486,7 +1486,7 @@ function TripCard({
       <div className="flex gap-3">
         <ImageWithFallback src={trip.image} alt={trip.destination} className="w-28 h-28 object-cover" />
         <div className="flex-1 p-3">
-          <h3 className="font-bold text-base mb-2" style={{ color: "#1a1a1a" }}>
+          <h3 className="font-bold text-base mb-2" style={{ color: "var(--lokadia-gray-900)" }}>
             {trip.destination}
           </h3>
           <div className="flex items-center gap-2 mb-2">
@@ -1505,7 +1505,7 @@ function TripCard({
             >
               {statusLabels[trip.status]}
             </span>
-            <span className="text-xs font-semibold" style={{ color: "#1a1a1a" }}>
+            <span className="text-xs font-semibold" style={{ color: "var(--lokadia-gray-900)" }}>
               {trip.checklistCompleted}/{trip.checklistTotal} ✓
             </span>
           </div>
@@ -1622,7 +1622,7 @@ function MenuButton({
         />
         <span
           className={`${compact ? "text-sm" : "text-sm"} font-semibold`}
-          style={{ color: danger ? "var(--lokadia-emergency-orange)" : "#1a1a1a" }}
+          style={{ color: danger ? "var(--lokadia-emergency-orange)" : "var(--lokadia-gray-900)" }}
         >
           {label}
         </span>

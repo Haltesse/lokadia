@@ -185,7 +185,7 @@ export default function CheckinScreen() {
       <div className="mx-auto max-w-lg space-y-4">
         <header
           className="rounded-3xl p-6 text-white"
-          style={{ background: exercise ? 'var(--lokadia-primary)' : '#B91C1C' }}
+          style={{ background: exercise ? 'var(--lokadia-primary)' : 'var(--lokadia-danger)' }}
         >
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 backdrop-blur">
             {exercise ? <GraduationCap size={14} /> : <ShieldCheck size={14} />}
@@ -222,7 +222,7 @@ export default function CheckinScreen() {
               </>
             ) : (
               <>
-                <AlertTriangle className="mx-auto mb-2" size={34} style={{ color: '#B91C1C' }} />
+                <AlertTriangle className="mx-auto mb-2" size={34} style={{ color: 'var(--lokadia-danger)' }} />
                 <p className="font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>Votre demande d'aide est transmise</p>
                 <p className="mt-1 text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
                   Votre organisation a été alertée et va vous contacter.
@@ -252,7 +252,7 @@ export default function CheckinScreen() {
                 onClick={() => respond('help')}
                 disabled={sending !== null}
                 className="flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 py-5 text-base font-bold disabled:opacity-60"
-                style={{ borderColor: '#B91C1C', color: '#B91C1C', background: 'white' }}
+                style={{ borderColor: 'var(--lokadia-danger)', color: 'var(--lokadia-danger)', background: 'white' }}
               >
                 <AlertTriangle size={22} />
                 {sending === 'help' ? 'Envoi…' : "J'ai besoin d'aide"}
@@ -281,7 +281,7 @@ export default function CheckinScreen() {
                     type="button"
                     onClick={attachPosition}
                     className="inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2.5 text-sm font-semibold"
-                    style={{ borderColor: position ? '#059669' : 'var(--lokadia-gray-200)', color: position ? '#047857' : 'var(--lokadia-gray-700)' }}
+                    style={{ borderColor: position ? '#059669' : 'var(--lokadia-gray-200)', color: position ? 'var(--lokadia-success)' : 'var(--lokadia-gray-700)' }}
                   >
                     <MapPin size={15} />
                     {position ? 'Position jointe' : 'Joindre ma position'}
@@ -291,7 +291,7 @@ export default function CheckinScreen() {
                     fois — Lokadia ne vous suit jamais en continu.
                   </p>
                   {positionMsg && (
-                    <p className="mt-1 text-xs font-semibold" style={{ color: position ? '#047857' : '#B45309' }}>{positionMsg}</p>
+                    <p className="mt-1 text-xs font-semibold" style={{ color: position ? 'var(--lokadia-success)' : 'var(--lokadia-warning)' }}>{positionMsg}</p>
                   )}
                 </div>
               )}

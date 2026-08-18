@@ -33,8 +33,8 @@ import { hasFeature } from '../entitlements';
 
 const SEVERITY_META: Record<string, { label: string; color: string; bg: string; Icon: typeof Siren }> = {
   info: { label: 'Information', color: '#0369A1', bg: 'rgba(14,165,233,0.12)', Icon: Radio },
-  vigilance: { label: 'Vigilance', color: '#B45309', bg: 'rgba(245,158,11,0.14)', Icon: AlertTriangle },
-  urgent: { label: 'Urgence', color: '#B91C1C', bg: 'rgba(220,38,38,0.14)', Icon: Siren },
+  vigilance: { label: 'Vigilance', color: 'var(--lokadia-warning)', bg: 'rgba(245,158,11,0.14)', Icon: AlertTriangle },
+  urgent: { label: 'Urgence', color: 'var(--lokadia-danger)', bg: 'rgba(220,38,38,0.14)', Icon: Siren },
 };
 
 /** Écran affiché quand l'offre ne couvre pas la gestion de crise. */
@@ -318,7 +318,7 @@ export default function ProCrisisScreen() {
             <button
               onClick={() => { setCheckinForm({ ...checkinForm, isExercise: false }); setCheckinFormOpen(true); }}
               className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-bold text-white"
-              style={{ background: '#B91C1C' }}
+              style={{ background: 'var(--lokadia-danger)' }}
             >
               <Send size={15} /> Lancer un check-in
             </button>
@@ -382,10 +382,10 @@ export default function ProCrisisScreen() {
 
       {/* ─── Formulaire check-in ─── */}
       {checkinFormOpen && (
-        <form onSubmit={submitCheckin} className="rounded-2xl bg-white p-5 lk-fade-in" style={{ boxShadow: 'var(--shadow-md)', border: `2px solid ${checkinForm.isExercise ? 'var(--lokadia-gray-200)' : '#B91C1C'}` }}>
+        <form onSubmit={submitCheckin} className="rounded-2xl bg-white p-5 lk-fade-in" style={{ boxShadow: 'var(--shadow-md)', border: `2px solid ${checkinForm.isExercise ? 'var(--lokadia-gray-200)' : 'var(--lokadia-danger)'}` }}>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-sm font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>
-              {checkinForm.isExercise ? <GraduationCap size={16} /> : <Siren size={16} style={{ color: '#B91C1C' }} />}
+              {checkinForm.isExercise ? <GraduationCap size={16} /> : <Siren size={16} style={{ color: 'var(--lokadia-danger)' }} />}
               {checkinForm.isExercise ? 'Exercice de check-in' : 'Check-in de sécurité'}
             </h2>
             <button type="button" onClick={() => setCheckinFormOpen(false)} aria-label="Fermer" className="rounded-lg p-1.5" style={{ color: 'var(--lokadia-gray-400)' }}><X size={16} /></button>
@@ -430,7 +430,7 @@ export default function ProCrisisScreen() {
             type="submit"
             disabled={busy || previewTargets.length === 0}
             className="mt-4 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-            style={{ background: checkinForm.isExercise ? 'var(--lokadia-primary)' : '#B91C1C' }}
+            style={{ background: checkinForm.isExercise ? 'var(--lokadia-primary)' : 'var(--lokadia-danger)' }}
           >
             <Send size={15} />
             {busy ? 'Envoi…' : checkinForm.isExercise ? "Lancer l'exercice" : 'Envoyer le check-in'}
@@ -467,9 +467,9 @@ export default function ProCrisisScreen() {
 
               <div className="grid gap-3 border-b px-5 py-4 sm:grid-cols-4" style={{ borderColor: 'var(--lokadia-gray-100)' }}>
                 {[
-                  { label: 'En sécurité', value: stats.safe, color: '#047857', Icon: CheckCircle2 },
-                  { label: "Besoin d'aide", value: stats.help, color: '#B91C1C', Icon: AlertTriangle },
-                  { label: 'Sans réponse', value: stats.pending, color: '#B45309', Icon: Clock },
+                  { label: 'En sécurité', value: stats.safe, color: 'var(--lokadia-success)', Icon: CheckCircle2 },
+                  { label: "Besoin d'aide", value: stats.help, color: 'var(--lokadia-danger)', Icon: AlertTriangle },
+                  { label: 'Sans réponse', value: stats.pending, color: 'var(--lokadia-warning)', Icon: Clock },
                   { label: 'Délai médian', value: stats.medianMin !== null ? `${stats.medianMin} min` : '—', color: 'var(--lokadia-gray-700)', Icon: Clock },
                 ].map((s) => (
                   <div key={s.label}>
@@ -502,15 +502,15 @@ export default function ProCrisisScreen() {
                           <td className="px-5 py-2.5 font-semibold" style={{ color: 'var(--lokadia-gray-900)' }}>
                             {r.travelers ? `${r.travelers.last_name.toUpperCase()} ${r.travelers.first_name}` : '—'}
                             {r.status === 'help' && r.travelers?.phone && (
-                              <a href={`tel:${r.travelers.phone}`} className="ml-2 inline-flex items-center gap-1 text-xs font-bold" style={{ color: '#B91C1C' }}>
+                              <a href={`tel:${r.travelers.phone}`} className="ml-2 inline-flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--lokadia-danger)' }}>
                                 <PhoneCall size={11} /> {r.travelers.phone}
                               </a>
                             )}
                           </td>
                           <td className="px-5 py-2.5">
-                            {r.status === 'safe' && <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: '#047857' }}><CheckCircle2 size={13} /> En sécurité</span>}
-                            {r.status === 'help' && <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: '#B91C1C' }}><AlertTriangle size={13} /> Besoin d'aide</span>}
-                            {r.status === 'pending' && <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: '#B45309' }}><Clock size={13} /> Sans réponse{r.reminded_at ? ' (relancée)' : ''}</span>}
+                            {r.status === 'safe' && <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--lokadia-success)' }}><CheckCircle2 size={13} /> En sécurité</span>}
+                            {r.status === 'help' && <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--lokadia-danger)' }}><AlertTriangle size={13} /> Besoin d'aide</span>}
+                            {r.status === 'pending' && <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--lokadia-warning)' }}><Clock size={13} /> Sans réponse{r.reminded_at ? ' (relancée)' : ''}</span>}
                             {r.note && <p className="mt-0.5 text-[11px]" style={{ color: 'var(--lokadia-gray-600)' }}>{r.note}</p>}
                           </td>
                           <td className="px-5 py-2.5 text-xs tabular-nums" style={{ color: 'var(--lokadia-gray-600)' }}>

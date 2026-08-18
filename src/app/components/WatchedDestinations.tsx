@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, Check, Loader2, MapPin, RefreshCw, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { AsyncState } from './AsyncState';
 import {
   listAlerts,
   listWatched,
@@ -23,7 +24,7 @@ import {
 
 const SEVERITY_STYLE = {
   urgent: { bg: 'var(--lokadia-danger-bg)', color: 'var(--lokadia-danger)', label: 'Urgent' },
-  vigilance: { bg: 'var(--lokadia-warning-bg)', color: '#B45309', label: 'Vigilance' },
+  vigilance: { bg: 'var(--lokadia-warning-bg)', color: 'var(--lokadia-warning)', label: 'Vigilance' },
   info: { bg: 'var(--lokadia-info-bg)', color: 'var(--lokadia-primary)', label: 'Info' },
 } as const;
 
@@ -34,6 +35,7 @@ export function WatchedDestinations() {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!user) {
@@ -41,12 +43,13 @@ export function WatchedDestinations() {
       return;
     }
     setLoading(true);
+    setError(null);
     try {
       const [list, alertList] = await Promise.all([listWatched(), listAlerts()]);
       setWatched(list);
       setAlerts(alertList);
     } catch {
-      setMessage('Liste indisponible hors connexion.');
+      setError("Vos destinations suivies n'ont pas pu être chargées.");
     } finally {
       setLoading(false);
     }
@@ -141,17 +144,16 @@ export function WatchedDestinations() {
         </button>
       </div>
 
-      {loading ? (
-        <p className="mt-3 text-sm" style={{ color: 'var(--lokadia-gray-500)' }}>
-          Chargement…
-        </p>
-      ) : watched.length === 0 ? (
-        <p className="mt-3 text-sm leading-6" style={{ color: 'var(--lokadia-gray-600)' }}>
-          Aucune destination suivie. Depuis une fiche destination, « Suivre cette
-          destination » vous prévient si son niveau de sécurité change — et
-          seulement dans ce cas.
-        </p>
-      ) : (
+      <AsyncState
+        loading={loading}
+        error={error}
+        onRetry={() => void refresh()}
+        skeleton="list"
+        isEmpty={watched.length === 0}
+        emptyIcon={<Bell className="h-8 w-8" />}
+        emptyTitle="Aucune destination suivie"
+        emptyDescription="Depuis une fiche destination, « Suivre cette destination » vous prévient si son niveau de sécurité change — et seulement dans ce cas."
+      >
         <ul className="mt-3 space-y-2">
           {watched.map((item) => (
             <li
@@ -178,7 +180,7 @@ export function WatchedDestinations() {
             </li>
           ))}
         </ul>
-      )}
+      </AsyncState>
 
       {alerts.length > 0 && (
         <div className="mt-5">

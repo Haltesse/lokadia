@@ -4,6 +4,8 @@ import { Shield, Search, Menu, X, Globe, User as UserIcon, Route as RouteIcon } 
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import { useLanguageSafe } from "../context/LanguageContext";
+import { CommandPaletteTrigger } from "./CommandPalette";
+import { ThemeToggle } from "./ThemeToggle";
 
 /**
  * TopBar responsive style Airbnb — affichée sur tablette (md+) et desktop (lg+).
@@ -83,6 +85,13 @@ export function TopBar() {
               <RouteIcon className="h-4 w-4" />
               {t.topnav.planTrip}
             </button>
+
+            {/* Recherche globale au clavier — l'indice visible évite que
+                le raccourci reste connu des seuls initiés. */}
+            <CommandPaletteTrigger />
+
+            {/* Thème clair / sombre */}
+            <ThemeToggle />
 
             {/* Language */}
             <button

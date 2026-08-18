@@ -43,9 +43,14 @@
     />
     <style>
       html, body { height: 100%; margin: 0; background: #FAFAFA; }
+      html.dark, html.dark body { background: #0B1220; }
       #root { height: 100%; }
       * { -webkit-tap-highlight-color: transparent; }
     </style>
+    <!-- Thème appliqué avant le premier rendu, sinon une page sombre
+         commence par un éclair blanc. Fichier externe et non script en
+         ligne : la CSP du site interdit `unsafe-inline`. -->
+    <script src="/theme-boot.js"></script>
   </head>
   <body>
     <div id="root"></div>

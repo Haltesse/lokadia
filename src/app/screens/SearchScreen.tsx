@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useSearchParams } from "react-router-dom";
 import { Search, ArrowLeft, MapPin, TrendingUp, X, Globe2 } from "lucide-react";
@@ -9,6 +9,11 @@ import {
   searchDestinations, popularDestinations, type SearchHit,
 } from "../lib/destinationSearch";
 import type { DestinationDetails } from "../data/types";
+import { toMapPoints } from "../components/SearchResultsMap";
+
+// Leaflet (45 ko gzip) n'a rien à faire dans le bundle d'un mobile qui
+// ne verra jamais la colonne carte : chargement à la demande.
+const SearchResultsMap = lazy(() => import("../components/SearchResultsMap"));
 
 /**
  * SearchScreen — exploration des destinations.
@@ -85,11 +90,23 @@ export function SearchScreen() {
     setSearchParams(next, { replace: true });
   }, [query, searchParams, setSearchParams]);
 
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
   const results = useMemo(() => searchDestinations(query), [query]);
   const popular = useMemo(() => popularDestinations(), []);
   const trimmed = query.trim();
 
   const open = (id: string) => navigate(`/destination/${id}`);
+
+  // La carte suit ce que la liste affiche : les résultats quand une
+  // recherche est en cours, les destinations populaires sinon.
+  const mapPoints = useMemo(() => {
+    const shown =
+      trimmed.length >= 2
+        ? [...results.cities, ...results.countries].map((hit) => hit.destination)
+        : popular;
+    return toMapPoints(shown);
+  }, [trimmed, results, popular]);
 
   const renderGroup = (title: string, hits: SearchHit[], icon: typeof MapPin) => {
     if (hits.length === 0) return null;
@@ -163,7 +180,8 @@ export function SearchScreen() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-4xl space-y-5 px-5 pt-5">
+      <div className="mx-auto grid max-w-4xl gap-6 px-5 pt-5 lg:max-w-7xl lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start">
+        <div className="space-y-5">
         {/* Champ vide : suggestions */}
         {trimmed.length === 0 && (
           <section className="space-y-2">
@@ -232,6 +250,32 @@ export function SearchScreen() {
             </button>
           </div>
         )}
+        </div>
+
+        {/* Volet carte — desktop uniquement. Situer les résultats sans
+            quitter la liste ; le score reste dans la liste, avec son
+            contexte. */}
+        <aside className="hidden lg:block lg:sticky lg:top-24">
+          <Suspense
+            fallback={<div className="lk-skeleton rounded-[24px]" style={{ height: 520 }} />}
+          >
+            <SearchResultsMap
+              points={mapPoints}
+              selectedId={selectedId}
+              onSelect={(id) => setSelectedId(id)}
+            />
+          </Suspense>
+          {selectedId && (
+            <button
+              type="button"
+              onClick={() => open(selectedId)}
+              className="lk-btn mt-3 w-full rounded-xl px-4 py-3 text-sm font-bold text-white"
+              style={{ background: 'var(--lokadia-primary)' }}
+            >
+              Ouvrir la fiche sélectionnée
+            </button>
+          )}
+        </aside>
       </div>
     </div>
   );

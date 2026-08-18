@@ -179,7 +179,7 @@ export function AlertCenterScreen() {
               onClick={() => setSelectedDestination("all")}
               className="w-full rounded-xl border px-3 py-2 text-left text-sm font-bold"
               style={{
-                background: selectedDestination === "all" ? "var(--lokadia-primary)" : "white",
+                background: selectedDestination === "all" ? "var(--lokadia-primary)" : "var(--lokadia-surface)",
                 borderColor: selectedDestination === "all" ? "var(--lokadia-primary)" : "var(--lokadia-gray-100)",
                 color: selectedDestination === "all" ? "white" : "var(--lokadia-gray-700)",
               }}
@@ -192,7 +192,7 @@ export function AlertCenterScreen() {
                 onClick={() => setSelectedDestination(destination)}
                 className="w-full rounded-xl border px-3 py-2 text-left text-sm font-bold"
                 style={{
-                  background: selectedDestination === destination ? "var(--lokadia-primary)" : "white",
+                  background: selectedDestination === destination ? "var(--lokadia-primary)" : "var(--lokadia-surface)",
                   borderColor: selectedDestination === destination ? "var(--lokadia-primary)" : "var(--lokadia-gray-100)",
                   color: selectedDestination === destination ? "white" : "var(--lokadia-gray-700)",
                 }}
@@ -228,7 +228,7 @@ export function AlertCenterScreen() {
                 onClick={() => setSelectedType(type)}
                 className="flex items-center gap-3 rounded-xl border px-3 py-3 text-left text-sm font-bold transition-all hover:shadow-md"
                 style={{
-                  background: isSelected ? config.color : "white",
+                  background: isSelected ? config.color : "var(--lokadia-surface)",
                   borderColor: isSelected ? config.color : "var(--lokadia-gray-100)",
                   color: isSelected ? "white" : "var(--lokadia-gray-700)",
                 }}
@@ -256,7 +256,7 @@ export function AlertCenterScreen() {
                 onClick={() => setSelectedLevel(level)}
                 className="rounded-xl border px-3 py-3 text-sm font-bold transition-all hover:shadow-md"
                 style={{
-                  background: isSelected ? config.color : "white",
+                  background: isSelected ? config.color : "var(--lokadia-surface)",
                   borderColor: isSelected ? config.color : "var(--lokadia-gray-100)",
                   color: isSelected ? "white" : "var(--lokadia-gray-700)",
                 }}
@@ -347,7 +347,7 @@ export function AlertCenterScreen() {
           <h2 className="text-lg font-bold tracking-tight" style={{ color: 'var(--lokadia-gray-900)' }}>
             Alertes mondiales temps réel
           </h2>
-          <span className="ml-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'rgba(34, 197, 94, 0.12)', color: '#15803d' }}>
+          <span className="ml-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'rgba(34, 197, 94, 0.12)', color: 'var(--lokadia-success)' }}>
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: '#22c55e' }} />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ background: '#22c55e' }} />
@@ -492,7 +492,7 @@ export function AlertCenterScreen() {
                         </p>
                       </div>
                       {selectedAlert.affectedZones && selectedAlert.affectedZones.length > 0 && (
-                        <div className="mt-4 rounded-2xl p-4" style={{ background: "rgba(245, 158, 11, 0.1)", color: "#92400E" }}>
+                        <div className="mt-4 rounded-2xl p-4" style={{ background: "rgba(245, 158, 11, 0.1)", color: "var(--lokadia-category-culture)" }}>
                           <p className="mb-1 text-sm font-bold">Zones à risque</p>
                           <p className="text-sm leading-6">{selectedAlert.affectedZones.join(", ")}</p>
                         </div>

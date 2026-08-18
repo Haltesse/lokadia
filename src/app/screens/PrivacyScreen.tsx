@@ -149,7 +149,7 @@ export default function PrivacyScreen() {
             <div
               key={family.prefix}
               className="rounded-2xl border p-4"
-              style={{ borderColor: 'var(--lokadia-gray-100)', background: 'white' }}
+              style={{ borderColor: 'var(--lokadia-gray-100)', background: 'var(--lokadia-surface)' }}
             >
               <p
                 className="break-words font-mono text-xs font-bold"

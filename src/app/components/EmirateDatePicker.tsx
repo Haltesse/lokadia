@@ -145,7 +145,7 @@ export function EmirateDatePicker({
         className="w-full rounded-2xl border-2 transition-all text-left overflow-hidden"
         style={{
           borderColor: open ? 'var(--lokadia-primary)' : 'var(--lokadia-gray-200)',
-          background: 'white',
+          background: 'var(--lokadia-surface)',
           boxShadow: 'var(--shadow-sm)'
         }}
       >
@@ -217,7 +217,7 @@ export function EmirateDatePicker({
         {open && (
           <motion.div
             className="fixed inset-0 z-50 flex flex-col"
-            style={{ background: 'white' }}
+            style={{ background: 'var(--lokadia-surface)' }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}

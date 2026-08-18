@@ -25,8 +25,8 @@ const TONE_STYLE = {
   },
   attention: {
     bg: 'var(--lokadia-warning-bg)',
-    color: '#B45309',
-    border: '#FDE68A',
+    color: 'var(--lokadia-warning)',
+    border: 'var(--lokadia-warning-light)',
   },
   neutral: {
     bg: 'var(--lokadia-info-bg)',

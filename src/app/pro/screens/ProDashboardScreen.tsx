@@ -57,7 +57,7 @@ function StatTile({
         <span className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--lokadia-gray-500)' }}>{label}</span>
         <Icon size={17} style={{ color: alert ? 'var(--lokadia-warning)' : 'var(--lokadia-primary)' }} />
       </div>
-      <p className="text-3xl font-bold tabular-nums" style={{ color: alert ? '#B45309' : 'var(--lokadia-gray-900)' }}>{value}</p>
+      <p className="text-3xl font-bold tabular-nums" style={{ color: alert ? 'var(--lokadia-warning)' : 'var(--lokadia-gray-900)' }}>{value}</p>
       <p className="mt-1 text-xs leading-snug" style={{ color: 'var(--lokadia-gray-500)' }}>{sub}</p>
     </button>
   );

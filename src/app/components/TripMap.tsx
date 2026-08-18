@@ -168,7 +168,7 @@ export function TripMap({ points, legs, startDate, endDate, travelers }: TripMap
                         fontSize: 11,
                         padding: '6px 8px',
                         background: incomingLeg.mode === 'plane' ? '#EEF2FF' : '#ECFDF5',
-                        color: incomingLeg.mode === 'plane' ? '#4F46E5' : '#047857',
+                        color: incomingLeg.mode === 'plane' ? '#4F46E5' : 'var(--lokadia-success)',
                         borderRadius: 8,
                         marginBottom: 8,
                         fontWeight: 600,

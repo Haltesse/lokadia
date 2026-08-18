@@ -75,9 +75,9 @@ export function PlannerSuggestions({
         <div className="px-3.5 py-2.5 flex items-center gap-2.5 border-b border-gray-100">
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: '#FEF3C7' }}
+            style={{ background: 'var(--lokadia-category-culture-bg)' }}
           >
-            <Hotel size={18} style={{ color: '#92400E' }} />
+            <Hotel size={18} style={{ color: 'var(--lokadia-category-culture)' }} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-gray-900 leading-tight">Où dormir</p>
@@ -148,8 +148,8 @@ export function PlannerSuggestions({
           title="Vols"
           subtitle="Comparateurs pour le meilleur prix"
           Icon={Plane}
-          bg="#DBEAFE"
-          fg="#1E40AF"
+          bg="var(--lokadia-category-safety-bg)"
+          fg="var(--lokadia-category-safety)"
           options={flightOptions}
         />
       )}
@@ -159,8 +159,8 @@ export function PlannerSuggestions({
         title="Reste connecté · eSIM"
         subtitle="Internet dès l'atterrissage, sans frais"
         Icon={Wifi}
-        bg="#EDE9FE"
-        fg="#6D28D9"
+        bg="var(--lokadia-category-transport-bg)"
+        fg="var(--lokadia-category-transport)"
         options={esimOptions}
       />
 

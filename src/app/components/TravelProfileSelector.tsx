@@ -44,7 +44,7 @@ export function TravelProfileSelector({ variant = 'list', onSelect }: TravelProf
             className="w-full text-left rounded-2xl border-2 p-3.5 transition-all hover:shadow-md focus:outline-none focus:ring-2"
             style={{
               borderColor: isSelected ? 'var(--lokadia-primary)' : 'var(--lokadia-gray-100)',
-              background: isSelected ? 'var(--lokadia-info-bg)' : 'white',
+              background: isSelected ? 'var(--lokadia-info-bg)' : 'var(--lokadia-surface)',
             }}
             aria-pressed={isSelected}
           >
@@ -52,7 +52,7 @@ export function TravelProfileSelector({ variant = 'list', onSelect }: TravelProf
               <div
                 className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
                 style={{
-                  background: isSelected ? 'rgba(255,255,255,0.7)' : 'var(--lokadia-gray-50, #f8fafc)',
+                  background: isSelected ? 'var(--lokadia-surface)' : 'var(--lokadia-gray-50)',
                 }}
                 aria-hidden="true"
               >
@@ -102,7 +102,7 @@ export function ActiveProfileBadge({ onEdit }: { onEdit?: () => void }) {
       className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 border transition-all hover:shadow-md"
       style={{
         borderColor: 'var(--lokadia-gray-100)',
-        background: 'white',
+        background: 'var(--lokadia-surface)',
       }}
     >
       <meta.Icon className="h-4 w-4" style={{ color: 'var(--lokadia-primary)' }} />

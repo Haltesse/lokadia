@@ -62,7 +62,7 @@ const SLOW_MS = 4000;
 const STATUS_META: Record<Health, { label: string; color: string; bg: string }> = {
   checking: { label: 'Vérification…', color: 'var(--lokadia-gray-500)', bg: 'var(--lokadia-gray-100)' },
   ok: { label: 'Opérationnel', color: 'var(--lokadia-success)', bg: 'var(--lokadia-success-bg)' },
-  slow: { label: 'Lent', color: '#B45309', bg: 'var(--lokadia-warning-bg)' },
+  slow: { label: 'Lent', color: 'var(--lokadia-warning)', bg: 'var(--lokadia-warning-bg)' },
   error: { label: 'Injoignable', color: 'var(--lokadia-danger)', bg: 'var(--lokadia-danger-bg)' },
   offline: { label: 'Hors connexion', color: 'var(--lokadia-gray-600)', bg: 'var(--lokadia-gray-100)' },
 };
@@ -166,7 +166,7 @@ export default function StatusScreen() {
             <div
               key={probe.id}
               className="rounded-2xl border p-4"
-              style={{ borderColor: 'var(--lokadia-gray-100)', background: 'white' }}
+              style={{ borderColor: 'var(--lokadia-gray-100)', background: 'var(--lokadia-surface)' }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

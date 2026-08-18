@@ -266,7 +266,7 @@ export default function ProComplianceScreen() {
                           {new Date(m.date_start + 'T00:00:00').toLocaleDateString('fr-FR')} → {new Date(m.date_end + 'T00:00:00').toLocaleDateString('fr-FR')}
                         </td>
                         {Object.keys(COMPLIANCE_LABELS).map((kind) => (
-                          <td key={kind} className="py-2 pr-3 font-semibold" style={{ color: by.get(kind) ? '#047857' : '#B45309' }}>
+                          <td key={kind} className="py-2 pr-3 font-semibold" style={{ color: by.get(kind) ? 'var(--lokadia-success)' : 'var(--lokadia-warning)' }}>
                             {by.get(kind) ? 'Oui' : 'Non'}
                           </td>
                         ))}
@@ -285,7 +285,7 @@ export default function ProComplianceScreen() {
 
           {report.incomplete.length > 0 && (
             <div className="mt-5 rounded-xl p-4" style={{ background: 'var(--lokadia-warning-bg, #FFFBEB)' }}>
-              <p className="flex items-center gap-1.5 text-xs font-bold" style={{ color: '#B45309' }}>
+              <p className="flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--lokadia-warning)' }}>
                 <AlertTriangle size={14} /> {report.incomplete.length} dossier{report.incomplete.length > 1 ? 's' : ''} incomplet{report.incomplete.length > 1 ? 's' : ''} au moment de l'édition
               </p>
               <p className="mt-1 text-[11px] leading-relaxed" style={{ color: 'var(--lokadia-gray-600)' }}>

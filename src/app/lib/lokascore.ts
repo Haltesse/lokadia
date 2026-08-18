@@ -148,7 +148,7 @@ export const DIMENSION_META: Record<keyof LokascoreDimensions, DimensionMeta> = 
     short: 'S',
     Icon: Shield,
     sources: ['MAE France', 'UK FCDO', 'US State Dept', 'AU DFAT'],
-    color: '#1E40AF',
+    color: 'var(--lokadia-category-safety)',
   },
   health: {
     id: 'health',
@@ -156,7 +156,7 @@ export const DIMENSION_META: Record<keyof LokascoreDimensions, DimensionMeta> = 
     short: 'H',
     Icon: Stethoscope,
     sources: ['OMS', 'ECDC', 'CDC USA', 'Lancet HAQ'],
-    color: '#6D28D9',
+    color: 'var(--lokadia-category-transport)',
   },
   nature: {
     id: 'nature',
@@ -164,7 +164,7 @@ export const DIMENSION_META: Record<keyof LokascoreDimensions, DimensionMeta> = 
     short: 'N',
     Icon: Tornado,
     sources: ['GDACS', 'ReliefWeb', 'NASA EONET', 'EM-DAT'],
-    color: '#92400E',
+    color: 'var(--lokadia-category-culture)',
   },
   infrastructure: {
     id: 'infrastructure',
@@ -172,7 +172,7 @@ export const DIMENSION_META: Record<keyof LokascoreDimensions, DimensionMeta> = 
     short: 'I',
     Icon: Building2,
     sources: ['WJP', 'Transparency Int.', 'WHO Road', 'World Bank', 'GSMA'],
-    color: '#047857',
+    color: 'var(--lokadia-success)',
   },
 };
 

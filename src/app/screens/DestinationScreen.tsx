@@ -310,7 +310,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
               <div className="flex items-baseline gap-2">
                 <span
                   className="text-4xl font-bold tabular-nums"
-                  style={{ color: hasLiveScore ? lokascoreLevel.color : "#0A2545" }}
+                  style={{ color: hasLiveScore ? lokascoreLevel.color : "var(--lokadia-gray-900)" }}
                 >
                   {scoreLoading && !hasLiveScore ? "..." : displayedScore ?? "--"}
                 </span>
@@ -353,7 +353,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
             <button
               onClick={handleGoToChecklist}
               className="py-3 rounded-xl font-semibold text-white transition-transform active:scale-98"
-              style={{ backgroundColor: "#0A2545" }}
+              style={{ backgroundColor: "var(--lokadia-primary-dark)" }}
               title="Checklist voyage"
             >
               ✓
@@ -364,8 +364,8 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
             disabled={downloadProgress !== null}
             className="w-full py-3 rounded-xl font-semibold border-2 transition-transform active:scale-98"
             style={{
-              borderColor: "#0A2545",
-              color: "#0A2545",
+              borderColor: "var(--lokadia-gray-900)",
+              color: "var(--lokadia-gray-900)",
             }}
           >
             {downloadProgress !== null ? (
@@ -458,7 +458,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
           >
             <div 
               className="w-8 h-8 rounded-full flex items-center justify-center shadow-md"
-              style={{ backgroundColor: "#0A2545" }}
+              style={{ backgroundColor: "var(--lokadia-primary-dark)" }}
             >
               <ChevronLeft className="h-4 w-4 text-white" />
             </div>
@@ -476,7 +476,7 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
           >
             <div 
               className="w-8 h-8 rounded-full flex items-center justify-center shadow-md"
-              style={{ backgroundColor: "#0A2545" }}
+              style={{ backgroundColor: "var(--lokadia-primary-dark)" }}
             >
               <ChevronRight className="h-4 w-4 text-white" />
             </div>

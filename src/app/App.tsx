@@ -1,5 +1,6 @@
 import { Component, Suspense, lazy, type ReactNode } from "react";
 import { BrowserRouter } from "react-router-dom";
+import { MotionConfig } from "motion/react";
 import { Routes, Route, Navigate } from "react-router";
 import { RootLayout } from "./components/RootLayout";
 import { CurrencyProvider } from "./context/CurrencyContext";
@@ -7,12 +8,14 @@ import { AuthProvider } from "./context/AuthContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { TravelProfileProvider } from "./context/TravelProfileContext";
 import { NationalityProvider } from "./context/NationalityContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { CartProvider } from "./lib/cart";
 import { LokascoreCacheInitializer } from "./components/LokascoreCacheInitializer";
 import { AuthErrorBoundary } from "./components/AuthErrorBoundary";
 import { PwaPrompts } from "./components/PwaPrompts";
 import { RouteSeo } from "./components/RouteSeo";
 import { StorageNotice } from "./components/StorageNotice";
+import { CommandPaletteProvider } from "./components/CommandPalette";
 
 // ─── Code splitting : chaque écran est un chunk chargé à la demande ─────────
 const GlobalHome = lazy(() => import("./screens/GlobalHome").then((m) => ({ default: m.GlobalHome })));
@@ -123,6 +126,10 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthErrorBoundary>
+        {/* Les animations Framer ignorent la media query CSS : ce réglage
+            leur fait suivre le "réduire les animations" du système. */}
+        <MotionConfig reducedMotion="user">
+        <ThemeProvider>
         <AuthProvider>
           <LanguageProvider>
             <CurrencyProvider>
@@ -143,6 +150,7 @@ function App() {
               >
                 {/* Titre, description, canonique et JSON-LD par route —
                     au-dessus du routeur, donc aucune page oubliée. */}
+                <CommandPaletteProvider>
                 <RouteSeo />
 
                 {/* Information sur le stockage local (aucun traceur) */}
@@ -208,6 +216,7 @@ function App() {
                     </Route>
                   </Routes>
                 </Suspense>
+                </CommandPaletteProvider>
               </BrowserRouter>
             </CartProvider>
             </NationalityProvider>
@@ -215,6 +224,8 @@ function App() {
             </CurrencyProvider>
           </LanguageProvider>
         </AuthProvider>
+        </ThemeProvider>
+        </MotionConfig>
       </AuthErrorBoundary>
     </ErrorBoundary>
   );

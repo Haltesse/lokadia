@@ -411,8 +411,8 @@ export default function ProDemoScreen() {
           {[
             { label: offer.peopleLabel, value: kpis.total.toLocaleString('fr-FR'), Icon: Users, color: offer.color },
             { label: 'Groupes gérés', value: kpis.groups, Icon: LayoutDashboard, color: '#0369a1' },
-            { label: `${offer.headLabel} en zone à risque`, value: kpis.atRisk.toLocaleString('fr-FR'), Icon: AlertTriangle, color: kpis.atRisk > 0 ? '#dc2626' : '#15803d' },
-            { label: 'Alertes en direct', value: feed.length, Icon: Bell, color: feed.length > 0 ? '#d97706' : '#15803d' },
+            { label: `${offer.headLabel} en zone à risque`, value: kpis.atRisk.toLocaleString('fr-FR'), Icon: AlertTriangle, color: kpis.atRisk > 0 ? '#dc2626' : 'var(--lokadia-success)' },
+            { label: 'Alertes en direct', value: feed.length, Icon: Bell, color: feed.length > 0 ? '#d97706' : 'var(--lokadia-success)' },
           ].map((k) => (
             <div key={k.label} className="rounded-2xl bg-white p-4" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>
               <k.Icon className="mb-2 h-5 w-5" style={{ color: k.color }} />
@@ -501,7 +501,7 @@ export default function ProDemoScreen() {
               <Activity className="h-5 w-5" style={{ color: '#dc2626' }} /> Flux temps réel
             </h2>
             {feed.length === 0 ? (
-              <div className="flex items-center justify-center gap-2 rounded-2xl p-4 text-center text-sm" style={{ background: 'rgba(34,197,94,0.08)', color: '#15803d' }}><ShieldCheck className="h-4 w-4 flex-shrink-0" /> Aucune alerte sur votre périmètre</div>
+              <div className="flex items-center justify-center gap-2 rounded-2xl p-4 text-center text-sm" style={{ background: 'rgba(34,197,94,0.08)', color: 'var(--lokadia-success)' }}><ShieldCheck className="h-4 w-4 flex-shrink-0" /> Aucune alerte sur votre périmètre</div>
             ) : (
               <div className="space-y-2">
                 {feed.map((a, i) => {
@@ -559,13 +559,13 @@ export default function ProDemoScreen() {
             </p>
             <div className="rounded-2xl border p-4 text-center" style={{ borderColor: 'var(--lokadia-gray-100)' }}>
               <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--lokadia-gray-500)' }}>Confirmations de sécurité</p>
-              <p className="my-1 text-4xl font-bold tabular-nums" style={{ color: ack >= broadcast.total ? '#15803d' : '#d97706' }}>
+              <p className="my-1 text-4xl font-bold tabular-nums" style={{ color: ack >= broadcast.total ? 'var(--lokadia-success)' : '#d97706' }}>
                 {ack.toLocaleString('fr-FR')}<span className="text-lg" style={{ color: 'var(--lokadia-gray-400)' }}> / {broadcast.total.toLocaleString('fr-FR')}</span>
               </p>
               <div className="mt-2 h-2 w-full overflow-hidden rounded-full" style={{ background: 'var(--lokadia-gray-100)' }}>
                 <div className="h-full rounded-full transition-all duration-300" style={{ width: `${(ack / broadcast.total) * 100}%`, background: ack >= broadcast.total ? '#22c55e' : '#f59e0b' }} />
               </div>
-              <p className="mt-2 text-xs font-bold" style={{ color: ack >= broadcast.total ? '#15803d' : 'var(--lokadia-gray-600)' }}>
+              <p className="mt-2 text-xs font-bold" style={{ color: ack >= broadcast.total ? 'var(--lokadia-success)' : 'var(--lokadia-gray-600)' }}>
                 {ack >= broadcast.total ? 'Toutes les personnes ont confirmé leur sécurité' : 'Réponses en cours…'}
               </p>
             </div>

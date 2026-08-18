@@ -110,7 +110,7 @@ export function EmergencyContacts({
             >
               <div className="flex items-center gap-3">
                 <ContactIcon icon={emergency.icon} />
-                <span className="text-sm font-medium" style={{ color: '#0A2545' }}>
+                <span className="text-sm font-medium" style={{ color: 'var(--lokadia-gray-900)' }}>
                   {emergency.name}
                 </span>
               </div>
@@ -145,7 +145,7 @@ export function EmergencyContacts({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="lk-btn mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-white"
-                style={{ backgroundColor: '#0A2545' }}
+                style={{ backgroundColor: 'var(--lokadia-primary-dark)' }}
               >
                 <Phone size={16} />
                 Trouver votre représentation — {authority.label}

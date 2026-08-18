@@ -76,7 +76,7 @@ export function LiveAlertsBanner({ variant = 'mobile' }: LiveAlertsBannerProps) 
         <div className="flex items-center gap-2 mb-0.5">
           <p
             className={isDesktop ? 'text-sm font-bold' : 'text-xs font-bold'}
-            style={{ color: '#991b1b' }}
+            style={{ color: 'var(--lokadia-danger)' }}
           >
             {totalAlerts} alerte{totalAlerts > 1 ? 's' : ''} active{totalAlerts > 1 ? 's' : ''}
             {redAlerts > 0 && (
@@ -99,12 +99,12 @@ export function LiveAlertsBanner({ variant = 'mobile' }: LiveAlertsBannerProps) 
                 style={{ background: '#dc2626' }}
               />
             </span>
-            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#991b1b' }}>
+            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--lokadia-danger)' }}>
               live
             </span>
           </div>
         </div>
-        <p className={isDesktop ? 'text-xs' : 'text-[11px]'} style={{ color: '#7f1d1d' }}>
+        <p className={isDesktop ? 'text-xs' : 'text-[11px]'} style={{ color: 'var(--lokadia-danger)' }}>
           <Globe className="inline h-3 w-3 mr-1" />
           {countriesCount} pays affectés ·{' '}
           {earthquakeCount > 0 && <><Activity className="inline h-3 w-3" /> {earthquakeCount} séisme{earthquakeCount > 1 ? 's' : ''} · </>}
@@ -113,7 +113,7 @@ export function LiveAlertsBanner({ variant = 'mobile' }: LiveAlertsBannerProps) 
       </div>
       <ChevronRight
         className={isDesktop ? 'h-5 w-5 flex-shrink-0' : 'h-4 w-4 flex-shrink-0'}
-        style={{ color: '#991b1b' }}
+        style={{ color: 'var(--lokadia-danger)' }}
       />
     </button>
   );

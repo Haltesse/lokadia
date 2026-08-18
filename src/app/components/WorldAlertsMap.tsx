@@ -190,8 +190,8 @@ export function WorldAlertsMap() {
         {located.length === 0 && (
           <div className="absolute inset-0 z-[300] flex items-center justify-center backdrop-blur-sm" style={{ background: 'rgba(255,255,255,0.85)' }}>
             <div className="text-center">
-              <div className="mb-2 flex justify-center">{typeFilter ? <Search className="h-10 w-10" style={{ color: 'var(--lokadia-gray-400)' }} /> : <ShieldCheck className="h-10 w-10" style={{ color: '#15803d' }} />}</div>
-              <p className="text-sm font-bold" style={{ color: typeFilter ? 'var(--lokadia-gray-700)' : '#15803d' }}>
+              <div className="mb-2 flex justify-center">{typeFilter ? <Search className="h-10 w-10" style={{ color: 'var(--lokadia-gray-400)' }} /> : <ShieldCheck className="h-10 w-10" style={{ color: 'var(--lokadia-success)' }} />}</div>
+              <p className="text-sm font-bold" style={{ color: typeFilter ? 'var(--lokadia-gray-700)' : 'var(--lokadia-success)' }}>
                 {typeFilter ? 'Aucune alerte de ce type' : 'Aucune alerte majeure'}
               </p>
             </div>

@@ -253,7 +253,7 @@ export default function ProSettingsScreen() {
 
             {inviteMsg && (
               <div className="mt-3">
-                <p className="text-sm font-semibold" style={{ color: inviteMsg.kind === 'ok' ? '#047857' : '#DC2626' }}>
+                <p className="text-sm font-semibold" style={{ color: inviteMsg.kind === 'ok' ? 'var(--lokadia-success)' : '#DC2626' }}>
                   {inviteMsg.text}
                 </p>
                 {inviteMsg.link && (

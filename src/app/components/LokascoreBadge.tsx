@@ -85,7 +85,8 @@ export function LokascoreBadge({
   if (variant === 'chip') {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/[.92] backdrop-blur-md shadow-md ${className}`}
+        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full backdrop-blur-md shadow-md ${className}`}
+        style={{ background: 'color-mix(in srgb, var(--lokadia-surface) 92%, transparent)' }}
         title={tooltip}
         aria-label={tooltip}
       >

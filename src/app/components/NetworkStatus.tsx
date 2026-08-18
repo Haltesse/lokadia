@@ -61,7 +61,7 @@ export function NetworkStatus() {
         role="status"
         aria-live="polite"
         className="sticky top-0 z-50 px-4 py-2.5 text-white safe-top"
-        style={{ background: '#B45309' }}
+        style={{ background: 'var(--lokadia-warning)' }}
       >
         <div className="mx-auto flex max-w-3xl items-center justify-center gap-2 text-center">
           <WifiOff className="h-4 w-4 flex-shrink-0" aria-hidden />

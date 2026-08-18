@@ -31,8 +31,8 @@ const PresenceMap = lazy(() => import('../components/PresenceMap'));
 
 const SEVERITY_META: Record<string, { label: string; color: string; bg: string; Icon: typeof Radio }> = {
   info: { label: 'Information', color: '#0369A1', bg: 'rgba(14,165,233,0.12)', Icon: Radio },
-  vigilance: { label: 'Vigilance', color: '#B45309', bg: 'rgba(245,158,11,0.14)', Icon: AlertTriangle },
-  urgent: { label: 'Urgence', color: '#B91C1C', bg: 'rgba(220,38,38,0.14)', Icon: Siren },
+  vigilance: { label: 'Vigilance', color: 'var(--lokadia-warning)', bg: 'rgba(245,158,11,0.14)', Icon: AlertTriangle },
+  urgent: { label: 'Urgence', color: 'var(--lokadia-danger)', bg: 'rgba(220,38,38,0.14)', Icon: Siren },
 };
 
 function WatchLocked() {
@@ -338,7 +338,7 @@ export default function ProWatchScreen() {
                         </button>
                       )}
                       {!isOpen && (
-                        <span className="flex-shrink-0 text-[11px] font-semibold" style={{ color: '#047857' }}>Traité</span>
+                        <span className="flex-shrink-0 text-[11px] font-semibold" style={{ color: 'var(--lokadia-success)' }}>Traité</span>
                       )}
                     </div>
                   </li>

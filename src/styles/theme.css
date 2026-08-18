@@ -71,22 +71,22 @@
   --lokadia-info-bg: #F0F9FF;
   
   /* Couleurs catégories douces */
-  --lokadia-category-safety: #0EA5E9;      /* Bleu ciel */
+  --lokadia-category-safety: #1D4ED8;      /* Bleu — teinte lisible sur fond clair (AA) */
   --lokadia-category-safety-bg: #EFF6FF;
   
-  --lokadia-category-health: #059669;      /* Vert émeraude */
+  --lokadia-category-health: #047857;      /* Émeraude foncée — AA sur fond clair */
   --lokadia-category-health-bg: #ECFDF5;
   
-  --lokadia-category-transport: #8B5CF6;   /* Violet */
+  --lokadia-category-transport: #6D28D9;   /* Violet foncé — AA sur fond clair */
   --lokadia-category-transport-bg: #F5F3FF;
   
-  --lokadia-category-culture: #F59E0B;     /* Ambre */
+  --lokadia-category-culture: #B45309;     /* Ambre foncé — AA sur fond clair */
   --lokadia-category-culture-bg: #FFFBEB;
   
-  --lokadia-category-food: #EC4899;        /* Rose */
+  --lokadia-category-food: #BE185D;        /* Rose foncé — AA sur fond clair */
   --lokadia-category-food-bg: #FDF2F8;
   
-  --lokadia-category-accommodation: #06B6D4; /* Cyan */
+  --lokadia-category-accommodation: #0E7490; /* Cyan foncé — AA sur fond clair */
   --lokadia-category-accommodation-bg: #ECFEFF;
   
   /* Palette de gris raffinée */
@@ -150,10 +150,30 @@
   --text-4xl: 2.5rem;      /* 40px - augmenté de 36px */
   --text-5xl: 3.25rem;     /* 52px - augmenté de 48px */
   
+  /* ─── Alias hérités ──────────────────────────────────────────────
+     Ces noms sont utilisés à plus de 200 endroits dans les composants
+     mais n'avaient JAMAIS été définis : var(--lokadia-text-dark) ne
+     résolvait rien, la couleur retombait sur l'héritage et les fonds
+     concernés étaient transparents. Invisible sur fond blanc, béant en
+     mode sombre. On les branche sur les vrais tokens plutôt que de
+     réécrire 200 appels, et ils deviennent ainsi dark-aware.
+     Dépréciés : tout nouveau code utilise les tokens de droite. */
+  --lokadia-text-dark: var(--lokadia-gray-900);
+  --lokadia-text-light: var(--lokadia-gray-600);
+  --lokadia-deep-blue: var(--lokadia-primary-dark);
+  --lokadia-blue: var(--lokadia-primary);
+  --lokadia-soft-white: var(--lokadia-background);
+  --lokadia-emergency-orange: var(--lokadia-danger);
+  --lokadia-warning-orange: var(--lokadia-warning);
+  --lokadia-success-green: var(--lokadia-success);
+  --lokadia-vigilance: var(--lokadia-warning);
+
   /* Dégradés subtils */
   --gradient-primary: linear-gradient(135deg, #0F4C81 0%, #1E6BA8 100%);
   --gradient-secondary: linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%);
   --gradient-accent: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+  --gradient-success: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  --gradient-danger: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
 }
 
 /* Animations */

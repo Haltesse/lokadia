@@ -101,12 +101,12 @@ export function LokascoreBreakdown({
         >
           <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: '#dc2626' }} />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold" style={{ color: '#991b1b' }}>
+            <p className="text-xs font-bold" style={{ color: 'var(--lokadia-danger)' }}>
               {liveAlerts.length} alerte{liveAlerts.length > 1 ? 's' : ''} active{liveAlerts.length > 1 ? 's' : ''}
             </p>
             <ul className="mt-1 space-y-0.5">
               {liveAlerts.slice(0, 3).map((alert, i) => (
-                <li key={i} className="text-[10px] leading-snug" style={{ color: '#7f1d1d' }}>
+                <li key={i} className="text-[10px] leading-snug" style={{ color: 'var(--lokadia-danger)' }}>
                   <span className="font-bold">[{alert.source}]</span> {alert.description}
                 </li>
               ))}
@@ -145,7 +145,7 @@ export function LokascoreBreakdown({
                 <div className="mt-1.5">
                   {usedSources.length > 0 ? (
                     <div className="flex items-center gap-1 flex-wrap">
-                      <CheckCircle2 className="h-2.5 w-2.5" style={{ color: '#15803d' }} />
+                      <CheckCircle2 className="h-2.5 w-2.5" style={{ color: 'var(--lokadia-success)' }} />
                       {usedSources.map((label) => (
                         <span
                           key={label}
@@ -176,9 +176,9 @@ export function LokascoreBreakdown({
         >
           {hasOfficialSource ? (
             <>
-              <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" style={{ color: '#15803d' }} />
+              <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--lokadia-success)' }} />
               <p className="text-[10px] leading-relaxed" style={{ color: 'var(--lokadia-gray-700)' }}>
-                <strong style={{ color: '#15803d' }}>Score officiel</strong> — agrégation propriétaire
+                <strong style={{ color: 'var(--lokadia-success)' }}>Score officiel</strong> — agrégation propriétaire
                 de sources internationales vérifiables, calculée en continu.
               </p>
             </>

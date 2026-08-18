@@ -99,23 +99,23 @@ export default function LokascorePage() {
 
   // Sources officielles — afficher TOUTES, c'est notre crédibilité
   const officialSources = [
-    { name: "MAE France", full: "Conseils aux voyageurs", url: "https://www.diplomatie.gouv.fr/fr/conseils-aux-voyageurs/", dim: "Sécurité", color: "#1E40AF", bg: "#DBEAFE", Icon: Shield },
-    { name: "UK FCDO", full: "Foreign Office Travel Advice", url: "https://www.gov.uk/foreign-travel-advice", dim: "Sécurité", color: "#1E40AF", bg: "#DBEAFE", Icon: Shield },
-    { name: "US State Dept", full: "Travel Advisories", url: "https://travel.state.gov/", dim: "Sécurité", color: "#1E40AF", bg: "#DBEAFE", Icon: Shield },
-    { name: "AU DFAT", full: "Smartraveller", url: "https://www.smartraveller.gov.au/", dim: "Sécurité", color: "#1E40AF", bg: "#DBEAFE", Icon: Shield },
-    { name: "OMS", full: "Disease Outbreak News", url: "https://www.who.int/emergencies/disease-outbreak-news", dim: "Santé", color: "#6D28D9", bg: "#EDE9FE", Icon: Heart },
-    { name: "ECDC", full: "Threats reports (UE)", url: "https://www.ecdc.europa.eu/en/threats-and-outbreaks", dim: "Santé", color: "#6D28D9", bg: "#EDE9FE", Icon: Heart },
-    { name: "CDC USA", full: "Travel Health Notices", url: "https://wwwnc.cdc.gov/travel/notices", dim: "Santé", color: "#6D28D9", bg: "#EDE9FE", Icon: Heart },
-    { name: "Lancet HAQ", full: "Healthcare Access & Quality", url: "https://www.healthdata.org/research-analysis/library/measuring-performance-healthcare-access-and-quality-index-195", dim: "Santé", color: "#6D28D9", bg: "#EDE9FE", Icon: Heart },
-    { name: "GDACS", full: "Global Disaster Alert (UE+ONU)", url: "https://www.gdacs.org/", dim: "Nature", color: "#92400E", bg: "#FEF3C7", Icon: AlertTriangle },
-    { name: "ReliefWeb", full: "OCHA - Humanitarian alerts", url: "https://reliefweb.int/", dim: "Nature", color: "#92400E", bg: "#FEF3C7", Icon: AlertTriangle },
-    { name: "USGS", full: "Earthquakes feed", url: "https://earthquake.usgs.gov/", dim: "Nature", color: "#92400E", bg: "#FEF3C7", Icon: AlertTriangle },
-    { name: "EM-DAT", full: "Emergency Events Database", url: "https://www.emdat.be/", dim: "Nature", color: "#92400E", bg: "#FEF3C7", Icon: AlertTriangle },
-    { name: "WJP", full: "World Justice Project Rule of Law", url: "https://worldjusticeproject.org/rule-of-law-index/", dim: "Infra", color: "#047857", bg: "#D1FAE5", Icon: Database },
-    { name: "Transparency Int.", full: "Corruption Perception Index", url: "https://www.transparency.org/en/cpi", dim: "Infra", color: "#047857", bg: "#D1FAE5", Icon: Database },
-    { name: "WHO Road Safety", full: "Global Status Report", url: "https://www.who.int/teams/social-determinants-of-health/safety-and-mobility", dim: "Infra", color: "#047857", bg: "#D1FAE5", Icon: Database },
-    { name: "World Bank WGI", full: "Worldwide Governance Indicators", url: "https://databank.worldbank.org/source/worldwide-governance-indicators", dim: "Infra", color: "#047857", bg: "#D1FAE5", Icon: Database },
-    { name: "GSMA", full: "Mobile Connectivity Index", url: "https://www.mobileconnectivityindex.com/", dim: "Infra", color: "#047857", bg: "#D1FAE5", Icon: Database },
+    { name: "MAE France", full: "Conseils aux voyageurs", url: "https://www.diplomatie.gouv.fr/fr/conseils-aux-voyageurs/", dim: "Sécurité", color: "var(--lokadia-category-safety)", bg: "var(--lokadia-category-safety-bg)", Icon: Shield },
+    { name: "UK FCDO", full: "Foreign Office Travel Advice", url: "https://www.gov.uk/foreign-travel-advice", dim: "Sécurité", color: "var(--lokadia-category-safety)", bg: "var(--lokadia-category-safety-bg)", Icon: Shield },
+    { name: "US State Dept", full: "Travel Advisories", url: "https://travel.state.gov/", dim: "Sécurité", color: "var(--lokadia-category-safety)", bg: "var(--lokadia-category-safety-bg)", Icon: Shield },
+    { name: "AU DFAT", full: "Smartraveller", url: "https://www.smartraveller.gov.au/", dim: "Sécurité", color: "var(--lokadia-category-safety)", bg: "var(--lokadia-category-safety-bg)", Icon: Shield },
+    { name: "OMS", full: "Disease Outbreak News", url: "https://www.who.int/emergencies/disease-outbreak-news", dim: "Santé", color: "var(--lokadia-category-transport)", bg: "var(--lokadia-category-transport-bg)", Icon: Heart },
+    { name: "ECDC", full: "Threats reports (UE)", url: "https://www.ecdc.europa.eu/en/threats-and-outbreaks", dim: "Santé", color: "var(--lokadia-category-transport)", bg: "var(--lokadia-category-transport-bg)", Icon: Heart },
+    { name: "CDC USA", full: "Travel Health Notices", url: "https://wwwnc.cdc.gov/travel/notices", dim: "Santé", color: "var(--lokadia-category-transport)", bg: "var(--lokadia-category-transport-bg)", Icon: Heart },
+    { name: "Lancet HAQ", full: "Healthcare Access & Quality", url: "https://www.healthdata.org/research-analysis/library/measuring-performance-healthcare-access-and-quality-index-195", dim: "Santé", color: "var(--lokadia-category-transport)", bg: "var(--lokadia-category-transport-bg)", Icon: Heart },
+    { name: "GDACS", full: "Global Disaster Alert (UE+ONU)", url: "https://www.gdacs.org/", dim: "Nature", color: "var(--lokadia-category-culture)", bg: "var(--lokadia-category-culture-bg)", Icon: AlertTriangle },
+    { name: "ReliefWeb", full: "OCHA - Humanitarian alerts", url: "https://reliefweb.int/", dim: "Nature", color: "var(--lokadia-category-culture)", bg: "var(--lokadia-category-culture-bg)", Icon: AlertTriangle },
+    { name: "USGS", full: "Earthquakes feed", url: "https://earthquake.usgs.gov/", dim: "Nature", color: "var(--lokadia-category-culture)", bg: "var(--lokadia-category-culture-bg)", Icon: AlertTriangle },
+    { name: "EM-DAT", full: "Emergency Events Database", url: "https://www.emdat.be/", dim: "Nature", color: "var(--lokadia-category-culture)", bg: "var(--lokadia-category-culture-bg)", Icon: AlertTriangle },
+    { name: "WJP", full: "World Justice Project Rule of Law", url: "https://worldjusticeproject.org/rule-of-law-index/", dim: "Infra", color: "var(--lokadia-success)", bg: "var(--lokadia-success-bg)", Icon: Database },
+    { name: "Transparency Int.", full: "Corruption Perception Index", url: "https://www.transparency.org/en/cpi", dim: "Infra", color: "var(--lokadia-success)", bg: "var(--lokadia-success-bg)", Icon: Database },
+    { name: "WHO Road Safety", full: "Global Status Report", url: "https://www.who.int/teams/social-determinants-of-health/safety-and-mobility", dim: "Infra", color: "var(--lokadia-success)", bg: "var(--lokadia-success-bg)", Icon: Database },
+    { name: "World Bank WGI", full: "Worldwide Governance Indicators", url: "https://databank.worldbank.org/source/worldwide-governance-indicators", dim: "Infra", color: "var(--lokadia-success)", bg: "var(--lokadia-success-bg)", Icon: Database },
+    { name: "GSMA", full: "Mobile Connectivity Index", url: "https://www.mobileconnectivityindex.com/", dim: "Infra", color: "var(--lokadia-success)", bg: "var(--lokadia-success-bg)", Icon: Database },
   ];
 
   return (
@@ -455,7 +455,7 @@ export default function LokascorePage() {
             <div
               key={item.question}
               className="rounded-2xl border p-5"
-              style={{ borderColor: "var(--lokadia-gray-100)", background: "white" }}
+              style={{ borderColor: "var(--lokadia-gray-100)", background: "var(--lokadia-surface)" }}
             >
               <h3 className="text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                 {item.question}

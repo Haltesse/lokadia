@@ -100,19 +100,19 @@ export function LiveAlertsList() {
           border: '1px solid rgba(34, 197, 94, 0.25)',
         }}
       >
-        <ShieldCheck className="h-8 w-8 flex-shrink-0" style={{ color: '#15803d' }} />
+        <ShieldCheck className="h-8 w-8 flex-shrink-0" style={{ color: 'var(--lokadia-success)' }} />
         <div>
-          <h3 className="font-bold text-sm" style={{ color: '#15803d' }}>
+          <h3 className="font-bold text-sm" style={{ color: 'var(--lokadia-success)' }}>
             Aucune alerte majeure dans le monde
           </h3>
-          <p className="text-xs mt-1" style={{ color: '#166534' }}>
+          <p className="text-xs mt-1" style={{ color: 'var(--lokadia-success)' }}>
             Aucun séisme M≥6 ni catastrophe ReliefWeb active. Sources : {snapshot.sources.join(' + ')}
           </p>
           <button
             onClick={handleRefresh}
             disabled={refreshing}
             className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
-            style={{ background: 'white', color: '#15803d' }}
+            style={{ background: 'var(--lokadia-surface)', color: 'var(--lokadia-success)' }}
           >
             <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
             Actualiser
@@ -150,7 +150,7 @@ export function LiveAlertsList() {
             <Globe className="h-5 w-5" style={{ color: '#dc2626' }} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold" style={{ color: '#991b1b' }}>
+            <p className="text-sm font-bold" style={{ color: 'var(--lokadia-danger)' }}>
               {totalAlerts} alerte{totalAlerts > 1 ? 's' : ''} active{totalAlerts > 1 ? 's' : ''} dans {groups.length} pays
               {redCount > 0 && (
                 <span
@@ -161,7 +161,7 @@ export function LiveAlertsList() {
                 </span>
               )}
             </p>
-            <p className="text-xs mt-0.5" style={{ color: '#7f1d1d' }}>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--lokadia-danger)' }}>
               Sources temps réel : {snapshot.sources.join(' + ')} ·{' '}
               <span className="font-bold">
                 MAJ {new Date(snapshot.lastFetch).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}

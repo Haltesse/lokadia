@@ -366,7 +366,7 @@ export default function ProMissionsScreen() {
                           return (
                             <span
                               className="inline-flex items-center gap-1 text-xs font-bold"
-                              style={{ color: '#047857' }}
+                              style={{ color: 'var(--lokadia-success)' }}
                               title={`Accusé signé par ${receipt.read_name ?? '—'} le ${new Date(receipt.read_at).toLocaleString('fr-FR')}`}
                             >
                               <Check size={13} /> Lu le {new Date(receipt.read_at).toLocaleDateString('fr-FR')}
@@ -392,7 +392,7 @@ export default function ProMissionsScreen() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold tabular-nums" style={{ color: done === 4 ? '#059669' : '#B45309' }}>{done}/4</span>
+                        <span className="text-xs font-bold tabular-nums" style={{ color: done === 4 ? '#059669' : 'var(--lokadia-warning)' }}>{done}/4</span>
                         <div className="flex flex-wrap gap-1.5">
                           {m.compliance_items.map((c) => (
                             <label
@@ -401,7 +401,7 @@ export default function ProMissionsScreen() {
                               className="inline-flex cursor-pointer items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-semibold"
                               style={{
                                 background: c.status === 'done' ? 'rgba(5,150,105,0.1)' : 'var(--lokadia-gray-100)',
-                                color: c.status === 'done' ? '#047857' : 'var(--lokadia-gray-500)',
+                                color: c.status === 'done' ? 'var(--lokadia-success)' : 'var(--lokadia-gray-500)',
                               }}
                             >
                               <input

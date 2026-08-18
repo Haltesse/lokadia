@@ -164,7 +164,7 @@ export function CurrencyExchangeRate({ localCurrency }: CurrencyExchangeRateProp
             className="w-full px-4 py-2 text-center text-base font-semibold rounded-lg border-2 outline-none"
             style={{ 
               borderColor: "var(--lokadia-blue)",
-              color: "#0A2545"
+              color: "var(--lokadia-gray-900)"
             }}
           />
           <span 
@@ -193,7 +193,7 @@ export function CurrencyExchangeRate({ localCurrency }: CurrencyExchangeRateProp
             {amount} {selectedCurrencyInfo.symbol}
           </span>
           <ArrowRight className="w-4 h-4" style={{ color: "var(--lokadia-text-light)" }} />
-          <span className="font-bold text-lg" style={{ color: "#0A2545" }}>
+          <span className="font-bold text-lg" style={{ color: "var(--lokadia-gray-900)" }}>
             {formatRate(rate * amount)} {localCurrencyInfo.symbol}
           </span>
         </div>

@@ -29,7 +29,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
         <button
           onClick={action.onClick}
           className="px-6 py-3 rounded-xl font-semibold text-white transition-transform active:scale-95"
-          style={{ backgroundColor: "#0A2545" }}
+          style={{ backgroundColor: "var(--lokadia-primary-dark)" }}
         >
           {action.label}
         </button>

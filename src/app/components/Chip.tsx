@@ -17,7 +17,7 @@ export function Chip({ children, selected = false, onClick, icon, className = ""
           ? "bg-lokadia-deep-blue text-white"
           : "bg-white border-2 border-gray-200 text-gray-700 hover:border-lokadia-blue"
       } ${className}`}
-      style={selected ? { backgroundColor: "#0A2545" } : {}}
+      style={selected ? { backgroundColor: "var(--lokadia-primary-dark)" } : {}}
     >
       {icon && <span className="flex-shrink-0">{icon}</span>}
       {children}

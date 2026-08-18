@@ -42,7 +42,7 @@ export function PriceDisplay({
     return (
       <div className={className}>
         <div className="flex items-baseline">
-          <span className="text-3xl font-bold" style={{ color: "#0A2545" }}>
+          <span className="text-3xl font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
             {convertedPrice}
           </span>
         </div>

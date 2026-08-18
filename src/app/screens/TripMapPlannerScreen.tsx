@@ -865,8 +865,8 @@ export default function TripMapPlannerScreen() {
                     <button
                       onClick={() => removeStop(p.id)}
                       style={{
-                        marginTop: 8, padding: '4px 10px', background: '#FEE2E2',
-                        color: '#B91C1C', border: 'none', borderRadius: 6,
+                        marginTop: 8, padding: '4px 10px', background: 'var(--lokadia-danger-bg)',
+                        color: 'var(--lokadia-danger)', border: 'none', borderRadius: 6,
                         fontSize: 11, fontWeight: 700, cursor: 'pointer',
                       }}
                     >

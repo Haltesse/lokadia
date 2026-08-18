@@ -10,8 +10,8 @@ import type { ItineraryIssue, CheckSeverity } from '../lib/itineraryChecks';
  */
 
 const SEVERITY_META: Record<CheckSeverity, { label: string; color: string; bg: string; Icon: typeof Info }> = {
-  blocking: { label: 'Bloquant', color: '#B91C1C', bg: 'rgba(220,38,38,0.10)', Icon: AlertOctagon },
-  warning: { label: 'À vérifier', color: '#B45309', bg: 'rgba(245,158,11,0.12)', Icon: AlertTriangle },
+  blocking: { label: 'Bloquant', color: 'var(--lokadia-danger)', bg: 'rgba(220,38,38,0.10)', Icon: AlertOctagon },
+  warning: { label: 'À vérifier', color: 'var(--lokadia-warning)', bg: 'rgba(245,158,11,0.12)', Icon: AlertTriangle },
   info: { label: 'Information', color: '#0369A1', bg: 'rgba(14,165,233,0.10)', Icon: Info },
 };
 
@@ -29,8 +29,8 @@ export function ItineraryIssues({ issues, onHighlight, className = '' }: Props) 
         className={`flex items-center gap-2.5 rounded-2xl px-4 py-3 ${className}`}
         style={{ background: 'rgba(5,150,105,0.08)' }}
       >
-        <CheckCircle2 size={16} style={{ color: '#047857' }} />
-        <p className="text-xs font-semibold" style={{ color: '#047857' }}>
+        <CheckCircle2 size={16} style={{ color: 'var(--lokadia-success)' }} />
+        <p className="text-xs font-semibold" style={{ color: 'var(--lokadia-success)' }}>
           Aucune incohérence détectée sur les données disponibles.
         </p>
       </div>

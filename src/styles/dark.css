@@ -1,0 +1,256 @@
+/**
+ * Mode sombre Lokadia.
+ *
+ * Le design system notait le mode sombre comme « configuré, pas piloté » :
+ * un bloc `.dark` existait pour les tokens shadcn, mais aucun des tokens
+ * `--lokadia-*` n'en tenait compte, et aucun toggle n'était exposé — à
+ * juste titre, l'interface aurait été illisible.
+ *
+ * Ce fichier fait le travail manquant, en deux couches :
+ *
+ *  1. **Les tokens** (`--lokadia-*`) sont redéfinis pour le fond sombre.
+ *     La majorité des écrans lisent déjà ces variables : ils basculent
+ *     donc sans être touchés. L'échelle de gris est inversée — `gray-900`
+ *     reste « la couleur du texte principal », `gray-100` reste « la
+ *     couleur des bordures discrètes ». Leur *rôle* est conservé, ce qui
+ *     évite de relire 300 composants.
+ *
+ *  2. **Un pont pour les utilitaires Tailwind écrits en dur** (`bg-white`,
+ *     `text-gray-600`, `bg-red-50`…), présents à plus de 600 endroits
+ *     dans l'application. Les réécrire un par un serait long et risqué ;
+ *     ce pont les remappe sur les tokens. Il est transitoire et assumé :
+ *     **tout nouveau composant doit utiliser les tokens**, pas ces
+ *     classes. Le pont vit ici, isolé, pour qu'on puisse le retirer au
+ *     fur et à mesure sans chercher dans tout le code.
+ *
+ * Pourquoi un fond bleuté plutôt qu'un gris neutre : le navy de marque
+ * (#0F4C81) est très présent (gradients, en-têtes) et jure sur un gris
+ * pur. Le fond reprend sa teinte, très désaturée.
+ */
+
+.dark {
+  /* ─── Marque : éclaircie pour rester lisible sur fond sombre ───
+     Le navy #0F4C81 sur un fond sombre tombe sous le contraste AA pour du
+     texte. On garde la teinte, on monte la luminosité. */
+  /* #3B82C4 est le compromis qui passe des deux côtés : ~4,0 avec du
+     blanc (boutons pleins) et ~4,5 sur le fond sombre (texte et liens).
+     Plus clair, les boutons perdaient le contraste du libellé. */
+  --lokadia-primary: #3B82C4;
+  --lokadia-primary-light: #7DBAF0;
+  --lokadia-primary-dark: #2A6FA8;
+
+  --lokadia-secondary: #22D3EE;
+  --lokadia-secondary-light: #67E8F9;
+  /* Assez foncé pour porter du texte blanc (≈ 4,4) : c'est le rôle que
+     joue `-dark` dans les pastilles et boutons pleins. */
+  --lokadia-secondary-dark: #0E7490;
+
+  --lokadia-accent: #A78BFA;
+  --lokadia-accent-light: #C4B5FD;
+  --lokadia-accent-dark: #8B5CF6;
+
+  /* ─── États sémantiques : teinte vive + fond assombri ─── */
+  --lokadia-success: #34D399;
+  --lokadia-success-light: #6EE7B7;
+  --lokadia-success-bg: #0C2B22;
+
+  --lokadia-warning: #FBBF24;
+  --lokadia-warning-light: #FCD34D;
+  --lokadia-warning-bg: #2C2211;
+
+  --lokadia-danger: #F87171;
+  --lokadia-danger-light: #FCA5A5;
+  --lokadia-danger-bg: #2E1517;
+
+  --lokadia-info: #38BDF8;
+  --lokadia-info-light: #7DD3FC;
+  --lokadia-info-bg: #0F2233;
+
+  /* ─── Catégories ─── */
+  --lokadia-category-safety: #7DD3FC;
+  --lokadia-category-safety-bg: #10243A;
+  --lokadia-category-health: #6EE7B7;
+  --lokadia-category-health-bg: #0C2B22;
+  --lokadia-category-transport: #C4B5FD;
+  --lokadia-category-transport-bg: #1E1A33;
+  --lokadia-category-culture: #FCD34D;
+  --lokadia-category-culture-bg: #2C2211;
+  --lokadia-category-food: #F9A8D4;
+  --lokadia-category-food-bg: #2E1626;
+  --lokadia-category-accommodation: #67E8F9;
+  --lokadia-category-accommodation-bg: #0D2730;
+
+  /* ─── Neutres : échelle inversée, rôles conservés ───
+     gray-900 = texte principal, gray-500 = texte secondaire,
+     gray-100 = bordure discrète. Les composants n'ont rien à changer. */
+  --lokadia-gray-50: #131C2B;
+  --lokadia-gray-100: #1E293B;
+  --lokadia-gray-200: #2A3A50;
+  --lokadia-gray-300: #3B4C65;
+  --lokadia-gray-400: #64748B;
+  --lokadia-gray-500: #94A3B8;
+  --lokadia-gray-600: #B4C0D0;
+  --lokadia-gray-700: #CBD5E1;
+  --lokadia-gray-800: #E2E8F0;
+  --lokadia-gray-900: #F1F5F9;
+
+  /* ─── Surfaces ─── */
+  --lokadia-surface: #131C2B;
+  --lokadia-surface-elevated: #1A2437;
+  --lokadia-background: #0B1220;
+  --lokadia-background-subtle: #0F1826;
+
+  /* ─── Bandes de risque : éclaircies, contraste AA sur fond sombre ─── */
+  --risk-high: #F87171;
+  --risk-mid: #FBBF24;
+  --risk-low: #34D399;
+
+  /* ─── Ombres : plus marquées, le fond ne les révèle plus tout seul ─── */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.55), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.65), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+
+  /* ─── Dégradés : mêmes teintes, assombries pour ne pas éblouir ─── */
+  --gradient-primary: linear-gradient(135deg, #0D3C68 0%, #17527F 100%);
+  --gradient-secondary: linear-gradient(135deg, #0E7490 0%, #0891B2 100%);
+  --gradient-accent: linear-gradient(135deg, #5B34C7 0%, #7C3AED 100%);
+
+  /* ─── Tokens shadcn : le primaire reste la marque ───
+     Le bloc `.dark` d'origine passait `--primary` en quasi-blanc (thème
+     shadcn par défaut) : tous les boutons de la bibliothèque seraient
+     sortis blancs, sans rapport avec Lokadia. */
+  --primary: #4C9BE0;
+  --primary-foreground: #0B1220;
+  --background: #0B1220;
+  --foreground: #F1F5F9;
+  --card: #131C2B;
+  --card-foreground: #F1F5F9;
+  --popover: #131C2B;
+  --popover-foreground: #F1F5F9;
+  --border: rgba(255, 255, 255, 0.10);
+  --input-background: #1A2437;
+  --switch-background: #3B4C65;
+  --ring: #4C9BE0;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Pont pour les utilitaires Tailwind écrits en dur.
+   Transitoire — voir l'en-tête du fichier.
+   ════════════════════════════════════════════════════════════════════ */
+
+.dark body {
+  background: var(--lokadia-background);
+  color: var(--lokadia-gray-900);
+}
+
+/* Surfaces */
+.dark .bg-white {
+  background-color: var(--lokadia-surface);
+}
+/* Variantes translucides utilisées comme surfaces (barres collantes,
+   champs posés sur une image). Les faibles opacités — `bg-white/20` et
+   compagnie — sont volontairement laissées : ce sont des voiles blancs
+   posés sur un dégradé navy, ils restent justes en sombre. */
+.dark .bg-white\/95 { background-color: color-mix(in srgb, var(--lokadia-surface) 95%, transparent); }
+.dark .bg-white\/90 { background-color: color-mix(in srgb, var(--lokadia-surface) 90%, transparent); }
+.dark .bg-white\/80 { background-color: color-mix(in srgb, var(--lokadia-surface) 80%, transparent); }
+.dark .bg-gray-50,
+.dark .bg-slate-50 {
+  background-color: var(--lokadia-background-subtle);
+}
+.dark .bg-gray-100,
+.dark .bg-slate-100 {
+  background-color: var(--lokadia-gray-100);
+}
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover {
+  background-color: var(--lokadia-gray-100);
+}
+
+/* Fonds sémantiques clairs (badges, encarts d'alerte) */
+.dark .bg-red-50 { background-color: var(--lokadia-danger-bg); }
+.dark .bg-orange-50 { background-color: var(--lokadia-warning-bg); }
+.dark .bg-amber-50,
+.dark .bg-yellow-50 { background-color: var(--lokadia-warning-bg); }
+.dark .bg-green-50,
+.dark .bg-emerald-50 { background-color: var(--lokadia-success-bg); }
+.dark .bg-blue-50,
+.dark .bg-sky-50 { background-color: var(--lokadia-info-bg); }
+.dark .bg-purple-50,
+.dark .bg-violet-50 { background-color: var(--lokadia-category-transport-bg); }
+
+/* Teinte 100 : fonds de badges (Badge.tsx) — même traitement que les 50. */
+.dark .bg-red-100 { background-color: var(--lokadia-danger-bg); }
+.dark .bg-orange-100,
+.dark .bg-amber-100,
+.dark .bg-yellow-100 { background-color: var(--lokadia-warning-bg); }
+.dark .bg-green-100,
+.dark .bg-emerald-100 { background-color: var(--lokadia-success-bg); }
+.dark .bg-blue-100,
+.dark .bg-sky-100 { background-color: var(--lokadia-info-bg); }
+.dark .bg-purple-100,
+.dark .bg-violet-100 { background-color: var(--lokadia-category-transport-bg); }
+
+/* Textes neutres */
+.dark .text-gray-900,
+.dark .text-slate-900 { color: var(--lokadia-gray-900); }
+.dark .text-gray-800 { color: var(--lokadia-gray-800); }
+.dark .text-gray-700 { color: var(--lokadia-gray-700); }
+.dark .text-gray-600 { color: var(--lokadia-gray-600); }
+.dark .text-gray-500 { color: var(--lokadia-gray-500); }
+.dark .text-gray-400 { color: var(--lokadia-gray-400); }
+
+/* Textes sémantiques foncés : ils étaient posés sur des fonds clairs
+   (`bg-red-50`…) devenus sombres — sans remap, du bordeaux sur nuit. */
+.dark .text-red-900,
+.dark .text-red-800,
+.dark .text-red-700,
+.dark .text-red-600 { color: var(--lokadia-danger); }
+.dark .text-orange-800,
+.dark .text-orange-700,
+.dark .text-amber-900,
+.dark .text-amber-800,
+.dark .text-amber-700,
+.dark .text-yellow-800 { color: var(--lokadia-warning); }
+.dark .text-green-900,
+.dark .text-green-800,
+.dark .text-green-700,
+.dark .text-emerald-800,
+.dark .text-emerald-700 { color: var(--lokadia-success); }
+.dark .text-blue-900,
+.dark .text-blue-800,
+.dark .text-blue-700,
+.dark .text-sky-800,
+.dark .text-sky-700 { color: var(--lokadia-info); }
+.dark .text-purple-900,
+.dark .text-purple-800,
+.dark .text-violet-800 { color: var(--lokadia-category-transport); }
+
+/* Bordures */
+.dark .border-gray-100 { border-color: var(--lokadia-gray-100); }
+.dark .border-gray-200 { border-color: var(--lokadia-gray-200); }
+.dark .border-red-100 { border-color: rgba(248, 113, 113, 0.35); }
+.dark .border-green-100 { border-color: rgba(52, 211, 153, 0.3); }
+.dark .border-blue-100 { border-color: rgba(56, 189, 248, 0.3); }
+
+/* Champs de formulaire natifs */
+.dark input,
+.dark textarea,
+.dark select {
+  color: var(--lokadia-gray-900);
+  background-color: var(--lokadia-surface-elevated);
+  border-color: var(--lokadia-gray-200);
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--lokadia-gray-500);
+}
+
+/* Cartes Leaflet : les tuiles claires brûlent les yeux sur fond sombre.
+   On les désature légèrement plutôt que de changer de fournisseur. */
+.dark .leaflet-tile-pane {
+  filter: brightness(0.72) contrast(1.08) saturate(0.85);
+}
