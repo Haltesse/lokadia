@@ -14,6 +14,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FileCheck2, Printer, Download, ScrollText, AlertTriangle } from 'lucide-react';
 import { useOrg } from '../OrgContext';
+import { useAuth } from '../../context/AuthContext';
+import { ScheduledReportsPanel } from '../components/ScheduledReportsPanel';
 import {
   fetchMissions, fetchAuditLog, isMissionActiveToday, isMissionUpcoming,
   complianceComplete, type MissionWithCompliance, type AuditEntry,
@@ -53,7 +55,9 @@ function downloadCsv(filename: string, rows: string[][]): void {
 }
 
 export default function ProComplianceScreen() {
-  const { org } = useOrg();
+  const { org, membership } = useOrg();
+  const { user } = useAuth();
+  const canWrite = membership?.role === 'admin' || membership?.role === 'manager';
   const [tab, setTab] = useState<'report' | 'audit'>('report');
   const [missions, setMissions] = useState<MissionWithCompliance[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
@@ -159,6 +163,17 @@ export default function ProComplianceScreen() {
           .no-print { display: none !important; }
         }
       `}</style>
+
+      {/* Rapport programmé — produit par la base, pas par cet écran */}
+      {org && (
+        <div className="no-print">
+          <ScheduledReportsPanel
+            orgId={org.id}
+            actor={user ? { id: user.id, email: user.email } : null}
+            canWrite={canWrite}
+          />
+        </div>
+      )}
 
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <div>

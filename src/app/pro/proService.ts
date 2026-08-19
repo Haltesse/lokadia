@@ -906,3 +906,72 @@ export async function decideRiskAssessment(
     },
   });
 }
+
+// ─── Rapports programmés (P6, complément) ────────────────────────────────
+
+export type ScheduledReport = Database['public']['Tables']['scheduled_reports']['Row'];
+export type ReportRun = Database['public']['Tables']['report_runs']['Row'];
+
+export async function fetchScheduledReport(orgId: string): Promise<ScheduledReport | null> {
+  const { data, error } = await supabase
+    .from('scheduled_reports')
+    .select('*')
+    .eq('org_id', orgId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchReportRuns(orgId: string, limit = 12): Promise<ReportRun[]> {
+  const { data, error } = await supabase
+    .from('report_runs')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data ?? [];
+}
+
+/**
+ * Active ou modifie l'abonnement. La première échéance est posée à la
+ * fréquence choisie : programmer un rapport ne doit pas en produire un
+ * immédiatement, sinon le premier envoi arrive avant que quiconque ait
+ * saisi la moindre mission.
+ */
+export async function saveScheduledReport(
+  orgId: string,
+  actor: { id: string; email: string },
+  frequency: 'weekly' | 'monthly',
+  active: boolean,
+): Promise<void> {
+  const days = frequency === 'monthly' ? 30 : 7;
+  const { error } = await supabase.from('scheduled_reports').upsert(
+    {
+      org_id: orgId,
+      kind: 'compliance',
+      frequency,
+      active,
+      next_run_at: new Date(Date.now() + days * 86_400_000).toISOString(),
+      created_by: actor.id,
+    },
+    { onConflict: 'org_id,kind' },
+  );
+  if (error) throw error;
+
+  await logAudit(orgId, actor, {
+    action: active ? 'report.schedule' : 'report.unschedule',
+    target_kind: 'report',
+    detail: { frequency },
+  });
+}
+
+/** Génération immédiate — même rapport que le passage programmé. */
+export async function generateReportNow(
+  orgId: string,
+  actor: { id: string; email: string },
+): Promise<void> {
+  const { error } = await supabase.rpc('generate_report_now', { p_org: orgId });
+  if (error) throw error;
+  await logAudit(orgId, actor, { action: 'report.generate', target_kind: 'report' });
+}

@@ -1162,6 +1162,85 @@ export type Database = {
           },
         ]
       }
+      report_runs: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          manual: boolean
+          org_id: string
+          payload: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          manual?: boolean
+          org_id: string
+          payload: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          manual?: boolean
+          org_id?: string
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_runs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_reports: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          frequency: string
+          id: string
+          kind: string
+          last_run_at: string | null
+          next_run_at: string
+          org_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          frequency?: string
+          id?: string
+          kind?: string
+          last_run_at?: string | null
+          next_run_at?: string
+          org_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          frequency?: string
+          id?: string
+          kind?: string
+          last_run_at?: string | null
+          next_run_at?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_reports_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traveler_alerts: {
         Row: {
           created_at: string
@@ -1743,6 +1822,7 @@ export type Database = {
           total: number
         }[]
       }
+      build_compliance_snapshot: { Args: { p_org: string }; Returns: Json }
       can_see_department: {
         Args: { p_department: string; p_org: string }
         Returns: boolean
@@ -1752,9 +1832,11 @@ export type Database = {
         Args: { p_name: string; p_tier?: string }
         Returns: string
       }
+      generate_report_now: { Args: { p_org: string }; Returns: string }
       is_org_member: { Args: { p_org: string }; Returns: boolean }
       member_department: { Args: { p_org: string }; Returns: string }
       org_role: { Args: { p_org: string }; Returns: string }
+      run_due_reports: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never

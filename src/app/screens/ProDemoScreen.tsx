@@ -133,7 +133,7 @@ const OFFERS: OfferDemo[] = [
       { key: 'api', label: 'API Lokascore intégrée', desc: 'Le score dans votre espace client', Icon: Code2 },
       { key: 'risk-pricing', label: 'Tarification au risque pays', desc: 'Prime ajustée au Lokascore', Icon: LineChart },
       { key: 'white-label', label: 'Branding personnalisé', desc: 'Vos couleurs, votre domaine', Icon: Sparkles },
-      { key: 'sla', label: 'SLA 99,9 %', desc: 'Disponibilité garantie', Icon: Shield },
+      { key: 'sla', label: 'Statut public', desc: 'Disponibilité vérifiable en direct', Icon: Shield },
     ],
     scenarios: [
       { label: 'Séisme Bali', destinationId: 'bali-indonesia', type: 'earthquake', severity: 'red', title: 'Séisme M6.8 près de Bali' },
@@ -615,7 +615,7 @@ function FeatureModal({ feature, onClose, offer, scores }: { feature: FeatureKey
   const titles: Record<FeatureKey, string> = {
     students: 'Suivi des étudiants Erasmus', 'group-alert': 'Alertes groupe par pays', 'ri-dashboard': 'Dashboard relations internationales', compliance: 'Reporting devoir de protection',
     missions: 'Gestion des missions terrain', 'team-alerts': 'Alertes sécurité équipes', 'incident-history': 'Historique & analyse des incidents', support: 'Support dédié 7j/7',
-    api: 'API Lokascore intégrée', 'risk-pricing': 'Tarification au risque pays', 'white-label': 'Branding personnalisé', sla: 'SLA 99,9 %',
+    api: 'API Lokascore intégrée', 'risk-pricing': 'Tarification au risque pays', 'white-label': 'Branding personnalisé', sla: 'Statut des services vérifiable',
     'passenger-app': 'Notifications app passager', preflight: 'Information destination pré-vol', 'ops-alerts': 'Alertes opérationnelles', cobranding: 'Co-branding',
     seminars: 'Gestion risque groupes/séminaires', 'employer-compliance': 'Conformité obligation employeur', 'collab-alerts': 'Alertes temps réel collaborateurs', 'hr-dashboard': 'Tableau de bord RH',
   };
@@ -649,7 +649,7 @@ function FeatureModal({ feature, onClose, offer, scores }: { feature: FeatureKey
       case 'white-label': case 'cobranding':
         return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Le Lokascore aux couleurs de votre marque.</p><div className="rounded-2xl p-4" style={{ border: `2px solid ${offer.color}` }}><div className="mb-3 flex items-center gap-2"><div className="h-6 w-6 rounded" style={{ background: offer.color }} /><span className="text-sm font-bold" style={{ color: offer.color }}>VotreMarque · Sécurité voyage</span></div><div className="flex items-center justify-between rounded-xl p-3" style={{ background: offer.bg }}><span className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-700)' }}>Bangkok, Thaïlande</span><span className="rounded-full px-3 py-1 text-sm font-bold text-white" style={{ background: offer.color }}>78/100</span></div></div>{ok('Rendu à vos couleurs')}</div>;
       case 'sla':
-        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Engagement de disponibilité contractuel.</p><div className="grid grid-cols-3 gap-2 text-center">{[{ k: 'Uptime', v: '99,9 %' }, { k: 'Latence', v: '< 200 ms' }, { k: 'Support', v: 'Prioritaire' }].map((s) => (<div key={s.k} className="rounded-xl p-3" style={{ background: offer.bg }}><p className="text-lg font-bold" style={{ color: offer.color }}>{s.v}</p><p className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>{s.k}</p></div>))}</div>{ok('Tous services opérationnels')}</div>;
+        return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Aucun taux de disponibilité n'est promis ici : il n'existe ni sonde continue ni engagement contractuel derrière un tel chiffre. Ce qui existe, et que vous pouvez vérifier vous-même : une page de statut qui teste les services en direct, depuis votre navigateur.</p><a href="/statut" className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold text-white" style={{ background: offer.color }}>Ouvrir la page de statut</a><p className="text-xs" style={{ color: 'var(--lokadia-gray-500)' }}>Un engagement de service chiffré fera partie du contrat le jour où il pourra être mesuré et tenu.</p></div>;
       case 'passenger-app':
         return <div className="space-y-3"><p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>Le Lokascore dans votre app passager.</p><div className="mx-auto w-48 rounded-3xl border-4 p-3" style={{ borderColor: 'var(--lokadia-gray-200)' }}><div className="rounded-xl p-3" style={{ background: offer.bg }}><p className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>Votre vol AF276</p><p className="text-sm font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>Tokyo</p><div className="mt-2 flex items-center justify-between"><span className="text-[11px]" style={{ color: 'var(--lokadia-gray-600)' }}>Sécurité</span><span className="rounded-full px-2 py-0.5 text-xs font-bold text-white" style={{ background: '#22c55e' }}>92</span></div></div></div>{ok('Widget intégrable')}</div>;
       case 'preflight':

@@ -63,7 +63,7 @@ export default function ProPage() {
         "API Lokascore intégrée à votre espace client",
         "Tarification ajustée en fonction du risque pays",
         "Branding personnalisé",
-        "SLA 99,9 %",
+        "Statut des services public et vérifiable en direct",
       ],
       color: "#10B981",
       bg: "rgba(16, 185, 129, 0.08)",
