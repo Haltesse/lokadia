@@ -31,9 +31,21 @@ const ANON = /"(eyJ[A-Za-z0-9._-]+)"/.exec(info)[1];
 const URL_BASE = `https://${PROJECT}.supabase.co`;
 
 const DEMO = { email: 'demo@lokadia.com', password: 'demo123' };
+/**
+ * Second compte, nécessaire pour jouer la validation hiérarchique.
+ *
+ * Par défaut l'adresse est volontairement invalide : le script ne doit
+ * envoyer aucun e-mail à qui que ce soit sans qu'on l'ait demandé. Pour
+ * exercer réellement le parcours complet, fournir une boîte qu'on possède :
+ *
+ *   TEST_EMAIL=moi+lokadia@exemple.fr node supabase/tests/pro-journey.mjs
+ *
+ * Un compte est alors créé pour de bon dans le projet, et un e-mail de
+ * confirmation part vers cette adresse.
+ */
 const TESTER = {
-  email: `parcours-pro-${Date.now()}@lokadia-test.invalid`,
-  password: `Test-${Math.random().toString(36).slice(2)}!`,
+  email: process.env.TEST_EMAIL ?? `parcours-pro-${Date.now()}@lokadia-test.invalid`,
+  password: process.env.TEST_PASSWORD ?? `Test-${Math.random().toString(36).slice(2)}!`,
 };
 
 /** Second compte, s'il a pu être créé — utilisé aussi au nettoyage. */
@@ -183,10 +195,29 @@ try {
   );
 
   // ─── 5. Validation par une autre personne ──────────────────────────────
+  // L'inscription ne dit jamais si l'adresse est déjà prise — Supabase
+  // répond 200 sans session dans ce cas, pour ne pas laisser énumérer les
+  // comptes. On tente donc systématiquement la connexion ensuite : elle
+  // réussit si le compte existe et qu'il est confirmé.
   try {
     validator = await signUp(TESTER);
-  } catch (err) {
-    console.log(`  (inscription du second compte impossible : ${err.message})`);
+  } catch {
+    // Inscription refusée (SMTP absent, adresse invalide) : on tentera
+    // quand même la connexion, au cas où le compte existerait déjà.
+  }
+
+  if (!validator) {
+    try {
+      validator = await signIn(TESTER);
+    } catch {
+      console.log('');
+      console.log(`  Compte ${TESTER.email} en attente de confirmation.`);
+      console.log("  Cliquez le lien reçu par e-mail, puis relancez avec :");
+      console.log(
+        `    TEST_EMAIL=${TESTER.email} TEST_PASSWORD=${TESTER.password} node supabase/tests/pro-journey.mjs`,
+      );
+      console.log('');
+    }
   }
 
   if (validator) {
