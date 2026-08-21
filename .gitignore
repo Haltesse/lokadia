@@ -46,3 +46,6 @@ Document/
 
 # Claude local preview config
 .claude/launch.json
+
+# Reglages Claude Code locaux (peuvent contenir des jetons) — jamais versionnes
+.claude/settings.local.json
