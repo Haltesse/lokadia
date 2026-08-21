@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
-  MapPin,
   Plane,
   Plus,
   Route,

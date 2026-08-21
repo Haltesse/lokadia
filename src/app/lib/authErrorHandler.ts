@@ -8,12 +8,29 @@ export class AuthError extends Error {
   }
 }
 
+/**
+ * Message lisible d'une erreur de forme inconnue.
+ *
+ * Sous `strict`, la liaison d'un `catch` est typée `unknown` : on ne peut pas
+ * y lire `.message` sans vérifier. Ce point d'entrée unique évite d'éparpiller
+ * ces vérifications, et de retomber sur `any` pour s'en dispenser.
+ */
+export function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object') {
+    const shape = error as { message?: unknown; error?: unknown };
+    if (typeof shape.message === 'string') return shape.message;
+    if (typeof shape.error === 'string') return shape.error;
+  }
+  return '';
+}
+
 // Détecter si une erreur est liée à l'authentification
-export function isAuthError(error: any): boolean {
+export function isAuthError(error: unknown): boolean {
   if (!error) return false;
-  
-  const message = error.message || error.error || '';
-  const errorString = message.toLowerCase();
+
+  const errorString = errorMessage(error).toLowerCase();
   
   // Liste des messages d'erreur liés à l'authentification
   const authErrorPatterns = [
@@ -33,8 +50,8 @@ export function isAuthError(error: any): boolean {
 }
 
 // Gérer une erreur d'authentification
-export async function handleAuthError(error: any) {
-  console.error('🚨 Auth error detected:', error.message || error);
+export async function handleAuthError(error: unknown) {
+  console.error('🚨 Auth error detected:', errorMessage(error) || error);
   
   if (isAuthError(error)) {
     console.log('🧹 Clearing invalid session...');

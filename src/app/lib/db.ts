@@ -300,7 +300,7 @@ class DatabaseService {
    * Supprime tous les éléments par index
    */
   async deleteAllByIndex(storeName: string, indexName: string, value: string): Promise<void> {
-    const items = await this.getAllByIndex<any>(storeName, indexName, value);
+    const items = await this.getAllByIndex<{ id: IDBValidKey }>(storeName, indexName, value);
     const db = this.getDb();
     
     return new Promise((resolve, reject) => {

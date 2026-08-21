@@ -1,6 +1,6 @@
 // Générateur de checklist intelligent basé sur les caractéristiques de la destination
 
-import { getDestinationData, type DestinationDetails } from '../data/destinationData';
+import { getDestinationData } from '../data/destinationData';
 import { getCachedLokascore } from './lokascoreApi';
 import { assessEntry } from './formalities';
 

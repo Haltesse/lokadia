@@ -1,5 +1,5 @@
 // Boundary qui capture les erreurs d'authentification
-import { Component, ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Lock } from 'lucide-react';
 import { handleAuthError, isAuthError } from '../lib/authErrorHandler';
 
@@ -17,12 +17,12 @@ export class AuthErrorBoundary extends Component<Props, State> {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(_error: Error): State {
     // Mettre à jour l'état pour afficher l'UI de secours au prochain rendu
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, errorInfo: any) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('❌ Error caught by AuthErrorBoundary:', error, errorInfo);
     
     // Si c'est une erreur d'authentification, la gérer

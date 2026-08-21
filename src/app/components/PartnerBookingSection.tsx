@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { Wifi, ShieldCheck, Hotel, Ticket, Plane, ArrowRight } from 'lucide-react';
+import { Wifi, ShieldCheck, Hotel, Ticket, Plane, ArrowRight, type LucideIcon } from 'lucide-react';
 
 /**
  * Section partenaires commerciaux — driver de commissions.
@@ -13,7 +13,7 @@ export type BookingPartner = {
   label: string;
   description: string;
   provider: string;
-  icon: any;
+  icon: LucideIcon;
   color: string;
   bg: string;
   href?: string; // lien d'affiliation (à remplir)

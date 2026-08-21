@@ -17,11 +17,10 @@ import {
   Plane, Train, Bus, Car, Ship, Check, Map as MapIcon, Info,
 } from 'lucide-react';
 import { generateStopSuggestions } from '../lib/tripBriefService';
-import type { TripStop, TripSegment } from '../lib/tripStopService';
+import type { TripStop, TripSegment, TripSegmentMetadata } from '../lib/tripStopService';
 import {
   updateTripSegmentMode,
   ensureTripSegments,
-  createTripSegment as createSegmentInDb,
 } from '../lib/tripStopService';
 import type { Trip } from '../lib/tripService';
 import { calculateTransportOptions, type TransportOption } from '../lib/transportService';
@@ -130,7 +129,7 @@ interface EnrichedLeg {
   recommendedMode: ModeKey;
   selectedMode: ModeKey;
   dbSegmentId: string | null;   // null → segment pas encore en BDD
-  dbMetadata: any;
+  dbMetadata: TripSegmentMetadata | null;
 }
 
 interface Props {
@@ -175,7 +174,7 @@ export default function TripItineraryMapTab({ trip, stops, segments: initialSegm
       });
     }
 
-    stops.forEach((s, idx) => {
+    stops.forEach((s) => {
       const coords = (s.latitude && s.longitude)
         ? { lat: s.latitude, lon: s.longitude }
         : resolveCoords(s.destinationId);
@@ -210,14 +209,14 @@ export default function TripItineraryMapTab({ trip, stops, segments: initialSegm
       let alternatives: TransportOption[];
       let recommendedMode: ModeKey;
       let dbSegmentId: string | null = null;
-      let dbMetadata: any = null;
+      let dbMetadata: TripSegmentMetadata | null = null;
 
       if (dbSeg && Array.isArray(dbSeg.alternatives) && dbSeg.alternatives.length > 0) {
         distanceKm = dbSeg.distanceKm;
         alternatives = dbSeg.alternatives as TransportOption[];
         recommendedMode = dbSeg.recommendedMode as ModeKey;
         dbSegmentId = dbSeg.id;
-        dbMetadata = dbSeg.metadata;
+        dbMetadata = dbSeg.metadata ?? null;
       } else {
         distanceKm = haversine(from.lat, from.lon, to.lat, to.lon);
         const fromStop = { id: from.id, destinationId: from.destinationId, latitude: from.lat, longitude: from.lon } as TripStop;

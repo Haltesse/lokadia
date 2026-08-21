@@ -2,8 +2,12 @@
 import { supabase } from './supabase';
 import type { Database } from './database.types';
 
+import type { TransportOption } from './transportService';
+
 type TripStopRow = Database['public']['Tables']['trip_stops']['Row'];
 type TripSegmentRow = Database['public']['Tables']['trip_segments']['Row'];
+type TripStopUpdate = Database['public']['Tables']['trip_stops']['Update'];
+type Json = Database['public']['Tables']['trip_segments']['Row']['metadata'];
 
 export interface TripStop {
   id: string;
@@ -20,16 +24,31 @@ export interface TripStop {
   updatedAt: string;
 }
 
+/**
+ * Contenu de la colonne jsonb `metadata` d'un segment. Champs connus
+ * explicites, le reste ouvert : c'est du JSON libre côté base.
+ */
+export interface TripSegmentMetadata {
+  /** Mode retenu par le voyageur, prioritaire sur le mode recommandé. */
+  selectedMode?: string;
+  /** Pass transport conseillé pour la zone (JR Pass, Interrail…). */
+  passRecommended?: string;
+  bookingAdvice?: string;
+  luggageNotes?: string;
+  tips?: string[];
+  [key: string]: unknown;
+}
+
 export interface TripSegment {
   id: string;
   tripId: string;
   fromStopId: string;
   toStopId: string;
   recommendedMode: string;
-  alternatives: any;
+  alternatives: TransportOption[];
   distanceKm: number;
   durationMinEstimated: number;
-  metadata?: any | null;
+  metadata?: TripSegmentMetadata | null;
   source: string;
   createdAt: string;
   updatedAt: string;
@@ -61,10 +80,10 @@ function mapSegmentRow(row: TripSegmentRow): TripSegment {
     fromStopId: row.from_stop_id,
     toStopId: row.to_stop_id,
     recommendedMode: row.recommended_mode,
-    alternatives: row.alternatives,
+    alternatives: (row.alternatives ?? []) as unknown as TransportOption[],
     distanceKm: row.distance_km,
     durationMinEstimated: row.duration_min_estimated,
-    metadata: row.metadata,
+    metadata: row.metadata as TripSegmentMetadata | null,
     source: row.source ?? 'estimation',
     createdAt: row.created_at ?? '',
     updatedAt: row.updated_at ?? '',
@@ -128,7 +147,7 @@ export async function updateTripStop(
   stopId: string,
   updates: Partial<TripStop>
 ): Promise<void> {
-  const dbUpdates: any = {};
+  const dbUpdates: TripStopUpdate = {};
   
   if (updates.destinationId !== undefined) dbUpdates.destination_id = updates.destinationId;
   if (updates.destinationName !== undefined) dbUpdates.destination_name = updates.destinationName;
@@ -251,10 +270,10 @@ export async function createTripSegment(
       from_stop_id: segment.fromStopId,
       to_stop_id: segment.toStopId,
       recommended_mode: segment.recommendedMode,
-      alternatives: segment.alternatives,
+      alternatives: segment.alternatives as unknown as Json,
       distance_km: segment.distanceKm,
       duration_min_estimated: segment.durationMinEstimated,
-      metadata: segment.metadata,
+      metadata: (segment.metadata ?? null) as unknown as Json,
       source: segment.source,
     })
     .select()
@@ -277,7 +296,7 @@ export async function createTripSegment(
 export async function updateTripSegmentMode(
   segmentId: string,
   selectedMode: string,
-  existingMetadata?: any
+  existingMetadata?: TripSegmentMetadata | null
 ): Promise<void> {
   const metadata = { ...(existingMetadata || {}), selectedMode };
   const { error } = await supabase

@@ -19,7 +19,7 @@ export function useWeather(cityName: string) {
           setWeather(data);
           setLoading(false);
         }
-      } catch (err) {
+      } catch {
         if (isMounted) {
           setError('Impossible de charger la météo');
           setLoading(false);

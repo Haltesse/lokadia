@@ -18,8 +18,6 @@ import {
   Download,
   RefreshCw,
 } from "lucide-react";
-import { Badge } from "../components/Badge";
-import { EmptyState } from "../components/EmptyState";
 import { SaveTripModal } from "../components/SaveTripModal";
 import { getDestinationData } from "../data/destinationData";
 import {

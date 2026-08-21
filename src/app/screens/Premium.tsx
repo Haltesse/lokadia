@@ -1,5 +1,4 @@
 import { Check, Crown, Bell, Map, Shield, Zap, Globe, Star, Sparkles, TrendingUp, Award, Gift } from "lucide-react";
-import { PriceDisplay } from "../components/PriceDisplay";
 import { motion } from "motion/react";
 
 export function Premium() {

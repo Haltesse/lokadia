@@ -5,7 +5,6 @@ import {
   Heart, 
   Share2, 
   MapPin, 
-  Clock, 
   Download, 
   CheckCircle, 
   Info, 

@@ -27,7 +27,7 @@ import { STOP_CITIES, type StopCity } from '../data/stopCities';
 import { calculateTransportOptions, type TransportOption } from '../lib/transportService';
 import { computeBudgetEstimate, DEPARTURE_CITIES } from '../lib/travelOffers';
 import { createTrip } from '../lib/tripService';
-import { addStopToTrip, createTripSegment } from '../lib/tripStopService';
+import { addStopToTrip, createTripSegment, type TripStop } from '../lib/tripStopService';
 import { checkItinerary, type CheckableStop } from '../lib/itineraryChecks';
 import { ItineraryIssues } from '../components/ItineraryIssues';
 import { ReorderableList } from '../components/ReorderableList';
@@ -431,8 +431,8 @@ export default function TripMapPlannerScreen() {
       const from = points[i], to = points[i + 1];
       const distanceKm = haversine({ lat: from.lat, lon: from.lon }, { lat: to.lat, lon: to.lon });
       // Pseudo-stops pour calculateTransportOptions
-      const fromStop = { id: from.id, destinationId: from.destinationId, latitude: from.lat, longitude: from.lon } as any;
-      const toStop = { id: to.id, destinationId: to.destinationId, latitude: to.lat, longitude: to.lon } as any;
+      const fromStop = { id: from.id, destinationId: from.destinationId, latitude: from.lat, longitude: from.lon } as TripStop;
+      const toStop = { id: to.id, destinationId: to.destinationId, latitude: to.lat, longitude: to.lon } as TripStop;
       const calc = calculateTransportOptions(fromStop, toStop, distanceKm);
       const recommended = calc.recommendedMode as ModeKey;
       const key = `${from.id}=>${to.id}`;
@@ -644,8 +644,8 @@ export default function TripMapPlannerScreen() {
         const toStop = stops[i + 1];
         const distanceKm = haversine({ lat: fromStop.lat, lon: fromStop.lon }, { lat: toStop.lat, lon: toStop.lon });
         const calc = calculateTransportOptions(
-          { id: fromRec.id, destinationId: fromStop.destinationId, latitude: fromStop.lat, longitude: fromStop.lon } as any,
-          { id: toRec.id, destinationId: toStop.destinationId, latitude: toStop.lat, longitude: toStop.lon } as any,
+          { id: fromRec.id, destinationId: fromStop.destinationId, latitude: fromStop.lat, longitude: fromStop.lon } as TripStop,
+          { id: toRec.id, destinationId: toStop.destinationId, latitude: toStop.lat, longitude: toStop.lon } as TripStop,
           distanceKm
         );
         const legKey = `${fromStop.id}=>${toStop.id}`;
@@ -911,7 +911,7 @@ export default function TripMapPlannerScreen() {
           {/* Popup au clic libre sur la carte (reverse geocoding) */}
           {pendingClick && (
             <Popup
-              position={[pendingClick.lat, pendingClick.lon] as any}
+              position={[pendingClick.lat, pendingClick.lon] as [number, number]}
               eventHandlers={{ remove: () => setPendingClick(null) }}
             >
               <div style={{ minWidth: 200 }}>
@@ -1033,8 +1033,7 @@ export default function TripMapPlannerScreen() {
 
         {/* Contenu (scrollable) — toujours monté, clippé par overflow-hidden du parent
             pour éviter tout saut visuel quand on baisse le drawer */}
-        {true && (
-          <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3 lg:px-5 lg:py-4">
+        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3 lg:px-5 lg:py-4">
 
             {/* ── Réglages compacts : départ + voyageurs sur la même ligne avec
                 EXACTEMENT le même style (icône inline + contenu), puis dates en dessous. ── */}
@@ -1362,8 +1361,7 @@ export default function TripMapPlannerScreen() {
               <Info size={11} />
               Modes affichés : uniquement ceux faisables pour la distance du trajet.
             </p>
-          </div>
-        )}
+        </div>
       </motion.div>
       </div>
     </div>

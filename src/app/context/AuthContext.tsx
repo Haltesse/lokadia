@@ -1,8 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
-import { isAuthError, handleAuthError } from '../lib/authErrorHandler';
+import type { Session } from '@supabase/supabase-js';
+import { isAuthError, handleAuthError, errorMessage } from '../lib/authErrorHandler';
 import { useGlobalAuthErrorHandler } from '../hooks/useGlobalAuthErrorHandler';
 
 // Interface utilisateur simplifiée
@@ -108,8 +107,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         console.log('ℹ️  No existing session found');
       }
-    } catch (error: any) {
-      console.error('❌ Init auth error:', error.message);
+    } catch (error) {
+      console.error('❌ Init auth error:', errorMessage(error));
       
       // Utiliser le gestionnaire d'erreurs centralisé
       if (isAuthError(error)) {
@@ -209,8 +208,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('Invalid profile data');
       }
       */
-    } catch (error: any) {
-      console.error('❌ Error fetching profile:', error.message);
+    } catch (error) {
+      console.error('❌ Error fetching profile:', errorMessage(error));
       
       // Créer un profil par défaut si erreur
       console.log('⚠️  Fallback: creating minimal profile...');
@@ -288,7 +287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       console.log('✅ Sign up complete!\n');
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Sign up error:', error);
       
       // Gérer les erreurs de type "Failed to fetch"
@@ -347,7 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await fetchUserProfile(data.session);
       
       console.log('✅ Sign in complete!\n');
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Sign in error:', error);
       
       // Gérer les erreurs de type "Failed to fetch"
@@ -376,8 +375,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setSession(null);
       console.log('✅ Signed out successfully\n');
-    } catch (error: any) {
-      console.error('❌ Sign out error:', error.message);
+    } catch (error) {
+      console.error('❌ Sign out error:', errorMessage(error));
       throw error;
     }
   }
@@ -392,8 +391,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🔄 Refreshing user profile...');
       await fetchUserProfile(session);
-    } catch (error: any) {
-      console.error('❌ Refresh user error:', error.message);
+    } catch (error) {
+      console.error('❌ Refresh user error:', errorMessage(error));
     }
   }
 
@@ -447,8 +446,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('✅ Profile updated successfully');
       }
       */
-    } catch (error: any) {
-      console.error('❌ Update profile error:', error.message);
+    } catch (error) {
+      console.error('❌ Update profile error:', errorMessage(error));
       throw error;
     }
   }
@@ -478,4 +477,15 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+/**
+ * Variante tolérante de `useAuth` : renvoie `null` hors provider au lieu de
+ * lever, sur le modèle de `useLanguageSafe`. Pour les composants montés aussi
+ * bien sur les pages publiques que dans l'application connectée — la TopBar,
+ * par exemple. Évite le `try/catch` autour d'un appel de hook, qui viole les
+ * règles des hooks.
+ */
+export function useAuthSafe(): AuthContextType | null {
+  return useContext(AuthContext) ?? null;
 }

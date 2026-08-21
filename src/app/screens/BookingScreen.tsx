@@ -11,7 +11,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router';
 import {
   ArrowLeft, Plane, Building2, Train, Wifi, ShieldCheck, Ticket,
-  Check, Plus, ShoppingCart, Star, Clock,
+  Check, Plus, ShoppingCart, Star, Clock, type LucideIcon,
 } from 'lucide-react';
 import { getDestinationData } from '../data/destinationData';
 import { generateFlightOffers, generateHotelOffers } from '../lib/travelOffers';
@@ -21,7 +21,7 @@ import {
 } from '../lib/bookingCatalog';
 import { useCart, CATEGORY_META, type CartCategory } from '../lib/cart';
 
-const TABS: Array<{ id: CartCategory; label: string; Icon: any }> = [
+const TABS: Array<{ id: CartCategory; label: string; Icon: LucideIcon }> = [
   { id: 'flight', label: 'Vol', Icon: Plane },
   { id: 'hotel', label: 'Hôtel', Icon: Building2 },
   { id: 'train', label: 'Train', Icon: Train },
@@ -226,7 +226,7 @@ function AddBtn({ added, color, onClick }: { added: boolean; color: string; onCl
   );
 }
 
-function OfferRow({ o, added, onAdd, Icon }: { o: CatalogOffer; added: boolean; onAdd: () => void; Icon: any }) {
+function OfferRow({ o, added, onAdd, Icon }: { o: CatalogOffer; added: boolean; onAdd: () => void; Icon: LucideIcon }) {
   const c = CATEGORY_META[o.category].color;
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-white p-4" style={{ border: '1px solid var(--lokadia-gray-100)', boxShadow: 'var(--shadow-sm)' }}>

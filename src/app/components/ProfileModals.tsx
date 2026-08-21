@@ -1,5 +1,3 @@
-import { Modal } from "../components/Modal";
-import { Download, AlertCircle } from "lucide-react";
 import { useLanguageSafe } from "../context/LanguageContext";
 
 interface ProfileModalsProps {

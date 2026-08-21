@@ -56,7 +56,7 @@ function FitBounds({ coords }: { coords: Array<[number, number]> }) {
       if (coords.length === 1) {
         map.setView(coords[0], 4);
       } else if (coords.length > 1) {
-        map.fitBounds(coords as any, { padding: [40, 40], maxZoom: 5 });
+        map.fitBounds(coords, { padding: [40, 40], maxZoom: 5 });
       }
     }, 200);
     return () => clearTimeout(t);

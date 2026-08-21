@@ -276,7 +276,7 @@ export const LOKASCORE_LEVELS_ORDER: LokascoreLevelConfig[] = [
 
 /** Configuration retournée quand le score est null/indisponible. */
 const UNKNOWN_LEVEL: LokascoreLevelConfig = {
-  level: 'unknown' as any,
+  level: 'unknown',
   label: 'Indisponible',
   short: 'N/A',
   color: '#6b7280',

@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import type { TripWithChecklist } from '../lib/tripService';
 import { getTripBooking, clearTripBooking, type TripBooking } from '../lib/tripBookings';
-import { generateFlightOffers, generateHotelOffers } from '../lib/travelOffers';
+import { generateFlightOffers, generateHotelOffers, type HotelOffer } from '../lib/travelOffers';
 import {
   generateStayOffers, generateEsimOffers, generateInsuranceOffers,
   generateTrainOffers, generateActivityOffers, type CatalogOffer,
@@ -29,7 +29,7 @@ import { useCart, CATEGORY_META, type CartCategory } from '../lib/cart';
 interface CatDef {
   id: CartCategory;
   label: string;
-  Icon: any;
+  Icon: LucideIcon;
   desc: string;
   essential: boolean;
 }
@@ -358,7 +358,7 @@ function CartBar({ count, total, fmt, onClick }: { count: number; total: number;
   );
 }
 
-function Label({ icon: Icon, text, color }: { icon: any; text: string; color: string }) {
+function Label({ icon: Icon, text, color }: { icon: LucideIcon; text: string; color: string }) {
   return (
     <div className="flex items-center gap-2 pt-2">
       <Icon className="h-4 w-4" style={{ color }} />
@@ -378,7 +378,7 @@ function Toggle({ added, color, onClick }: { added: boolean; color: string; onCl
   );
 }
 
-function HotelCard({ h, nights, fmt, added, onToggle }: { h: any; nights: number; fmt: (n: number) => string; added: boolean; onToggle: () => void }) {
+function HotelCard({ h, nights, fmt, added, onToggle }: { h: HotelOffer; nights: number; fmt: (n: number) => string; added: boolean; onToggle: () => void }) {
   return (
     <div className="flex gap-3 rounded-2xl bg-white p-3 transition-all" style={{ border: `1.5px solid ${added ? CATEGORY_META.hotel.color : 'var(--lokadia-gray-100)'}`, boxShadow: 'var(--shadow-sm)' }}>
       <div className="h-20 w-24 flex-shrink-0 rounded-xl bg-cover bg-center" style={{ backgroundImage: `url(${h.imageUrl})`, backgroundColor: 'var(--lokadia-gray-200)' }} />
@@ -401,7 +401,7 @@ function HotelCard({ h, nights, fmt, added, onToggle }: { h: any; nights: number
   );
 }
 
-function Row({ o, added, onToggle, Icon }: { o: CatalogOffer; added: boolean; onToggle: () => void; Icon: any }) {
+function Row({ o, added, onToggle, Icon }: { o: CatalogOffer; added: boolean; onToggle: () => void; Icon: LucideIcon }) {
   const c = CATEGORY_META[o.category].color;
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-white p-4 transition-all" style={{ border: `1.5px solid ${added ? c : 'var(--lokadia-gray-100)'}`, boxShadow: 'var(--shadow-sm)' }}>

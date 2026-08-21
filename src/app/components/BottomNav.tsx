@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router";
-import { Home, LayoutGrid, Plus, User, Plane } from "lucide-react";
+import { Home, LayoutGrid, Plus, User, Plane, type LucideIcon } from "lucide-react";
 import { useLanguageSafe } from "../context/LanguageContext";
 import { motion } from "motion/react";
 
@@ -30,7 +30,7 @@ export function BottomNav() {
     location.pathname === path ||
     (path === "/trips" && location.pathname.startsWith("/trips") && !location.pathname.includes("create"));
 
-  const renderItem = (item: { path: string; icon: any; label: string }) => {
+  const renderItem = (item: { path: string; icon: LucideIcon; label: string }) => {
     const Icon = item.icon;
     const active = isActive(item.path);
     return (

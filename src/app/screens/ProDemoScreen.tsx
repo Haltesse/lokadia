@@ -19,7 +19,7 @@ import {
   Activity, AlertTriangle, ArrowLeft, ArrowRight, Bell, Briefcase, Building2,
   CheckCircle2, ChevronDown, Code2, Download, GraduationCap, Heart,
   LayoutDashboard, LineChart, MapPin, Plane, Radio, Shield, ShieldCheck,
-  Siren, Smartphone, Sparkles, TrendingUp, Users, Zap,
+  Siren, Smartphone, Sparkles, TrendingUp, Users, Zap, type LucideIcon,
 } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { ProDemoMap, type DemoMapPoint } from '../components/ProDemoMap';
@@ -40,10 +40,10 @@ type FeatureKey =
 
 interface Person { name: string; role: string; destinationId: string; city: string; meta: string; count?: number }
 interface Group { id: string; name: string; people: Person[] }
-interface Feature { key: FeatureKey; label: string; desc: string; Icon: any }
+interface Feature { key: FeatureKey; label: string; desc: string; Icon: LucideIcon }
 interface Scenario { label: string; destinationId: string; type: string; severity: 'orange' | 'red'; title: string }
 interface OfferDemo {
-  id: string; title: string; kind: string; Icon: any; color: string; bg: string;
+  id: string; title: string; kind: string; Icon: LucideIcon; color: string; bg: string;
   price: string; profile: TravelProfile; peopleLabel: string; headLabel: string;
   market: string; arr: string;
   groups: Group[]; features: Feature[]; scenarios: Scenario[];
@@ -319,7 +319,9 @@ export default function ProDemoScreen() {
   useEffect(() => () => { if (ackTimer.current) window.clearInterval(ackTimer.current); }, []);
 
   const toggleGroup = (id: string) => setOpenGroups((prev) => {
-    const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
+    const n = new Set(prev);
+    if (n.has(id)) n.delete(id); else n.add(id);
+    return n;
   });
 
   return (

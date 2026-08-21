@@ -142,7 +142,7 @@ export function generateFlightOffers(params: {
   travelers: number;
   originIata?: string; // default PARI
 }): FlightOffer[] {
-  const { destinationId, destinationName, startDate, endDate, travelers, originIata = 'PARI' } = params;
+  const { destinationId, startDate, endDate, travelers, originIata = 'PARI' } = params;
   const rng = seedFrom(`${destinationId}-${startDate}-flight`);
   const destIata = CITY_IATA[destinationId] || destinationId.slice(0, 3).toUpperCase();
 

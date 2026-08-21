@@ -35,6 +35,12 @@ export interface LiveAlert {
   detectedAt: Date;
 }
 
+/**
+ * Forme d'une alerte telle qu'elle ressort du sessionStorage : identique à
+ * `LiveAlert`, sauf `detectedAt` que JSON a réduit à une chaîne ISO.
+ */
+type RawLiveAlert = Omit<LiveAlert, 'detectedAt'> & { detectedAt: string };
+
 export interface LiveAlertsSnapshot {
   /** Liste complète des alertes (avec coordonnées) */
   alerts: LiveAlert[];
@@ -89,7 +95,7 @@ function hydrate(): LiveAlertsSnapshot | null {
     if (!raw) return null;
     const p = JSON.parse(raw);
     if (Date.now() - p.lastFetch > CACHE_DURATION) return null;
-    const alerts: LiveAlert[] = (p.alerts ?? []).map((a: any) => ({ ...a, detectedAt: new Date(a.detectedAt) }));
+    const alerts: LiveAlert[] = (p.alerts ?? []).map((a: RawLiveAlert) => ({ ...a, detectedAt: new Date(a.detectedAt) }));
     return buildSnapshot(alerts, p.stats ?? {}, p.sources ?? [], p.lastFetch);
   } catch { return null; }
 }

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { LanguageSelector } from "../components/LanguageSelector";
 import { useAuth } from "../context/AuthContext";
+import { errorMessage } from "../lib/authErrorHandler";
 import { getDemoCredentials } from "../lib/demo";
 
 type ViewMode = "welcome" | "login" | "signup";
@@ -67,9 +68,9 @@ export function LoginScreen() {
       await signIn(email, password);
       setSuccess("Connexion réussie!");
       // La redirection sera gérée par le useEffect
-    } catch (err: any) {
+    } catch (err) {
       console.error('❌ Login error:', err);
-      setError(err.message || "Erreur lors de la connexion");
+      setError(errorMessage(err) || "Erreur lors de la connexion");
     } finally {
       setIsLoading(false);
     }
@@ -89,9 +90,9 @@ export function LoginScreen() {
       
       setSuccess("Connexion au compte démo réussie!");
       // La redirection sera gérée par le useEffect
-    } catch (err: any) {
+    } catch (err) {
       console.error('❌ Demo login error:', err);
-      setError(err.message || "Erreur lors de la connexion au compte démo");
+      setError(errorMessage(err) || "Erreur lors de la connexion au compte démo");
     } finally {
       setIsLoading(false);
     }
@@ -137,14 +138,15 @@ export function LoginScreen() {
       await signUp(email, password, name);
       setSuccess("Inscription réussie!");
       // La redirection sera gérée par le useEffect
-    } catch (err: any) {
+    } catch (err) {
       console.error('❌ Signup error:', err);
-      
+
       // Gestion des erreurs spécifiques
-      if (err.message.includes('déjà')) {
-        setError(err.message + " Voulez-vous vous connecter ?");
+      const message = errorMessage(err);
+      if (message.includes('déjà')) {
+        setError(message + " Voulez-vous vous connecter ?");
       } else {
-        setError(err.message || "Erreur lors de l'inscription");
+        setError(message || "Erreur lors de l'inscription");
       }
     } finally {
       setIsLoading(false);

@@ -100,6 +100,47 @@ function getFromCache(key: string): RealTimeAlert[] | null {
   }
 }
 
+// ============================================================================
+// FORMES DES PAYLOADS EXTERNES
+// ============================================================================
+// Ces APIs publiques ne publient pas de schéma stable. On ne déclare que les
+// champs réellement lus, tous optionnels : un champ absent est déjà couvert
+// par les `|| ''` et le `try/catch` de chaque boucle. C'est plus honnête —
+// et plus sûr — qu'un `any` qui laisserait passer n'importe quelle faute de
+// frappe sur un nom de champ.
+
+interface EonetEvent {
+  id?: string;
+  title?: string;
+  description?: string;
+  categories?: Array<{ title?: string }>;
+  geometry?: Array<{ coordinates?: number[]; date?: string }>;
+  sources?: Array<{ url?: string }>;
+}
+
+interface GdeltArticle {
+  title?: string;
+  url?: string;
+  seendate?: string;
+}
+
+interface SncfDisruption {
+  messages?: Array<{ text?: string }>;
+  application_periods?: Array<{ begin?: string }>;
+  cause?: string;
+  severity?: { effect?: string };
+}
+
+interface TflLineStatus {
+  statusSeverityDescription?: string;
+  reason?: string;
+}
+
+interface TflLine {
+  name?: string;
+  lineStatuses?: TflLineStatus[];
+}
+
 // Destinations avec leurs coordonnées pour les APIs
 const destinations = [
   { name: 'Paris', country: 'France', countryCode: 'FR', lat: 48.8566, lon: 2.3522 },
@@ -194,8 +235,8 @@ async function fetchNewsAlerts(): Promise<RealTimeAlert[]> {
     }
     
     return [];
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
       console.log('ℹ️ News API timeout');
     } else {
       console.error('❌ Erreur News API:', error);
@@ -350,7 +391,7 @@ async function fetchOpenMeteoAlerts(): Promise<RealTimeAlert[]> {
         
         console.log(`  ✅ ${dest.name}: ${alertCountForDest} alerte(s) générée(s)`);
         
-      } catch (error) {
+      } catch {
         errorCount++;
         console.warn(`  ❌ ${dest.name}: Erreur API`);
         continue;
@@ -443,7 +484,7 @@ async function fetchGDACSAlerts(): Promise<RealTimeAlert[]> {
           zone: country,
           coordinates: { lat: matchedDest.lat, lon: matchedDest.lon },
         });
-      } catch (error) {
+      } catch {
         // Ignorer les items invalides
       }
     });
@@ -495,7 +536,7 @@ async function fetchNASAEONETAlerts(): Promise<RealTimeAlert[]> {
     
     console.log(`🛰️ NASA EONET: ${data.events.length} événements détectés`);
     
-    data.events?.forEach((event: any) => {
+    data.events?.forEach((event: EonetEvent) => {
       try {
         const category = event.categories?.[0]?.title || '';
         let type: RealTimeAlert['type'] = 'disaster';
@@ -518,6 +559,9 @@ async function fetchNASAEONETAlerts(): Promise<RealTimeAlert[]> {
         const coords = event.geometry?.[0]?.coordinates;
         const lat = coords?.[1];
         const lon = coords?.[0];
+        if (lat === undefined || lon === undefined) {
+          return; // Événement sans position exploitable
+        }
         
         const nearestDest = findNearestDestination(lat, lon);
         if (!nearestDest) {
@@ -556,7 +600,7 @@ async function fetchNASAEONETAlerts(): Promise<RealTimeAlert[]> {
           zone: locationDescription,
           coordinates: { lat, lon },
         });
-      } catch (error) {
+      } catch {
         // Erreur de traitement - ignorer cet événement
       }
     });
@@ -600,8 +644,8 @@ function fetchSecurityAdvisoriesAlerts(): RealTimeAlert[] {
       
       console.log(`📍 ${dest.name}: Score ${score}/5, Sources: ${sources}`);
       
-      let level: RealTimeAlert['level'] = advisory.level;
-      let type: RealTimeAlert['type'] = 'security';
+      const level: RealTimeAlert['level'] = advisory.level;
+      const type: RealTimeAlert['type'] = 'security';
       let title = '';
       let summary = '';
       
@@ -677,7 +721,7 @@ async function fetchGDELTAlerts(): Promise<RealTimeAlert[]> {
     console.log(`🏛️ GDELT: ${data.articles.length} événements trouvés`);
     
     // Analyser les articles et extraire les événements pertinents
-    data.articles.slice(0, 20).forEach((article: any, index: number) => {
+    data.articles.slice(0, 20).forEach((article: GdeltArticle, index: number) => {
       try {
         const title = article.title || '';
         const url = article.url || '';
@@ -722,7 +766,7 @@ async function fetchGDELTAlerts(): Promise<RealTimeAlert[]> {
           zone: matchedDest.name,
           coordinates: { lat: matchedDest.lat, lon: matchedDest.lon },
         });
-      } catch (error) {
+      } catch {
         // Ignorer l'article en cas d'erreur
       }
     });
@@ -867,7 +911,7 @@ function generatePoliticalAlertsFromSecurityData(): RealTimeAlert[] {
         type: 'political',
         level: score >= 4.0 ? 'urgent' : 'vigilance',
         title: `Contexte politique sensible - ${dest.name}`,
-        summary: `Niveau de risque sécuritaire élevé (${score.toFixed(1)}/5). Situation politique pouvant être instable. Évitez les rassemblements et suivez l\'actualité locale.`,
+        summary: `Niveau de risque sécuritaire élevé (${score.toFixed(1)}/5). Situation politique pouvant être instable. Évitez les rassemblements et suivez l'actualité locale.`,
         destination: dest.name,
         country: dest.country,
         date: formatDate(new Date().toISOString()),
@@ -980,7 +1024,7 @@ async function fetchWHOHealthAlerts(): Promise<RealTimeAlert[]> {
             zone: matchedDest.name,
             coordinates: { lat: matchedDest.lat, lon: matchedDest.lon },
           };
-        } catch (error) {
+        } catch {
           return null;
         }
       })();
@@ -1036,7 +1080,7 @@ async function fetchSNCFTransportAlerts(): Promise<RealTimeAlert[]> {
     console.log(`🚄 SNCF: ${data.disruptions.length} perturbations trouvées`);
     
     // Prendre les perturbations actives
-    data.disruptions.slice(0, 10).forEach((disruption: any, index: number) => {
+    data.disruptions.slice(0, 10).forEach((disruption: SncfDisruption, index: number) => {
       try {
         const message = disruption.messages?.[0]?.text || disruption.cause || 'Perturbation signalée';
         const severity = disruption.severity?.effect || 'unknown';
@@ -1061,7 +1105,7 @@ async function fetchSNCFTransportAlerts(): Promise<RealTimeAlert[]> {
           zone: 'Réseau SNCF',
           coordinates: { lat: 48.8566, lon: 2.3522 },
         });
-      } catch (error) {
+      } catch {
         // Ignorer en cas d'erreur
       }
     });
@@ -1069,7 +1113,7 @@ async function fetchSNCFTransportAlerts(): Promise<RealTimeAlert[]> {
     console.log(`✅ SNCF: ${alerts.length} alertes transport générées`);
     return alerts;
     
-  } catch (error) {
+  } catch {
     console.log('ℹ️ SNCF temporairement indisponible');
     return [];
   }
@@ -1108,12 +1152,12 @@ async function fetchTfLTransportAlerts(): Promise<RealTimeAlert[]> {
     let disruptionCount = 0;
     
     // Analyser chaque ligne de métro
-    data.forEach((line: any) => {
+    data.forEach((line: TflLine) => {
       try {
         const lineName = line.name || '';
         const lineStatuses = line.lineStatuses || [];
         
-        lineStatuses.forEach((status: any, statusIndex: number) => {
+        lineStatuses.forEach((status: TflLineStatus, statusIndex: number) => {
           const statusSeverity = status.statusSeverityDescription || '';
           const reason = status.reason || '';
           
@@ -1143,7 +1187,7 @@ async function fetchTfLTransportAlerts(): Promise<RealTimeAlert[]> {
           
           disruptionCount++;
         });
-      } catch (error) {
+      } catch {
         // Ignorer en cas d'erreur
       }
     });
@@ -1151,7 +1195,7 @@ async function fetchTfLTransportAlerts(): Promise<RealTimeAlert[]> {
     console.log(`✅ TfL: ${alerts.length} alertes transport générées`);
     return alerts;
     
-  } catch (error) {
+  } catch {
     console.log('ℹ️ TfL temporairement indisponible');
     return [];
   }
@@ -1377,7 +1421,7 @@ export async function fetchRealTimeAlerts(): Promise<RealTimeAlert[]> {
       } else {
         throw new Error('Aucune alerte générée');
       }
-    } catch (error) {
+    } catch {
       console.log('⚠️ Security Advisories en erreur, utilisation du cache...');
       const cached = getFromCache(CACHE_KEYS.SECURITY);
       if (cached) {

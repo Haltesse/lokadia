@@ -7,11 +7,8 @@ import {
   FileText,
   MapPin,
   Briefcase,
-  Backpack,
-  Coffee,
-  Search,
 } from "lucide-react";
-import { destinationsDatabase, getDestinationData } from "../data/destinationData";
+import { destinationsDatabase } from "../data/destinationData";
 
 interface DestinationData {
   id: string;
@@ -28,11 +25,26 @@ const getAllDestinations = (): DestinationData[] => {
   })).sort((a, b) => a.name.localeCompare(b.name));
 };
 
+/**
+ * État passé par `navigate('/trip-create', { state })` : une destination
+ * pré-sélectionnée et le brouillon du formulaire, restitué au retour d'un
+ * détour (choix de destination, connexion).
+ */
+interface TripCreateNavState {
+  destination?: DestinationData;
+  formData?: {
+    startDate?: string;
+    endDate?: string;
+    travelers?: number;
+    notes?: string;
+  };
+}
+
 export function TripCreateScreen() {
   const navigate = useNavigate();
   const location = useLocation();
-  const passedDestination = (location.state as { destination?: DestinationData; formData?: any })?.destination;
-  const savedFormData = (location.state as { destination?: DestinationData; formData?: any })?.formData;
+  const passedDestination = (location.state as TripCreateNavState | null)?.destination;
+  const savedFormData = (location.state as TripCreateNavState | null)?.formData;
 
   const [destination, setDestination] = useState<DestinationData | null>(passedDestination || null);
   const [showDestinationPicker, setShowDestinationPicker] = useState(!passedDestination);

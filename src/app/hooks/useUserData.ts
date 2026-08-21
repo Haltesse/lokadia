@@ -18,9 +18,9 @@ export function useUserData() {
   // Note: Le warning console a été supprimé pour éviter les messages d'erreur à l'utilisateur
 
   // Retourner des fonctions no-op pour éviter les erreurs
-  const noOp = useCallback(async () => {
-    return null as any;
-  }, []);
+  // Renvoie `null` typé `never` : assignable à n'importe quel appelant sans
+  // recourir à `any`.
+  const noOp = useCallback(async (): Promise<never | null> => null, []);
 
   return {
     // Data (vides)

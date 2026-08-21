@@ -22,7 +22,7 @@ import {
   BookOpen,
   Palette
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { allDestinations } from '../data/allDestinations';
 import { destinationCoordinates } from '../data/destinationCoordinates';
 import { createTrip, getTripById, updateTrip } from '../lib/tripService';
@@ -35,7 +35,7 @@ import { FlightOffers } from '../components/FlightOffers';
 import { HotelOffers } from '../components/HotelOffers';
 import { generateFlightOffers, generateHotelOffers, computeBudgetEstimate, estimateLeg, DEPARTURE_CITIES, type LegEstimate } from '../lib/travelOffers';
 import { getCoherentCountries } from '../data/countryNeighbors';
-import { STOP_CITIES, type StopCity } from '../data/stopCities';
+import { STOP_CITIES } from '../data/stopCities';
 import { TripMap, type TripMapPoint } from '../components/TripMap';
 import { Plane, Train, Bus, Map as MapIcon, CheckCircle2, Hotel, Wallet, ShieldCheck, X } from 'lucide-react';
 
@@ -646,7 +646,7 @@ export default function TripWizardScreen() {
                       transition={{ duration: 0.2 }}
                     >
                       {getCountryDestinations(mainDestination)
-                        .filter(([id, dest]) => 
+                        .filter(([_id, dest]) => 
                           citySearch.length === 0 || 
                           dest.name.toLowerCase().includes(citySearch.toLowerCase())
                         )
@@ -676,7 +676,7 @@ export default function TripWizardScreen() {
                           );
                         })}
                       {getCountryDestinations(mainDestination)
-                        .filter(([id, dest]) => 
+                        .filter(([_id, dest]) => 
                           citySearch.length === 0 || 
                           dest.name.toLowerCase().includes(citySearch.toLowerCase())
                         ).length === 0 && (

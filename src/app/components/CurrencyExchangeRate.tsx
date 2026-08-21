@@ -13,7 +13,7 @@ export function CurrencyExchangeRate({ localCurrency }: CurrencyExchangeRateProp
   // Extraire le code de devise (ex: "Euro (EUR)" -> "EUR")
   const extractCurrencyCode = (currency: string): string => {
     // Chercher un code de 3 lettres majuscules entre parenthèses, avec ou sans slash/symboles après
-    const match = currency.match(/\(([A-Z]{3})[\/)]/);
+    const match = currency.match(/\(([A-Z]{3})[/)]/);
     if (match) return match[1];
     
     // Si c'est déjà un code de 3 lettres

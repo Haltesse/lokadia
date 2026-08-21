@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 import { useNavigate } from "react-router";
 import {
   User,
@@ -7,7 +7,6 @@ import {
   Edit3,
   Lock,
   Trash2,
-  MapPin,
   Heart,
   Bookmark,
   Bell,
@@ -18,12 +17,6 @@ import {
   Shield,
   Download,
   Settings as SettingsIcon,
-  Eye,
-  EyeOff,
-  MessageSquare,
-  MessageCircle,
-  Flag,
-  Award,
   HelpCircle,
   Phone,
   Bug,
@@ -33,12 +26,9 @@ import {
   Calendar,
   AlertCircle,
   Globe,
-  Volume2,
-  VolumeX,
   Plane,
   ArrowLeft,
   Check,
-  X,
   Sparkles,
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
@@ -46,10 +36,9 @@ import { Badge } from "../components/Badge";
 import { Modal } from "../components/Modal";
 import { useLanguageSafe } from "../context/LanguageContext";
 import { LANGUAGE_META as SUPPORTED_LANGUAGES } from "../translations";
-import type { Language as LanguageType } from "../translations";
 import { useAuth } from "../context/AuthContext";
+import { errorMessage } from "../lib/authErrorHandler";
 import { useUserData } from "../hooks/useUserData";
-import { useComments } from "../hooks/useComments";
 import { getUserTrips, deleteTrip as deleteTripService, type Trip } from "../lib/tripService";
 import { TravelProfileSelector } from "../components/TravelProfileSelector";
 import { NationalitySelector } from "../components/NationalitySelector";
@@ -68,11 +57,10 @@ export function ProfileScreen() {
     favorites,
     getStats,
   } = useUserData();
-  const { stats: commentStats } = useComments();
   
   // Charger les voyages depuis Supabase
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [tripsLoading, setTripsLoading] = useState(true);
+  const [, setTripsLoading] = useState(true);
   
   // États des modals
   const [showEditModal, setShowEditModal] = useState(false);
@@ -136,7 +124,6 @@ export function ProfileScreen() {
   }
 
   // Calculer les statistiques de l'utilisateur
-  const stats = getStats();
   const activeTripsCount = trips.filter(t => t.status === 'active' || t.status === 'planned').length;
 
   // Adapter les trips pour l'affichage
@@ -252,9 +239,9 @@ export function ProfileScreen() {
       setNewPassword("");
       setConfirmPassword("");
       showSuccess("Mot de passe modifié avec succès");
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erreur lors du changement de mot de passe:', error);
-      if (error.message === 'INVALID_PASSWORD') {
+      if (errorMessage(error) === 'INVALID_PASSWORD') {
         alert("Mot de passe actuel incorrect");
       } else {
         alert("Erreur lors du changement de mot de passe");
@@ -1007,7 +994,7 @@ export function ProfileScreen() {
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Entrez votre nouveau pseudo"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
-              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as any}
+              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as CSSProperties}
             />
           </div>
           <button
@@ -1085,7 +1072,7 @@ export function ProfileScreen() {
               onChange={(e) => setPhotoURL(e.target.value)}
               placeholder="https://example.com/photo.jpg"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
-              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as any}
+              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as CSSProperties}
             />
             <p className="text-xs mt-2" style={{ color: "var(--lokadia-text-light)" }}>
               Collez l'URL d'une image depuis Internet
@@ -1148,7 +1135,7 @@ export function ProfileScreen() {
               onChange={(e) => setNewEmail(e.target.value)}
               placeholder="nouveau@email.com"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
-              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as any}
+              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as CSSProperties}
             />
           </div>
           <button
@@ -1175,7 +1162,7 @@ export function ProfileScreen() {
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
-              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as any}
+              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as CSSProperties}
             />
           </div>
           <div>
@@ -1188,7 +1175,7 @@ export function ProfileScreen() {
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
-              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as any}
+              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as CSSProperties}
             />
           </div>
           <div>
@@ -1201,7 +1188,7 @@ export function ProfileScreen() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
-              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as any}
+              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as CSSProperties}
             />
           </div>
           <button
@@ -1291,7 +1278,7 @@ export function ProfileScreen() {
               placeholder="Décrivez votre problème ou question..."
               rows={5}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 resize-none"
-              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as any}
+              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as CSSProperties}
             />
           </div>
           <button
@@ -1318,7 +1305,7 @@ export function ProfileScreen() {
               placeholder="Décrivez le bug rencontré..."
               rows={5}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 resize-none"
-              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as any}
+              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as CSSProperties}
             />
           </div>
           <button
@@ -1345,7 +1332,7 @@ export function ProfileScreen() {
               placeholder="Partagez votre idée d'amélioration..."
               rows={5}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 resize-none"
-              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as any}
+              style={{ "--tw-ring-color": "var(--lokadia-deep-blue)" } as CSSProperties}
             />
           </div>
           <button
@@ -1464,19 +1451,28 @@ function Section({
   );
 }
 
-function TripCard({ 
-  trip, 
+/** Voyage enrichi des champs calculés pour l'affichage de la carte. */
+type DisplayTrip = Trip & {
+  destination: string;
+  dates: string;
+  image: string;
+  checklistCompleted: number;
+  checklistTotal: number;
+};
+
+function TripCard({
+  trip,
   onOpen, 
   onDuplicate, 
   onDelete 
-}: { 
-  trip: any;
+}: {
+  trip: DisplayTrip;
   onOpen: () => void;
   onDuplicate?: () => void;
   onDelete: () => void;
 }) {
-  const context = useLanguageSafe();
-  const profileLabels = ((context?.t as any)?.profile || {}) as any;
+  const { t } = useLanguageSafe();
+  const profileLabels = t.profile;
   const statusColors: Record<string, string> = {
     planned: "var(--lokadia-info)",
     active: "var(--lokadia-success-green)",

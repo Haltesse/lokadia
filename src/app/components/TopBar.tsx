@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router";
 import { useState } from "react";
 import { Shield, Search, Menu, X, Globe, User as UserIcon, Route as RouteIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useAuth } from "../context/AuthContext";
+import { useAuthSafe } from "../context/AuthContext";
 import { useLanguageSafe } from "../context/LanguageContext";
 import { CommandPaletteTrigger } from "./CommandPalette";
 import { ThemeToggle } from "./ThemeToggle";
@@ -15,7 +15,7 @@ export function TopBar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-  const auth = (() => { try { return useAuth(); } catch { return null; } })();
+  const auth = useAuthSafe();
   const isAuth = !!auth?.user;
   const { t } = useLanguageSafe();
 

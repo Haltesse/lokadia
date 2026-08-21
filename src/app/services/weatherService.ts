@@ -5,7 +5,8 @@
 // 3. Remplacez 'YOUR_API_KEY_HERE' par votre vraie clé API
 
 const OPENWEATHER_API_KEY = 'YOUR_API_KEY_HERE';
-const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
+// Réservé au chemin production, encore commenté plus bas dans ce fichier.
+const _OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
 export interface WeatherData {
   temperature: number;

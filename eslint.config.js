@@ -17,6 +17,16 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      // Le code marque déjà les liaisons volontairement ignorées : `_` dans un
+      // tableau déstructuré, et `{ passwordHash: _, ...reste }` pour retirer un
+      // champ d'un objet. La règle doit reconnaître ces conventions plutôt que
+      // de pousser à les contourner.
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        destructuredArrayIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      }],
     },
   },
 )

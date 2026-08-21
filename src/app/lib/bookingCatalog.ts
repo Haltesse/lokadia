@@ -112,7 +112,7 @@ const STAY_TEMPLATES = [
   { type: 'Maison', label: 'Maison entière avec jardin', base: 180, guests: '4-6 voyageurs' },
   { type: 'Maison', label: 'Villa avec terrasse', base: 240, guests: '6-8 voyageurs' },
 ];
-export function generateStayOffers(destinationId: string, destinationName: string, startDate: string, endDate: string, travelers: number): CatalogOffer[] {
+export function generateStayOffers(destinationId: string, destinationName: string, startDate: string, endDate: string, _travelers: number): CatalogOffer[] {
   const nights = daysBetween(startDate, endDate);
   const rng = seeded(`stay-${destinationId}`);
   const cityFactor = 0.85 + rng() * 0.5; // coût de la vie local
@@ -147,7 +147,7 @@ const LODGING_TEMPLATES: Array<{ group: string; type: string; label: string; bas
   { group: 'Hostel',      type: 'Auberge',     label: 'Lit en dortoir',               base: 26,  guests: '1 voyageur',       badge: 'Budget' },
   { group: 'Hostel',      type: 'Auberge',     label: 'Chambre privée en auberge',    base: 55,  guests: '1-2 voyageurs' },
 ];
-export function generateLodgingOffers(destinationId: string, destinationName: string, startDate: string, endDate: string, travelers: number): CatalogOffer[] {
+export function generateLodgingOffers(destinationId: string, destinationName: string, startDate: string, endDate: string, _travelers: number): CatalogOffer[] {
   const nights = daysBetween(startDate, endDate);
   const rng = seeded(`lodge-${destinationId}`);
   const cityFactor = 0.85 + rng() * 0.5; // coût de la vie local

@@ -4,7 +4,7 @@ import type { TripSegment } from './tripStopService';
 import type { DestinationDetails } from '../data/types';
 import { allDestinations } from '../data/allDestinations';
 import { getTripStops, getTripSegments } from './tripStopService';
-import { estimateTotalDuration, formatDuration, getTransportEmoji } from './transportService';
+import { estimateTotalDuration, formatDuration } from './transportService';
 
 export interface ActionCard {
   id: string;

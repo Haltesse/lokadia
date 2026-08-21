@@ -9,12 +9,10 @@ import {
   Heart,
   MapPin,
   RefreshCw,
-  Search,
   Shield,
   Sparkles,
   Train,
   TrendingUp,
-  X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { WatchedDestinations } from "../components/WatchedDestinations";
