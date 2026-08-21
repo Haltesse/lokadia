@@ -25,7 +25,7 @@ import {
 import { motion, useMotionValue, useMotionValueEvent, type PanInfo } from 'motion/react';
 import { STOP_CITIES, type StopCity } from '../data/stopCities';
 import { calculateTransportOptions, type TransportOption } from '../lib/transportService';
-import { computeBudgetEstimate, DEPARTURE_CITIES } from '../lib/travelOffers';
+import { computeBudgetEstimate, estimateAccommodationBudget, DEPARTURE_CITIES } from '../lib/travelOffers';
 import { createTrip } from '../lib/tripService';
 import { addStopToTrip, createTripSegment, type TripStop } from '../lib/tripStopService';
 import { checkItinerary, type CheckableStop } from '../lib/itineraryChecks';
@@ -592,20 +592,47 @@ export default function TripMapPlannerScreen() {
 
   const budget = useMemo(() => {
     if (legs.length === 0 || !startDate || !endDate) return null;
-    // Per-person price = somme des prix moyens des legs (selon mode choisi)
-    const legPrices = legs.map((leg) => {
+    // Fourchette par tronçon : `alt.cost` est déjà une plage ("€80-150"),
+    // on la conserve au lieu de l'écraser sur sa moyenne.
+    const legRanges = legs.map((leg) => {
       const alt = leg.alternatives.find((a) => a.mode === leg.selectedMode);
-      if (!alt?.cost) return 0;
-      // alt.cost est une string genre "€80-150" → on prend la moyenne
-      const m = alt.cost.match(/(\d+)\D+(\d+)/);
-      if (m) return Math.round((parseInt(m[1]) + parseInt(m[2])) / 2);
+      if (!alt?.cost) return { low: 0, high: 0 };
+      const pair = alt.cost.match(/(\d+)\D+(\d+)/);
+      if (pair) return { low: parseInt(pair[1]), high: parseInt(pair[2]) };
       const single = alt.cost.match(/(\d+)/);
-      return single ? parseInt(single[1]) : 0;
+      const value = single ? parseInt(single[1]) : 0;
+      return { low: value, high: value };
     });
-    // Hôtel estimé : 90€/nuit × nights (moyenne confort)
-    const hotelTotal = 90 * nights;
-    return computeBudgetEstimate({ legPrices, hotelTotal, travelers, nights });
-  }, [legs, nights, travelers, startDate, endDate]);
+
+    const country = stops[0]?.country ?? '';
+    const accommodation = estimateAccommodationBudget({
+      destinationName: stops[0]?.name ?? '',
+      country,
+      startDate,
+      endDate,
+      travelers,
+    });
+
+    const estimate = computeBudgetEstimate({
+      legs: legRanges,
+      accommodation: { low: accommodation.low, high: accommodation.high },
+      travelers,
+      nights,
+      country,
+    });
+
+    const mid = (r: { low: number; high: number }) => Math.round((r.low + r.high) / 2);
+    return {
+      flights: mid(estimate.transport),
+      hotel: mid(estimate.accommodation),
+      food: mid(estimate.food),
+      activities: mid(estimate.activities),
+      total: mid(estimate.total),
+      low: estimate.total.low,
+      high: estimate.total.high,
+      method: `${accommodation.method} ${estimate.method}`,
+    };
+  }, [legs, nights, travelers, startDate, endDate, stops]);
 
   // ── Sauvegarde ──
   const canSave = stops.length >= 1 && startDate && endDate && !!user;
@@ -1026,7 +1053,9 @@ export default function TripMapPlannerScreen() {
           {budget && (
             <div className="text-right pointer-events-none">
               <p className="text-[10px] text-gray-500 uppercase font-semibold">Budget</p>
-              <p className="font-bold text-blue-600">{formatAmount(budget.total, 'EUR')}</p>
+              <p className="font-bold text-blue-600">
+                {formatAmount(budget.low, 'EUR')} – {formatAmount(budget.high, 'EUR')}
+              </p>
             </div>
           )}
         </motion.div>

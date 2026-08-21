@@ -1,15 +1,28 @@
 /**
- * Travel offers generator.
+ * Estimations budgétaires et liens de recherche partenaires.
  *
- * Produit des offres vols + hôtels réalistes (prix seedés par destination + dates)
- * avec des deep-links partenaires qui ouvrent des résultats réels sur Skyscanner /
- * Booking.com / GetYourGuide. L'utilisateur voit un prix plausible dans l'app,
- * puis obtient le vrai prix live sur le site partenaire (commission à la clé).
+ * Ce module produisait auparavant de fausses offres : compagnie tirée au sort
+ * dans une liste, horaires de vol inventés, prix dérivé de la somme des codes
+ * de caractères du code IATA, et des hôtels nommés « ibis Budget Tokyo » avec
+ * une note et un nombre d'avis fabriqués. Un voyageur pouvait donc lire
+ * « Air France · 08h15 → 11h40 · 285 € » sur un écran de réservation, sans
+ * qu'aucune de ces informations n'ait la moindre existence.
+ *
+ * Il n'y a plus ici que deux choses :
+ *
+ *   1. Des **fourchettes** budgétaires, calculées sur la distance réelle entre
+ *      deux points et la saisonnalité de la réservation. Chacune expose la
+ *      méthode qui l'a produite, affichée telle quelle à côté du montant. Une
+ *      fourchette annoncée comme telle aide à préparer un voyage ; un prix
+ *      unique inventé fait croire à une offre.
+ *
+ *   2. Des **liens de recherche** vers les partenaires (Skyscanner, Booking),
+ *      pré-remplis avec la destination, les dates et le nombre de voyageurs.
+ *      Le prix réel se lit chez eux, jamais ici.
  */
 
-// Mapping ville → IATA pour les destinations les plus courantes.
-// Fallback : nom de ville utilisé dans l'URL Skyscanner si absent.
-// Liste affichable des villes de départ principales (pour autocomplete)
+import { destinationCoordinates } from '../data/destinationCoordinates';
+
 export const DEPARTURE_CITIES: Array<{ id: string; label: string; iata: string; lat: number; lon: number; country: string }> = [
   { id: 'paris', label: 'Paris', iata: 'PARI', lat: 48.8566, lon: 2.3522, country: 'France' },
   { id: 'lyon', label: 'Lyon', iata: 'LYS', lat: 45.7640, lon: 4.8357, country: 'France' },
@@ -53,75 +66,32 @@ export const CITY_IATA: Record<string, string> = {
   warsaw: 'WAW', moscow: 'MOW', 'st-petersburg': 'LED',
 };
 
-const AIRLINES = [
-  { code: 'AF', name: 'Air France' },
-  { code: 'BA', name: 'British Airways' },
-  { code: 'LH', name: 'Lufthansa' },
-  { code: 'TK', name: 'Turkish Airlines' },
-  { code: 'EK', name: 'Emirates' },
-  { code: 'QR', name: 'Qatar Airways' },
-  { code: 'KL', name: 'KLM' },
-  { code: 'IB', name: 'Iberia' },
-  { code: 'U2', name: 'easyJet' },
-  { code: 'FR', name: 'Ryanair' },
-];
+// ─────────────────────────────────────────────────────────────────────────────
+//  Fourchettes budgétaires
+// ─────────────────────────────────────────────────────────────────────────────
 
-const HOTEL_CHAINS = [
-  { name: 'Novotel', tier: 'Confort', color: '#0F4C81' },
-  { name: 'ibis Styles', tier: 'Essentiel', color: '#E63946' },
-  { name: 'Mercure', tier: 'Boutique', color: '#2D3748' },
-  { name: 'Sofitel', tier: 'Luxe', color: '#92400E' },
-  { name: 'B&B Hotels', tier: 'Budget', color: '#10B981' },
-  { name: 'Generator Hostel', tier: 'Backpacker', color: '#8B5CF6' },
-];
-
-// Seed deterministic PRNG à partir d'un string.
-function seedFrom(str: string): () => number {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return () => {
-    h ^= h << 13; h ^= h >>> 17; h ^= h << 5;
-    return ((h >>> 0) % 10000) / 10000;
-  };
+export interface BudgetEstimate {
+  /** Borne basse, en euros. */
+  low: number;
+  /** Borne haute, en euros. */
+  high: number;
+  /**
+   * D'où sort la fourchette, en une phrase destinée à être affichée à côté du
+   * montant. Une estimation sans sa méthode est indiscernable d'un prix inventé.
+   */
+  method: string;
+  /** Recherche partenaire pré-remplie, pour obtenir le prix réel. */
+  searchUrl: string;
+  /** Partenaire vers lequel pointe `searchUrl`. */
+  partner: string;
 }
 
-export interface FlightOffer {
-  id: string;
-  airline: string;
-  airlineCode: string;
-  stops: 0 | 1 | 2;
-  duration: string;
-  departTime: string;
-  arriveTime: string;
-  price: number;
-  currency: string;
-  deeplink: string;
-  tag?: string;
-}
+/** Amplitude de la fourchette autour de la valeur centrale du modèle. */
+const SPREAD = 0.25;
 
-export interface HotelOffer {
-  id: string;
-  name: string;
-  chain: string;
-  tier: string;
-  color: string;
-  rating: number;
-  reviewCount: number;
-  pricePerNight: number;
-  totalPrice: number;
-  currency: string;
-  imageUrl: string;
-  deeplink: string;
-  tag?: string;
-}
-
-function formatDateISO(d: string): string {
-  // "2026-05-10" → "260510" pour Skyscanner
-  const [y, m, day] = d.split('-');
-  return y.slice(2) + m + day;
+function spread(center: number): { low: number; high: number } {
+  const round5 = (n: number) => Math.max(5, Math.round(n / 5) * 5);
+  return { low: round5(center * (1 - SPREAD)), high: round5(center * (1 + SPREAD)) };
 }
 
 function daysBetween(start: string, end: string): number {
@@ -130,142 +100,16 @@ function daysBetween(start: string, end: string): number {
   return Math.max(1, Math.round((e - s) / 86400000));
 }
 
-function formatTime(h: number, m: number): string {
-  return `${String(h).padStart(2, '0')}h${String(m).padStart(2, '0')}`;
+function daysUntil(date: string): number {
+  return Math.max(0, Math.round((new Date(date).getTime() - Date.now()) / 86400000));
 }
 
-export function generateFlightOffers(params: {
-  destinationId: string;
-  destinationName: string;
-  startDate: string;
-  endDate: string;
-  travelers: number;
-  originIata?: string; // default PARI
-}): FlightOffer[] {
-  const { destinationId, startDate, endDate, travelers, originIata = 'PARI' } = params;
-  const rng = seedFrom(`${destinationId}-${startDate}-flight`);
-  const destIata = CITY_IATA[destinationId] || destinationId.slice(0, 3).toUpperCase();
-
-  // Prix de base proportionnel à une distance "vague" (on utilise la 1ère lettre du code comme proxy simple)
-  const charSum = destIata.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  const basePrice = 120 + (charSum % 420); // 120€ → 540€
-
-  // Fenêtre avancée
-  const daysAhead = Math.max(0, Math.round((new Date(startDate).getTime() - Date.now()) / 86400000));
-  const advanceMultiplier = daysAhead < 14 ? 1.45 : daysAhead < 45 ? 1.1 : 0.88;
-
-  const skyscannerBase = 'https://www.skyscanner.fr/transport/vols';
-  const outbound = formatDateISO(startDate);
-  const inbound = formatDateISO(endDate);
-
-  const offers: FlightOffer[] = [];
-  for (let i = 0; i < 3; i++) {
-    const airline = AIRLINES[Math.floor(rng() * AIRLINES.length)];
-    const stops = (i === 0 ? 0 : i === 1 ? 1 : rng() > 0.5 ? 0 : 1) as 0 | 1;
-    const stopPenalty = stops === 0 ? 1.25 : 0.82;
-    const variance = 0.85 + rng() * 0.3;
-    const price = Math.round((basePrice * advanceMultiplier * stopPenalty * variance) / 5) * 5;
-
-    const depH = 6 + Math.floor(rng() * 16);
-    const depM = Math.floor(rng() * 12) * 5;
-    const durH = stops === 0 ? 2 + Math.floor(rng() * 4) : 5 + Math.floor(rng() * 8);
-    const durM = Math.floor(rng() * 12) * 5;
-    const arrTotal = depH * 60 + depM + durH * 60 + durM;
-    const arrH = Math.floor(arrTotal / 60) % 24;
-    const arrM = arrTotal % 60;
-
-    offers.push({
-      id: `fl-${i}`,
-      airline: airline.name,
-      airlineCode: airline.code,
-      stops,
-      duration: `${durH}h${String(durM).padStart(2, '0')}`,
-      departTime: formatTime(depH, depM),
-      arriveTime: formatTime(arrH, arrM),
-      price,
-      currency: 'EUR',
-      deeplink: `${skyscannerBase}/${originIata.toLowerCase()}/${destIata.toLowerCase()}/${outbound}/${inbound}/?adults=${travelers}`,
-      tag: stops === 0 ? 'Direct' : undefined,
-    });
-  }
-
-  // Tri par prix croissant — tag "Meilleur prix" uniquement le moins cher
-  offers.sort((a, b) => a.price - b.price);
-  offers[0].tag = 'Meilleur prix';
-  return offers;
-}
-
-// Banque d'images Unsplash par type d'hôtel (photos libres)
-const HOTEL_IMAGES = [
-  'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=70',
-  'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&q=70',
-  'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600&q=70',
-  'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=600&q=70',
-  'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=70',
-  'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600&q=70',
-];
-
-export function generateHotelOffers(params: {
-  destinationId: string;
-  destinationName: string;
-  startDate: string;
-  endDate: string;
-  travelers: number;
-}): HotelOffer[] {
-  const { destinationId, destinationName, startDate, endDate, travelers } = params;
-  const rng = seedFrom(`${destinationId}-${startDate}-hotel`);
-  const nights = daysBetween(startDate, endDate);
-
-  const basePriceMap: Record<string, number> = {
-    Budget: 55, Backpacker: 40, Essentiel: 85, Confort: 130, Boutique: 175, Luxe: 290,
-  };
-
-  const bookingUrl = `https://www.booking.com/searchresults.fr.html?ss=${encodeURIComponent(destinationName)}&checkin=${startDate}&checkout=${endDate}&group_adults=${travelers}&group_children=0&no_rooms=1`;
-
-  // 3 hôtels: budget, confort, boutique
-  const tiers = [
-    HOTEL_CHAINS.find((h) => h.tier === 'Budget')!,
-    HOTEL_CHAINS.find((h) => h.tier === 'Confort')!,
-    HOTEL_CHAINS.find((h) => h.tier === 'Boutique')!,
-  ];
-
-  return tiers.map((chain, i) => {
-    const variance = 0.8 + rng() * 0.5;
-    const pricePerNight = Math.round((basePriceMap[chain.tier] * variance) / 5) * 5;
-    const rating = Math.round((7.8 + rng() * 1.9) * 10) / 10;
-    const reviewCount = 200 + Math.floor(rng() * 2800);
-    return {
-      id: `ht-${i}`,
-      name: `${chain.name} ${destinationName}`,
-      chain: chain.name,
-      tier: chain.tier,
-      color: chain.color,
-      rating,
-      reviewCount,
-      pricePerNight,
-      totalPrice: pricePerNight * nights,
-      currency: 'EUR',
-      imageUrl: HOTEL_IMAGES[(i + destinationId.length) % HOTEL_IMAGES.length],
-      deeplink: bookingUrl,
-      tag: i === 0 ? 'Meilleur rapport qualité-prix' : i === 2 ? 'Coup de cœur' : undefined,
-    };
-  });
-}
-
-/**
- * Calcule un prix « moyen » cohérent pour une jambe (leg) entre 2 villes.
- * Utilisé pour le budget multi-étapes (vol, train ou bus selon distance).
- * Retourne un prix par personne et le mode de transport suggéré.
- */
-export interface LegEstimate {
-  fromId: string;
-  fromName: string;
-  toId: string;
-  toName: string;
-  distanceKm: number;
-  mode: 'plane' | 'train' | 'bus';
-  pricePerPerson: number;
-  durationLabel: string;
+/** Multiplicateur de saisonnalité : réserver tard coûte plus cher. */
+function advanceFactor(startDate: string): { factor: number; label: string } {
+  const days = daysUntil(startDate);
+  if (days < 14) return { factor: 1.4, label: 'départ à moins de 2 semaines (+40 %)' };
+  if (days < 45) return { factor: 1.1, label: 'départ dans moins de 45 jours (+10 %)' };
+  return { factor: 0.9, label: 'réservation anticipée (−10 %)' };
 }
 
 function haversine(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
@@ -273,12 +117,169 @@ function haversine(a: { lat: number; lon: number }, b: { lat: number; lon: numbe
   const toRad = (x: number) => (x * Math.PI) / 180;
   const dLat = toRad(b.lat - a.lat);
   const dLon = toRad(b.lon - a.lon);
-  const lat1 = toRad(a.lat);
-  const lat2 = toRad(b.lat);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
+/** "2026-05-10" → "260510", format attendu par Skyscanner. */
+function formatDateISO(d: string): string {
+  const [y, m, day] = d.split('-');
+  return y.slice(2) + m + day;
+}
+
+export function skyscannerSearchUrl(params: {
+  originIata: string;
+  destIata: string;
+  startDate: string;
+  endDate: string;
+  travelers: number;
+}): string {
+  const { originIata, destIata, startDate, endDate, travelers } = params;
+  return (
+    `https://www.skyscanner.fr/transport/vols/${originIata.toLowerCase()}/${destIata.toLowerCase()}` +
+    `/${formatDateISO(startDate)}/${formatDateISO(endDate)}/?adults=${travelers}`
+  );
+}
+
+export function bookingSearchUrl(params: {
+  destinationName: string;
+  startDate: string;
+  endDate: string;
+  travelers: number;
+}): string {
+  const u = new URL('https://www.booking.com/searchresults.fr.html');
+  u.searchParams.set('ss', params.destinationName);
+  u.searchParams.set('checkin', params.startDate);
+  u.searchParams.set('checkout', params.endDate);
+  u.searchParams.set('group_adults', String(params.travelers));
+  u.searchParams.set('group_children', '0');
+  u.searchParams.set('no_rooms', '1');
+  return u.toString();
+}
+
+/**
+ * Fourchette pour un aller-retour, **par personne**.
+ *
+ * Modèle : forfait de 55 € (taxes et frais fixes) + 0,06 €/km sur la distance
+ * orthodromique aller-retour réelle entre la ville de départ et la destination,
+ * ajusté de la saisonnalité. La distance vient de coordonnées réelles, pas
+ * d'un code de ville.
+ */
+export function estimateFlightBudget(params: {
+  destinationId: string;
+  destinationName: string;
+  startDate: string;
+  endDate: string;
+  travelers: number;
+  originIata?: string;
+  originCoord?: { lat: number; lon: number };
+}): BudgetEstimate | null {
+  const { destinationId, startDate, endDate, travelers, originIata = 'PARI' } = params;
+
+  const destCoord = destinationCoordinates[destinationId];
+  const originCoord =
+    params.originCoord ??
+    DEPARTURE_CITIES.find((c) => c.iata === originIata) ??
+    DEPARTURE_CITIES[0];
+
+  const destIata = CITY_IATA[destinationId.split('-')[0]] ?? destinationId.slice(0, 3).toUpperCase();
+  const searchUrl = skyscannerSearchUrl({ originIata, destIata, startDate, endDate, travelers });
+
+  // Sans coordonnées, aucune estimation défendable : on renvoie la recherche
+  // partenaire seule plutôt qu'un chiffre sorti de nulle part.
+  if (!destCoord) return null;
+
+  const oneWayKm = Math.round(haversine(originCoord, destCoord));
+  const { factor, label } = advanceFactor(startDate);
+  const center = (55 + oneWayKm * 2 * 0.06) * factor;
+  const { low, high } = spread(center);
+
+  return {
+    low,
+    high,
+    method:
+      `Forfait 55 € + 0,06 €/km sur ${(oneWayKm * 2).toLocaleString('fr-FR')} km aller-retour, ` +
+      `${label}. Fourchette ±25 %.`,
+    searchUrl,
+    partner: 'Skyscanner',
+  };
+}
+
+/** Coût de la vie relatif, appliqué à l'hébergement et aux repas. */
+const COST_INDEX: Record<string, number> = {
+  Suisse: 1.5, Norvège: 1.5, Islande: 1.45, Danemark: 1.35, Singapour: 1.35,
+  'États-Unis': 1.3, Australie: 1.25, Japon: 1.15, 'Royaume-Uni': 1.2,
+  France: 1, Allemagne: 1, Italie: 0.95, Espagne: 0.9, Portugal: 0.85,
+  Grèce: 0.85, 'République Tchèque': 0.75, Pologne: 0.7, Turquie: 0.6,
+  Maroc: 0.55, Égypte: 0.5, Thaïlande: 0.55, Vietnam: 0.45, Inde: 0.4,
+  Mexique: 0.6, Brésil: 0.6, Argentine: 0.55, Indonésie: 0.5,
+};
+
+function costIndex(country: string): { index: number; known: boolean } {
+  const index = COST_INDEX[country];
+  return index === undefined ? { index: 1, known: false } : { index, known: true };
+}
+
+/**
+ * Fourchette d'hébergement pour tout le séjour, chambre double.
+ *
+ * Modèle : 95 €/nuit pour un établissement de milieu de gamme en France,
+ * pondéré par l'indice de coût de la vie du pays et le nombre de chambres.
+ */
+export function estimateAccommodationBudget(params: {
+  destinationName: string;
+  country: string;
+  startDate: string;
+  endDate: string;
+  travelers: number;
+}): BudgetEstimate {
+  const { destinationName, country, startDate, endDate, travelers } = params;
+  const nights = daysBetween(startDate, endDate);
+  const rooms = Math.ceil(travelers / 2);
+  const { index, known } = costIndex(country);
+  const center = 95 * index * nights * rooms;
+  const { low, high } = spread(center);
+
+  return {
+    low,
+    high,
+    method:
+      `95 €/nuit en milieu de gamme × ${nights} nuit${nights > 1 ? 's' : ''} × ` +
+      `${rooms} chambre${rooms > 1 ? 's' : ''}` +
+      (known
+        ? `, indice de coût de la vie ${country} ×${index}`
+        : `, indice de coût de la vie inconnu pour ${country} (base France)`) +
+      '. Fourchette ±25 %.',
+    searchUrl: bookingSearchUrl({ destinationName, startDate, endDate, travelers }),
+    partner: 'Booking.com',
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Étapes d'un itinéraire multi-villes
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface LegEstimate {
+  fromId: string;
+  fromName: string;
+  toId: string;
+  toName: string;
+  distanceKm: number;
+  mode: 'plane' | 'train' | 'bus';
+  /** Fourchette par personne. */
+  low: number;
+  high: number;
+  method: string;
+  durationLabel: string;
+}
+
+/**
+ * Fourchette et mode de transport pour un tronçon, à partir de la distance
+ * réelle entre les deux villes. Aucune part d'aléatoire : deux itinéraires
+ * identiques donnent la même estimation, et la méthode est affichable.
+ */
 export function estimateLeg(params: {
   fromId: string;
   fromName: string;
@@ -291,63 +292,92 @@ export function estimateLeg(params: {
 }): LegEstimate {
   const { fromId, fromName, toId, toName, fromCoord, toCoord, startDate, sameCountry } = params;
   const distanceKm = Math.round(haversine(fromCoord, toCoord));
-  const rng = seedFrom(`${fromId}-${toId}-${startDate}-leg`);
 
-  // Mode: < 500 km (ou même pays < 800 km) → train, 500-2500 → vol low-cost, sinon vol
-  let mode: 'plane' | 'train' | 'bus';
-  let pricePerPerson: number;
+  let mode: LegEstimate['mode'];
+  let center: number;
   let durationLabel: string;
+  let method: string;
 
   if (distanceKm < 120) {
     mode = 'bus';
-    pricePerPerson = Math.round((15 + distanceKm * 0.08) * (0.85 + rng() * 0.3));
-    const h = Math.max(1, Math.round(distanceKm / 75));
-    durationLabel = `${h}h en bus`;
+    center = 15 + distanceKm * 0.08;
+    durationLabel = `${Math.max(1, Math.round(distanceKm / 75))} h en bus`;
+    method = `15 € + 0,08 €/km sur ${distanceKm} km. Fourchette ±25 %.`;
   } else if (distanceKm < (sameCountry ? 800 : 500)) {
     mode = 'train';
-    pricePerPerson = Math.round((25 + distanceKm * 0.12) * (0.85 + rng() * 0.35));
-    const h = Math.max(1, Math.round(distanceKm / 150));
-    durationLabel = `${h}h en train`;
+    center = 25 + distanceKm * 0.12;
+    durationLabel = `${Math.max(1, Math.round(distanceKm / 150))} h en train`;
+    method = `25 € + 0,12 €/km sur ${distanceKm} km. Fourchette ±25 %.`;
   } else {
     mode = 'plane';
-    // Vol court/moyen/long courrier
-    const base = 55 + distanceKm * 0.06; // ~55€ base + 6c/km
-    const daysAhead = Math.max(0, Math.round((new Date(startDate).getTime() - Date.now()) / 86400000));
-    const advance = daysAhead < 14 ? 1.4 : daysAhead < 45 ? 1.1 : 0.9;
-    pricePerPerson = Math.round((base * advance * (0.85 + rng() * 0.4)) / 5) * 5;
-    const h = Math.max(1, Math.round(distanceKm / 750));
-    durationLabel = `${h}h de vol`;
+    const { factor, label } = advanceFactor(startDate);
+    center = (55 + distanceKm * 0.06) * factor;
+    durationLabel = `${Math.max(1, Math.round(distanceKm / 750))} h de vol`;
+    method = `Forfait 55 € + 0,06 €/km sur ${distanceKm} km, ${label}. Fourchette ±25 %.`;
   }
 
-  return { fromId, fromName, toId, toName, distanceKm, mode, pricePerPerson, durationLabel };
+  const { low, high } = spread(center);
+  return { fromId, fromName, toId, toName, distanceKm, mode, low, high, method, durationLabel };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  Budget global d'un voyage
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface TripBudgetEstimate {
+  transport: { low: number; high: number };
+  accommodation: { low: number; high: number };
+  food: { low: number; high: number };
+  activities: { low: number; high: number };
+  total: { low: number; high: number };
+  /** Méthode de la partie repas et activités, la seule qui ne vient pas d'ailleurs. */
+  method: string;
+}
+
+/**
+ * Additionne les postes d'un voyage en conservant les fourchettes.
+ *
+ * Repas et activités : 30 €/jour/personne pour les repas et 20 €/jour/personne
+ * pour les visites, en base France, pondérés par l'indice de coût de la vie.
+ */
 export function computeBudgetEstimate(params: {
-  /** Prix par personne de chaque tronçon (aller origine→stops→retour). Ex: [Paris→Tokyo, Tokyo→Osaka, Osaka→Paris]. */
-  legPrices?: number[];
-  /** Ancien mode : prix d'un seul vol (aller-retour par personne). Utilisé si legPrices absent. */
-  flightPrice?: number;
-  hotelTotal: number;
+  /** Fourchettes par personne de chaque tronçon. */
+  legs: Array<{ low: number; high: number }>;
+  accommodation: { low: number; high: number };
   travelers: number;
   nights: number;
-}) {
-  const { legPrices, flightPrice, hotelTotal, travelers, nights } = params;
-  const flightPerPerson = legPrices && legPrices.length > 0
-    ? legPrices.reduce((a, b) => a + b, 0)
-    : (flightPrice || 0);
-  const flights = flightPerPerson * travelers;
-  const food = 35 * travelers * nights;
-  const activities = 25 * travelers * nights;
-  const essentials = 45;
-  const total = flights + hotelTotal + food + activities + essentials;
+  country: string;
+}): TripBudgetEstimate {
+  const { legs, accommodation, travelers, nights, country } = params;
+  const { index, known } = costIndex(country);
+
+  const transport = legs.reduce(
+    (acc, leg) => ({ low: acc.low + leg.low * travelers, high: acc.high + leg.high * travelers }),
+    { low: 0, high: 0 }
+  );
+
+  const foodCenter = 30 * index * travelers * nights;
+  const activitiesCenter = 20 * index * travelers * nights;
+  const food = spread(foodCenter);
+  const activities = spread(activitiesCenter);
+
   return {
-    flights,
-    flightPerPerson,
-    legCount: legPrices?.length ?? 1,
-    hotel: hotelTotal,
+    transport,
+    accommodation,
     food,
     activities,
-    essentials,
-    total,
+    total: {
+      low: transport.low + accommodation.low + food.low + activities.low,
+      high: transport.high + accommodation.high + food.high + activities.high,
+    },
+    method:
+      `Repas 30 €/jour/personne et visites 20 €/jour/personne en base France` +
+      (known ? `, indice ${country} ×${index}` : `, indice inconnu pour ${country} (base France)`) +
+      `, sur ${nights} jour${nights > 1 ? 's' : ''} et ${travelers} voyageur${travelers > 1 ? 's' : ''}.`,
   };
+}
+
+/** Formatage court d'une fourchette : « 320 – 480 € ». */
+export function formatRange(range: { low: number; high: number }): string {
+  return `${range.low.toLocaleString('fr-FR')} – ${range.high.toLocaleString('fr-FR')} €`;
 }

@@ -16,13 +16,17 @@ import { useCurrency } from '../context/CurrencyContext';
  */
 
 export interface BudgetBreakdown {
-  /** Transport, pour l'ensemble du groupe */
+  /** Transport, pour l'ensemble du groupe — valeur centrale de la fourchette. */
   flights: number;
   hotel: number;
   food: number;
   activities: number;
-  essentials: number;
   total: number;
+  /** Bornes du total. Affichées telles quelles : le centre seul ferait croire à une précision qu'aucune estimation n'a. */
+  low: number;
+  high: number;
+  /** Hypothèses de calcul, affichées sous le montant. */
+  method: string;
 }
 
 interface Props {
@@ -34,12 +38,11 @@ interface Props {
 
 type View = 'category' | 'day' | 'person';
 
-const CATEGORY_META: Array<{ key: keyof BudgetBreakdown; label: string; color: string }> = [
+const CATEGORY_META: Array<{ key: 'flights' | 'hotel' | 'food' | 'activities'; label: string; color: string }> = [
   { key: 'flights', label: 'Transport', color: '#8B5CF6' },
   { key: 'hotel', label: 'Hébergement', color: '#06B6D4' },
   { key: 'food', label: 'Restauration', color: '#F59E0B' },
   { key: 'activities', label: 'Activités', color: '#EC4899' },
-  { key: 'essentials', label: 'Essentiels', color: '#64748B' },
 ];
 
 export function TripBudgetPanel({ budget, travelers, nights, className = '' }: Props) {
@@ -122,9 +125,16 @@ export function TripBudgetPanel({ budget, travelers, nights, className = '' }: P
           </span>
         </div>
         <p className="mt-1 text-2xl font-bold tabular-nums" style={{ color: 'var(--lokadia-primary)' }}>
-          {formatAmount(headline, 'EUR')}
+          {view === 'category'
+            ? `${formatAmount(budget.low, 'EUR')} – ${formatAmount(budget.high, 'EUR')}`
+            : formatAmount(headline, 'EUR')}
         </p>
-        <p className="text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>{headlineLabel}</p>
+        <p className="text-[11px]" style={{ color: 'var(--lokadia-gray-500)' }}>
+          {headlineLabel} · estimation
+        </p>
+        <p className="mt-1 text-[10px] leading-snug" style={{ color: 'var(--lokadia-gray-400)' }}>
+          {budget.method}
+        </p>
       </div>
 
       <div className="flex gap-1.5 px-4 pt-3" role="tablist" aria-label="Angle de lecture du budget">

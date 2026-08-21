@@ -673,7 +673,7 @@ function fetchSecurityAdvisoriesAlerts(): RealTimeAlert[] {
         destination: dest.name,
         country: dest.country,
         date: formatDate(updated),
-        source: 'Conseils Officiels',
+        source: 'Conseils officiels — relevé Lokadia',
         url: 'https://www.diplomatie.gouv.fr/fr/conseils-aux-voyageurs/',
         zone: dest.name,
         coordinates: { lat: dest.lat, lon: dest.lon },

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useWeather } from "../hooks/useWeather";
 import { useLokascore } from "../hooks/useLokascore";
+import { ALERT_TYPE_META } from "../lib/liveAlertsService";
 import { WeatherCard, WeatherCardSkeleton } from "../components/WeatherCard";
 import { LokascoreBadge } from "../components/LokascoreBadge";
 import { ProvenanceNote } from "../components/ProvenanceNote";
@@ -115,7 +116,6 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSourcesModal, setShowSourcesModal] = useState(false);
-  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -187,19 +187,6 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
         behavior: "smooth",
       });
     }
-  };
-
-  const handleDownload = () => {
-    setDownloadProgress(0);
-    const interval = setInterval(() => {
-      setDownloadProgress((prev) => {
-        if (prev === null || prev >= 100) {
-          clearInterval(interval);
-          return null;
-        }
-        return prev + 10;
-      });
-    }, 200);
   };
 
   const handleShare = async () => {
@@ -358,27 +345,18 @@ function DestinationScreenContent({ destination }: { destination: DestinationDet
               ✓
             </button>
           </div>
-          <button
-            onClick={handleDownload}
-            disabled={downloadProgress !== null}
-            className="w-full py-3 rounded-xl font-semibold border-2 transition-transform active:scale-98"
-            style={{
-              borderColor: "var(--lokadia-gray-900)",
-              color: "var(--lokadia-gray-900)",
-            }}
+          {/* Il y avait ici un bouton « Télécharger les infos » dont la barre
+              de progression comptait de 0 à 100 % sans rien télécharger. Cette
+              fiche est déjà consultable hors connexion : son contenu fait
+              partie du bundle préchargé par le service worker, et le Lokascore
+              est mis en cache à chaque consultation. */}
+          <p
+            className="flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium"
+            style={{ background: "var(--lokadia-soft-white)", color: "var(--lokadia-gray-600)" }}
           >
-            {downloadProgress !== null ? (
-              <span className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"></div>
-                {downloadProgress}%
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                <Download className="h-5 w-5" />
-                Télécharger les infos
-              </span>
-            )}
-          </button>
+            <Download className="h-4 w-4" />
+            Fiche consultable hors connexion
+          </p>
 
           {/* Suivi de la destination : alerte uniquement en cas de
               changement réel du niveau de sécurité. */}
@@ -628,7 +606,7 @@ function OverviewTab({ destination }: { destination: DestinationDetails }) {
 }
 
 function WeatherTab({ destination }: { destination: DestinationDetails }) {
-  const { weather, loading: weatherLoading, error: weatherError } = useWeather(destination.name);
+  const { weather, loading: weatherLoading, error: weatherError } = useWeather(destination.id);
   
   return (
     <div className="lg:max-w-2xl">
@@ -643,13 +621,40 @@ function WeatherTab({ destination }: { destination: DestinationDetails }) {
   );
 }
 
+/**
+ * Alertes en cours pour la destination.
+ *
+ * Uniquement des alertes réelles : celles remontées par la fonction
+ * `world-alerts` depuis GDACS, l'OMS, ReliefWeb et l'USGS, chacune avec sa
+ * source et sa date de détection. Les fiches portaient auparavant des alertes
+ * écrites en dur (« Grève des transports — Aujourd'hui, 14:30 ») qui ne
+ * bougeaient jamais : un horodatage perpétuellement frais sur un évènement
+ * figé, exactement ce qu'un voyageur ne doit pas voir sur un écran de sécurité.
+ */
 function AlertsTab({ destination }: { destination: DestinationDetails }) {
-  if (destination.alerts.length === 0) {
+  const { liveAlerts, loading } = useLokascore(destination.id, { live: true });
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
+        <p className="text-sm" style={{ color: "var(--lokadia-text-light)" }}>
+          Interrogation des sources officielles…
+        </p>
+      </div>
+    );
+  }
+
+  if (liveAlerts.length === 0) {
     return (
       <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
         <CheckCircle className="h-12 w-12 mx-auto mb-3" style={{ color: "var(--lokadia-success-green)" }} />
-        <p className="text-sm" style={{ color: "var(--lokadia-text-light)" }}>
-          Aucune alerte active pour cette destination
+        <p className="text-sm font-medium" style={{ color: "var(--lokadia-text-dark)" }}>
+          Aucune alerte en cours pour cette destination
+        </p>
+        <p className="mt-2 text-xs" style={{ color: "var(--lokadia-text-light)" }}>
+          Sources consultées : GDACS, OMS, ReliefWeb, USGS. Cette absence
+          d'alerte ne remplace pas les conseils aux voyageurs de votre ministère
+          des Affaires étrangères.
         </p>
       </div>
     );
@@ -657,50 +662,38 @@ function AlertsTab({ destination }: { destination: DestinationDetails }) {
 
   return (
     <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-      {destination.alerts.map((alert) => (
-        <div key={alert.id} className="bg-white rounded-2xl p-5 shadow-sm">
-          <div className="flex items-start gap-3 mb-3">
-            <Bell
-              className="h-5 w-5 mt-0.5 flex-shrink-0"
-              style={{ 
-                color: alert.type === "info" 
-                  ? "var(--lokadia-info)" 
-                  : alert.type === "danger"
-                  ? "var(--lokadia-emergency-orange)"
-                  : "var(--lokadia-vigilance)" 
-              }}
-            />
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold" style={{ color: "var(--lokadia-text-dark)" }}>
-                  {alert.title}
-                </h3>
-                <Badge 
-                  variant={alert.type === "info" ? "info" : alert.type === "danger" ? "urgent" : "vigilance"}
-                  size="sm"
-                >
-                  {alert.type === "info" ? "Info" : alert.type === "danger" ? "Danger" : "Vigilance"}
-                </Badge>
+      {liveAlerts.map((alert, index) => {
+        const meta = ALERT_TYPE_META[alert.type] ?? ALERT_TYPE_META.other;
+        const AlertIcon = meta.Icon;
+        return (
+          <div key={`${alert.source}-${index}`} className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <AlertIcon className="h-5 w-5 mt-0.5 flex-shrink-0" style={{ color: meta.color }} />
+              <div className="flex-1">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="font-semibold" style={{ color: "var(--lokadia-text-dark)" }}>
+                    {meta.label}
+                  </h3>
+                  <Badge variant={alert.severity === "red" ? "urgent" : "vigilance"} size="sm">
+                    {alert.severity === "red" ? "Urgent" : "Vigilance"}
+                  </Badge>
+                </div>
+                <p className="text-sm mb-2" style={{ color: "var(--lokadia-text-light)" }}>
+                  {alert.description}
+                </p>
+                <p className="text-xs" style={{ color: "var(--lokadia-text-light)" }}>
+                  {alert.source} · détectée le{" "}
+                  {alert.detectedAt.toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
               </div>
-              <p className="text-sm mb-2" style={{ color: "var(--lokadia-text-light)" }}>
-                {alert.summary}
-              </p>
-              <p className="text-xs" style={{ color: "var(--lokadia-text-light)" }}>
-                {alert.date}
-              </p>
             </div>
           </div>
-          <button
-            className="w-full py-2 rounded-lg font-medium text-sm transition-colors"
-            style={{
-              color: "var(--lokadia-blue)",
-              backgroundColor: "var(--lokadia-soft-white)",
-            }}
-          >
-            Voir les détails
-          </button>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

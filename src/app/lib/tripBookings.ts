@@ -1,21 +1,20 @@
 /**
- * tripBookings — persistance locale des réservations rattachées à un voyage.
+ * tripBookings — budget prévisionnel enregistré pour un voyage.
  *
- * Quand l'utilisateur finalise son voyage, le contenu du panier est figé dans
- * localStorage sous la clé du voyage. Permet d'afficher ensuite le récapitulatif
- * "voyage finalisé" (vol ✓, hôtel ✓, e-SIM ✓...) dans l'aperçu du voyage.
- *
- * (Démo : stockage local. En prod, ces réservations seraient persistées côté
- * backend avec les références de commande des partenaires.)
+ * Le voyageur fige les postes qu'il retient ; le plan est relu ensuite dans
+ * l'aperçu du voyage. Rien n'est réservé ni transmis : Lokadia ne vend pas et
+ * n'encaisse pas. Le stockage est local à l'appareil, comme le reste des
+ * préférences.
  */
-import type { CartItem } from './cart';
+import type { BudgetLine } from './cart';
 
 export interface TripBooking {
   tripId: string;
-  items: CartItem[];
-  total: number;
-  reference: string;
-  bookedAt: string; // ISO
+  items: BudgetLine[];
+  /** Fourchette totale du plan, en euros. */
+  total: { low: number; high: number };
+  /** Date d'enregistrement du plan (ISO). */
+  savedAt: string;
 }
 
 const KEY = 'lokadia_trip_bookings_v1';

@@ -19,6 +19,7 @@ import {
 import type { TripDashboard } from '../lib/tripBriefService';
 import type { TripWithChecklist } from '../lib/tripService';
 import { useLokascore } from '../hooks/useLokascore';
+import { ALERT_TYPE_META } from '../lib/liveAlertsService';
 import { LokascoreBadge } from './LokascoreBadge';
 
 interface Props {
@@ -47,25 +48,19 @@ const getEmergencyIcon = (emoji: string): LucideIcon => {
 
 export default function TripOverviewTab({ dashboard, trip }: Props) {
   const navigate = useNavigate();
-  const { priorityActions, alerts, checklistProgress, transportSummary, destination } = dashboard;
+  const { priorityActions, checklistProgress, transportSummary, destination } = dashboard;
   const {
     score: liveLokascore,
     loading: scoreLoading,
     sources: lokascoreSources,
     lastUpdate: lokascoreLastUpdate,
-  } = useLokascore(trip.destinationId);
+    liveAlerts,
+  } = useLokascore(trip.destinationId, { live: true });
 
   const getPriorityColor = (priority: string) => {
     if (priority === 'high') return 'border-l-red-500 bg-red-50';
     if (priority === 'medium') return 'border-l-orange-500 bg-orange-50';
     return 'border-l-blue-500 bg-blue-50';
-  };
-
-  const getAlertColor = (type: string) => {
-    if (type === 'danger') return 'bg-red-100 border-red-300 text-red-800';
-    if (type === 'warning') return 'bg-orange-100 border-orange-300 text-orange-800';
-    if (type === 'vigilance') return 'bg-yellow-100 border-yellow-300 text-yellow-800';
-    return 'bg-blue-100 border-blue-300 text-blue-800';
   };
 
 
@@ -102,23 +97,36 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
         </div>
       </section>
 
-      {/* Alertes importantes */}
-      {alerts.length > 0 && (
+      {/* Alertes en cours — uniquement les sources officielles temps réel */}
+      {liveAlerts.length > 0 && (
         <section>
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
             <AlertTriangle className="text-orange-600" size={24} />
-            Alertes importantes
+            Alertes en cours
           </h2>
           <div className="space-y-3">
-            {alerts.map((alert, index) => (
-              <div
-                key={index}
-                className={`border rounded-xl p-4 ${getAlertColor(alert.type)}`}
-              >
-                <h3 className="font-semibold mb-1">{alert.title}</h3>
-                <p className="text-sm">{alert.message}</p>
-              </div>
-            ))}
+            {liveAlerts.map((alert, index) => {
+              const meta = ALERT_TYPE_META[alert.type] ?? ALERT_TYPE_META.other;
+              return (
+                <div
+                  key={`${alert.source}-${index}`}
+                  className={`border rounded-xl p-4 ${
+                    alert.severity === 'red'
+                      ? 'border-l-4 border-l-red-500 bg-red-50'
+                      : 'border-l-4 border-l-orange-500 bg-orange-50'
+                  }`}
+                >
+                  <h3 className="font-semibold mb-1">{meta.label}</h3>
+                  <p className="text-sm">{alert.description}</p>
+                  <p className="mt-2 text-xs text-gray-600">
+                    {alert.source} · détectée le{' '}
+                    {alert.detectedAt.toLocaleDateString('fr-FR', {
+                      day: 'numeric', month: 'long', year: 'numeric',
+                    })}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

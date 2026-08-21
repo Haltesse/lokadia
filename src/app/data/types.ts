@@ -7,19 +7,13 @@
  * `visaInfo` et `typicalCosts`, qu'aucune destination n'a jamais renseignés,
  * pendant que les écrans lisaient `summary`, `vaccines`, `commonScams` et
  * `priceGuide`. Les noms ci-dessous sont ceux des données et des écrans.
+ *
+ * Ce qui n'y figure plus, volontairement : les alertes. Chaque fiche portait
+ * un tableau `alerts` écrit à la main, horodaté en relatif (« Aujourd'hui,
+ * 14:30 »), donc perpétuellement « frais » pour un évènement figé depuis des
+ * mois. Les alertes viennent désormais des seules sources officielles, via
+ * `useLokascore(id, { live: true })` — datées et attribuées.
  */
-
-export interface Alert {
-  id: number;
-  type: "info" | "vigilance" | "danger" | "warning";
-  title: string;
-  /** Corps de l'alerte, affiché sous le titre. */
-  summary: string;
-  /** Horodatage lisible ("Aujourd'hui, 14:30"), pas une date machine. */
-  date?: string;
-  source?: string;
-  timestamp?: string;
-}
 
 export interface Vaccine {
   name: string;
@@ -51,14 +45,12 @@ export interface DestinationDetails {
   /** @deprecated Ne jamais afficher cette valeur — le score est calculé côté serveur (lokascore-compute) et exposé via useLokascore() */
   lokascoreSeed?: number;
   safetyLevel: "safe" | "vigilance" | "danger";
-  lastUpdate: string;
   timezone: string;
   language: string;
   currency: string;
 
   // Sécurité
   securitySummary: string;
-  alerts: Alert[];
   dangerousAreas: string[];
   safetyTips: string[];
   commonScams: ScamAlert[];

@@ -10,20 +10,10 @@ export const moreDetailedDestinations3: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 84,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 2 heures",
     timezone: "GMT+0 (WET, GMT+1 en été)",
     language: "Portugais (Anglais parlé zones touristiques)",
     currency: "Euro (€)",
     securitySummary: "Lisbonne est globalement très sûre pour les touristes. La criminalité violente est rare. Les pickpockets sont actifs dans les zones touristiques (Alfama, Baixa, Bairro Alto, tramway 28) et transports publics. Attention aux vols à l'arraché depuis scooters. Certains quartiers périphériques à éviter la nuit. Ville construite sur 7 collines = nombreuses côtes raides, pavés glissants après pluie.",
-    alerts: [
-      {
-        id: 1,
-        type: "info",
-        title: "Forte chaleur",
-        summary: "Canicule prévue 38-40°C cette semaine. Hydratez-vous, évitez soleil 12h-16h.",
-        date: "Aujourd'hui, 10:00"
-      }
-    ],
     dangerousAreas: [
       "Martim Moniz après minuit (dealers présents)",
       "Intendente la nuit (en amélioration mais restez vigilant)",
@@ -125,20 +115,10 @@ export const moreDetailedDestinations3: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1541849546-216549ae216d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 81,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 1 heure",
     timezone: "GMT+1 (CET)",
     language: "Tchèque (Anglais parlé zones touristiques)",
     currency: "Couronne tchèque (CZK) - 1€ ≈ 25 CZK",
     securitySummary: "Prague est globalement sûre mais les arnaques aux touristes sont TRÈS fréquentes. Pickpockets actifs zones touristiques (Pont Charles, Place Venceslas, Vieille Ville). Arnaques taxis/bureaux change/restaurants courantes. Scams sexuels bars strip-tease (additions 1000€+). Évitez quartiers périphériques la nuit. Attention enterrements vie garçon britanniques ivres.",
-    alerts: [
-      {
-        id: 1,
-        type: "vigilance",
-        title: "Recrudescence arnaques taxis",
-        summary: "Nombreux cas signalés taxis sans compteur facturant 100€+ pour trajets courts. Utilisez Uber/Bolt.",
-        date: "Il y a 3 heures"
-      }
-    ],
     dangerousAreas: [
       "Wenceslas Square la nuit (prostitution, dealers)",
       "Žižkov après minuit (bars louches)",
@@ -240,27 +220,10 @@ export const moreDetailedDestinations3: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1555993539-1732b0258235?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 79,
     safetyLevel: "vigilance",
-    lastUpdate: "Il y a 2 heures",
     timezone: "GMT+2 (EET)",
     language: "Grec (Anglais parlé zones touristiques)",
     currency: "Euro (€)",
     securitySummary: "Athènes est modérément sûre. Pickpockets très actifs métro, Acropole, Plaka, Monastiraki. Évitez absolument Omonia Square et certaines zones la nuit (Metaxourgio, Exarcheia). Grèves et manifestations fréquentes (souvent violentes). Attention taxis sans compteur. Chaleur extrême été (40°C+). Graffitis partout, ville sale par endroits.",
-    alerts: [
-      {
-        id: 1,
-        type: "warning",
-        title: "Manifestation syndicale",
-        summary: "Grève générale jeudi - Transports publics arrêtés, manifestation Syntagma Square 10h-16h. Évitez la zone.",
-        date: "Aujourd'hui, 08:00"
-      },
-      {
-        id: 2,
-        type: "vigilance",
-        title: "Canicule extrême",
-        summary: "Températures 41-43°C prévues cette semaine. Acropole fermée 12h-17h. Hydratez-vous.",
-        date: "Il y a 1 jour"
-      }
-    ],
     dangerousAreas: [
       "Omonia Square JOUR ET NUIT (dealers, prostituées, danger réel)",
       "Metaxourgio la nuit (immigration illégale, drogue)",
@@ -360,12 +323,10 @@ export const moreDetailedDestinations3: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1516550893923-42d28e5677af?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 87,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 1 heure",
     timezone: "GMT+1 (CET)",
     language: "Allemand (Anglais bien parlé)",
     currency: "Euro (€)",
     securitySummary: "Vienne est l'une des villes les plus sûres d'Europe. La criminalité violente est rare. Pickpockets présents zones touristiques (Stephansplatz, Naschmarkt) et transports publics. Ville propre, organisée, respectueuse des règles. ATTENTION: Règles strictes (amendes fréquentes pour infractions mineures). Ville élégante, classique, parfois rigide.",
-    alerts: [],
     dangerousAreas: [
       "Praterstern (gare) la nuit (quelques ivrognes, dealers)",
       "Gürtel (périphérique) certaines zones la nuit",
@@ -461,20 +422,10 @@ export const moreDetailedDestinations3: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1597212618440-806262de4f6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 76,
     safetyLevel: "vigilance",
-    lastUpdate: "Il y a 2 heures",
     timezone: "GMT+1 (pas de changement heure)",
     language: "Arabe, Berbère, Français très parlé",
     currency: "Dirham marocain (MAD) - 1€ ≈ 11 MAD",
     securitySummary: "Marrakech est modérément sûre. Criminalité violente rare mais harcèlement vendeurs/faux guides constant et épuisant. Arnaques multiples (taxis, souks, restaurants). Femmes seules peuvent subir harcèlement verbal. Respectez culture locale (vêtements modestes). Médina labyrinthique (facile se perdre). Circulation chaotique (scooters partout). Chaleur extrême été (45°C+).",
-    alerts: [
-      {
-        id: 1,
-        type: "vigilance",
-        title: "Canicule extrême",
-        summary: "Températures 43-46°C prévues cette semaine. Hydratez-vous, évitez sorties 12h-17h.",
-        date: "Aujourd'hui, 09:00"
-      }
-    ],
     dangerousAreas: [
       "Ruelles sombres médina la nuit (risque agression/vol)",
       "Zones périphériques Médina après 22h",
@@ -578,12 +529,10 @@ export const moreDetailedDestinations3: Record<string, DestinationDetails> = {
     image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Dublin_-_aerial_-_2025-07-07_01.jpg/1280px-Dublin_-_aerial_-_2025-07-07_01.jpg",
     lokascoreSeed: 82,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 1 heure",
     timezone: "GMT+0 (GMT+1 en été)",
     language: "Anglais, Irlandais (Gaeilge)",
     currency: "Euro (€)",
     securitySummary: "Dublin est globalement sûre mais attention pickpockets zones touristiques (Temple Bar, O'Connell Street, Grafton Street). Évitez certains quartiers périphériques la nuit (Ballymun, Tallaght). Bagarres d'ivrognes fréquentes tard le soir près des pubs. Alcool très présent dans culture. Météo pluvieuse imprévisible (4 saisons en 1 jour). Ville CHÈRE.",
-    alerts: [],
     dangerousAreas: [
       "Ballymun la nuit",
       "Tallaght certaines zones après minuit",

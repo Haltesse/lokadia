@@ -40,7 +40,6 @@ export interface TripDashboard {
   stops: TripStop[];
   segments: TripSegment[];
   priorityActions: ActionCard[];
-  alerts: Array<{ type: string; title: string; message: string }>;
   checklistProgress: { completed: number; total: number };
   transportSummary: {
     totalStops: number;
@@ -101,19 +100,6 @@ function generatePriorityActions(
       priority: hasRequired ? 'high' : 'medium',
       category: 'health',
       icon: 'Syringe',
-    });
-  }
-
-  // Alertes sécurité
-  if (destination?.alerts && destination.alerts.length > 0) {
-    const hasDanger = destination.alerts.some(a => a.type === 'danger');
-    actions.push({
-      id: 'security-alerts',
-      title: 'Consulter alertes sécurité',
-      description: `${destination.alerts.length} alerte(s) active(s)`,
-      priority: hasDanger ? 'high' : 'medium',
-      category: 'alert',
-      icon: 'AlertTriangle',
     });
   }
 
@@ -316,33 +302,10 @@ export async function generateTripDashboard(
   // Générer actions prioritaires
   const priorityActions = generatePriorityActions(trip, destination, daysUntil);
   
-  // Collecter les alertes de toutes les destinations de l'itinéraire
-  const alerts: Array<{ type: string; title: string; message: string }> = [];
-  
-  if (destination?.alerts) {
-    destination.alerts.forEach(alert => {
-      alerts.push({
-        type: alert.type,
-        title: alert.title,
-        message: alert.summary || '',
-      });
-    });
-  }
-  
-  // Ajouter alertes des villes
-  for (const stop of stops) {
-    const cityDest = getDestination(stop.destinationId);
-    if (cityDest?.alerts) {
-      cityDest.alerts.forEach(alert => {
-        alerts.push({
-          type: alert.type,
-          title: `${cityDest.name}: ${alert.title}`,
-          message: alert.summary || '',
-        });
-      });
-    }
-  }
-  
+  // Les alertes ne transitent plus par ce service : elles sont chargées à
+  // l'écran depuis les sources officielles (useLokascore({ live: true })),
+  // avec leur source et leur date. Les fiches ne portent plus d'alertes.
+
   // Résumé transport
   const totalDuration = estimateTotalDuration(segments);
   const transportSummary = {
@@ -356,7 +319,6 @@ export async function generateTripDashboard(
     stops,
     segments,
     priorityActions,
-    alerts: alerts.slice(0, 5), // Max 5 alertes
     checklistProgress: { completed: checklistCompleted, total: checklistTotal },
     transportSummary,
     destination,

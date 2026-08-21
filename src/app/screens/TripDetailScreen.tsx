@@ -100,7 +100,7 @@ export default function TripDetailScreen() {
 
   const tabOptions: Array<{ id: TabType; label: string }> = [
     { id: 'overview', label: 'Aperçu' },
-    { id: 'booking', label: 'Réserver' },
+    { id: 'booking', label: 'Budget' },
     { id: 'preparation', label: 'Avant le départ' },
     { id: 'location', label: 'Pendant' },
     { id: 'itinerary', label: 'Itinéraire / Carte' },
@@ -179,7 +179,7 @@ export default function TripDetailScreen() {
           className="px-5 py-4 font-semibold text-base whitespace-nowrap relative transition-colors"
           style={{ color: activeTab === 'booking' ? 'var(--lokadia-primary)' : 'var(--lokadia-gray-600)' }}
         >
-          Réserver
+          Budget
           {activeTab === 'booking' && (
             <div className="absolute bottom-0 left-0 right-0 h-1 rounded-t-full" style={{ backgroundColor: 'var(--lokadia-primary)' }}></div>
           )}

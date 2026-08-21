@@ -10,27 +10,10 @@ export const moreDetailedDestinations: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1513581166391-887a96ddeafd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 81,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 3 heures",
     timezone: "GMT+1 (CET)",
     language: "Italien (Anglais parlé dans zones touristiques)",
     currency: "Euro (€)",
     securitySummary: "Milan est globalement sûre pour les touristes. La criminalité violente est rare mais les pickpockets sont très actifs, particulièrement dans le métro, autour du Duomo, dans les gares (Centrale, Garibaldi) et dans les zones commerciales. Les arnaques touristiques sont fréquentes autour de la cathédrale. Évitez certaines zones périphériques la nuit (notamment autour de la Gare Centrale). La présence policière est importante dans le centre.",
-    alerts: [
-      {
-        id: 1,
-        type: "info",
-        title: "Grève transports",
-        summary: "Perturbations métro et tramway vendredi 28 février - Lignes M1, M2 partiellement fermées",
-        date: "Demain, 10:00"
-      },
-      {
-        id: 2,
-        type: "vigilance",
-        title: "Manifestation étudiants",
-        summary: "Rassemblement Piazza del Duomo samedi après-midi - Évitez la zone 14h-18h",
-        date: "Il y a 2 heures"
-      }
-    ],
     dangerousAreas: [
       "Quartier de la Gare Centrale la nuit (après 22h)",
       "Parc Sempione après la tombée de la nuit",
@@ -128,27 +111,10 @@ export const moreDetailedDestinations: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 83,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 2 heures",
     timezone: "GMT+1 (CET)",
     language: "Italien (Anglais parlé zones touristiques)",
     currency: "Euro (€)",
     securitySummary: "Venise est très sûre pour les touristes. La criminalité violente est quasi inexistante. Les pickpockets opèrent dans les zones ultra-touristiques (Pont du Rialto, Place Saint-Marc, vaporetto bondés). Les arnaques aux restaurants/gondoles sont le principal problème. Attention aux inondations 'acqua alta' en automne/hiver. Ville TRÈS chère et TRÈS touristique.",
-    alerts: [
-      {
-        id: 1,
-        type: "vigilance",
-        title: "Acqua alta prévue",
-        summary: "Marée haute exceptionnelle vendredi matin (120cm) - Place St-Marc inondée, prévoyez bottes",
-        date: "Aujourd'hui, 16:00"
-      },
-      {
-        id: 2,
-        type: "info",
-        title: "Carnaval de Venise",
-        summary: "Affluence record du 1er au 10 mars - Réservations hébergement obligatoires, prix x3",
-        date: "Il y a 1 jour"
-      }
-    ],
     dangerousAreas: [
       "Aucune zone dangereuse (ville très sûre)",
       "Évitez zones isolées de Mestre la nuit (partie continentale)",
@@ -242,27 +208,10 @@ export const moreDetailedDestinations: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 80,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 1 heure",
     timezone: "GMT+1 (CET)",
     language: "Espagnol (Castillan) - Anglais limité hors zones touristiques",
     currency: "Euro (€)",
     securitySummary: "Madrid est globalement sûre mais les pickpockets sont omniprésents dans le métro (lignes 1, 2, 5), autour de Sol/Gran Vía, au Rastro (marché dimanche), dans les musées (Prado, Reina Sofía) et zones touristiques. Les vols à l'arraché (sac, téléphone) sont fréquents. Évitez Lavapiés et certaines zones de Carabanchel tard la nuit. Attention manifestations fréquentes (souvent pacifiques). Ville animée jusqu'à 3-4h du matin.",
-    alerts: [
-      {
-        id: 1,
-        type: "vigilance",
-        title: "Manifestation syndicale",
-        summary: "Défilé Puerta del Sol samedi 1er mars 11h-14h - Perturbations métro lignes 1, 2, 3",
-        date: "Aujourd'hui, 09:00"
-      },
-      {
-        id: 2,
-        type: "info",
-        title: "Vague de chaleur",
-        summary: "Températures 35-38°C prévues toute la semaine - Hydratez-vous, évitez soleil 14h-17h",
-        date: "Il y a 3 heures"
-      }
-    ],
     dangerousAreas: [
       "Certaines parties de Lavapiés la nuit (après minuit)",
       "Usera et Carabanchel périphérique sud la nuit",

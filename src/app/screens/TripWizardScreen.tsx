@@ -31,9 +31,9 @@ import { BottomNav } from '../components/BottomNav';
 import { useAuth } from '../context/AuthContext';
 import { EmirateDatePicker } from '../components/EmirateDatePicker';
 import { BOOKING_PARTNERS } from '../components/PartnerBookingSection';
-import { FlightOffers } from '../components/FlightOffers';
-import { HotelOffers } from '../components/HotelOffers';
-import { generateFlightOffers, generateHotelOffers, computeBudgetEstimate, estimateLeg, DEPARTURE_CITIES, type LegEstimate } from '../lib/travelOffers';
+import { BudgetEstimateCard, EstimateDisclaimer } from '../components/BudgetEstimateCard';
+import { estimateFlightBudget, computeBudgetEstimate, estimateLeg, formatRange, DEPARTURE_CITIES, type LegEstimate } from '../lib/travelOffers';
+import { estimateLodging } from '../lib/bookingCatalog';
 import { getCoherentCountries } from '../data/countryNeighbors';
 import { STOP_CITIES } from '../data/stopCities';
 import { TripMap, type TripMapPoint } from '../components/TripMap';
@@ -337,8 +337,8 @@ export default function TripWizardScreen() {
           </div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--lokadia-gray-900)' }}>Voyage créé</h1>
           <p className="mt-2 text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
-            Votre voyage vers <strong>{createdTripName}</strong> est prêt. Réservez vos hébergements,
-            vols et e-SIM dans l'onglet « Réserver ».
+            Votre voyage vers <strong>{createdTripName}</strong> est prêt. Estimez son budget —
+            vol, hébergement, e-SIM — dans l'onglet « Budget ».
           </p>
           <button
             onClick={() => navigate(`/trips/${createdTripId}`)}
@@ -1186,17 +1186,19 @@ export default function TripWizardScreen() {
               if (!startDate || !endDate || !arrivalCity) return null;
               const destName = allDestinations[arrivalCity]?.name || arrivalCity;
               const depCity = DEPARTURE_CITIES.find((c) => c.id === departureCityId) || DEPARTURE_CITIES[0];
-              const flights = generateFlightOffers({
+              const destCountry = allDestinations[arrivalCity]?.country ?? '';
+              const flightEstimate = estimateFlightBudget({
                 destinationId: arrivalCity,
                 destinationName: destName,
                 startDate,
                 endDate,
                 travelers,
                 originIata: depCity.iata,
+                originCoord: { lat: depCity.lat, lon: depCity.lon },
               });
-              const hotels = generateHotelOffers({
-                destinationId: arrivalCity,
+              const lodging = estimateLodging({
                 destinationName: destName,
+                country: destCountry,
                 startDate,
                 endDate,
                 travelers,
@@ -1273,13 +1275,12 @@ export default function TripWizardScreen() {
                 );
               }
 
-              const legPrices = legs.map((l) => l.pricePerPerson);
-
               const budget = computeBudgetEstimate({
-                legPrices,
-                hotelTotal: hotels[0].totalPrice,
+                legs,
+                accommodation: { low: lodging.low, high: lodging.high },
                 travelers,
                 nights,
+                country: destCountry,
               });
 
               return (
@@ -1333,10 +1334,10 @@ export default function TripWizardScreen() {
                               </div>
                               <div className="text-right">
                                 <p className="text-sm font-bold" style={{ color: modeColor }}>
-                                  {leg.pricePerPerson}€
+                                  {formatRange(leg)}
                                 </p>
                                 <p className="text-[10px]" style={{ color: 'var(--lokadia-gray-500)' }}>
-                                  /pers
+                                  estimé /pers
                                 </p>
                               </div>
                             </div>
@@ -1346,34 +1347,37 @@ export default function TripWizardScreen() {
                     )}
                   </div>
 
-                  {/* Vols */}
-                  <div className="mt-8">
-                    <div className="flex items-end justify-between mb-3">
-                      <div>
-                        <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: 'var(--lokadia-gray-900)' }}>
-                          <Plane className="h-5 w-5" style={{ color: 'var(--lokadia-primary)' }} /> Vols suggérés
-                        </h3>
-                        <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
-                          {depCity.label} → {destName} · aller-retour
-                        </p>
-                      </div>
+                  {/* Vol et hébergement : fourchettes, pas d'offres */}
+                  <div className="mt-8 space-y-3">
+                    <div>
+                      <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: 'var(--lokadia-gray-900)' }}>
+                        <Wallet className="h-5 w-5" style={{ color: 'var(--lokadia-primary)' }} /> Ce que ça devrait coûter
+                      </h3>
+                      <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
+                        {depCity.label} → {destName} · {nights} nuit{nights > 1 ? 's' : ''} · {travelers} voyageur{travelers > 1 ? 's' : ''}
+                      </p>
                     </div>
-                    <FlightOffers offers={flights} travelers={travelers} />
-                  </div>
-
-                  {/* Hôtels */}
-                  <div className="mt-8">
-                    <div className="flex items-end justify-between mb-3">
-                      <div>
-                        <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: 'var(--lokadia-gray-900)' }}>
-                          <Hotel className="h-5 w-5" style={{ color: 'var(--lokadia-primary)' }} /> Hôtels à {destName}
-                        </h3>
-                        <p className="text-sm" style={{ color: 'var(--lokadia-gray-600)' }}>
-                          {nights} nuit{nights > 1 ? 's' : ''} · {travelers} voyageur{travelers > 1 ? 's' : ''}
-                        </p>
-                      </div>
-                    </div>
-                    <HotelOffers offers={hotels} nights={nights} />
+                    <EstimateDisclaimer />
+                    {flightEstimate && (
+                      <BudgetEstimateCard
+                        Icon={Plane}
+                        estimate={{
+                          category: 'flight',
+                          label: `Vol aller-retour · ${travelers} voyageur${travelers > 1 ? 's' : ''}`,
+                          low: flightEstimate.low * travelers,
+                          high: flightEstimate.high * travelers,
+                          method: `${flightEstimate.method} Par personne : ${formatRange(flightEstimate)}.`,
+                          partners: [{
+                            id: 'skyscanner',
+                            name: flightEstimate.partner,
+                            description: `Vols vers ${destName}`,
+                            brandColor: '#0770E3',
+                            href: flightEstimate.searchUrl,
+                          }],
+                        }}
+                      />
+                    )}
+                    <BudgetEstimateCard estimate={lodging} Icon={Hotel} />
                   </div>
 
                   {/* Budget estimé */}
@@ -1383,23 +1387,24 @@ export default function TripWizardScreen() {
                   >
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-lg font-bold flex items-center gap-2"><Wallet className="h-5 w-5" /> Budget estimé</h3>
-                      <span className="text-xs bg-white/20 px-2 py-1 rounded-full">hors essentiels</span>
+                      <span className="text-xs bg-white/20 px-2 py-1 rounded-full">fourchette indicative</span>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="opacity-85">
-                          Transports ({budget.legCount} trajet{budget.legCount > 1 ? 's' : ''} × {travelers})
+                          Transports ({legs.length} trajet{legs.length > 1 ? 's' : ''} × {travelers})
                         </span>
-                        <span className="font-semibold">{budget.flights}€</span>
+                        <span className="font-semibold">{formatRange(budget.transport)}</span>
                       </div>
-                      <div className="flex justify-between"><span className="opacity-85">Hôtel ({nights} nuits)</span><span className="font-semibold">{budget.hotel}€</span></div>
-                      <div className="flex justify-between"><span className="opacity-85">Restauration</span><span className="font-semibold">{budget.food}€</span></div>
-                      <div className="flex justify-between"><span className="opacity-85">Activités</span><span className="font-semibold">{budget.activities}€</span></div>
+                      <div className="flex justify-between"><span className="opacity-85">Hébergement ({nights} nuits)</span><span className="font-semibold">{formatRange(budget.accommodation)}</span></div>
+                      <div className="flex justify-between"><span className="opacity-85">Restauration</span><span className="font-semibold">{formatRange(budget.food)}</span></div>
+                      <div className="flex justify-between"><span className="opacity-85">Activités</span><span className="font-semibold">{formatRange(budget.activities)}</span></div>
                       <div className="h-px my-2" style={{ background: 'rgba(255,255,255,0.25)' }} />
                       <div className="flex justify-between text-base">
                         <span className="font-bold">Total estimé</span>
-                        <span className="font-bold text-2xl">{budget.total}€</span>
+                        <span className="font-bold text-xl">{formatRange(budget.total)}</span>
                       </div>
+                      <p className="pt-1 text-[11px] leading-snug opacity-80">{budget.method}</p>
                     </div>
                   </div>
                 </>

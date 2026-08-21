@@ -4,10 +4,10 @@ import { moreDetailedDestinations } from "./moreDetailedDestinations";
 import { moreDetailedDestinations2 } from "./moreDetailedDestinations2";
 import { moreDetailedDestinations3 } from "./moreDetailedDestinations3";
 import { moreDetailedDestinations4 } from "./moreDetailedDestinations4";
-import type { DestinationDetails, Alert, Vaccine, ScamAlert, PriceItem, EmergencyContact } from "./types";
+import type { DestinationDetails, Vaccine, ScamAlert, PriceItem, EmergencyContact } from "./types";
 
 // Re-export types for backward compatibility
-export type { DestinationDetails, Alert, Vaccine, ScamAlert, PriceItem, EmergencyContact };
+export type { DestinationDetails, Vaccine, ScamAlert, PriceItem, EmergencyContact };
 
 export const destinationsDatabase: Record<string, DestinationDetails> = {
   "paris-france": {
@@ -17,27 +17,10 @@ export const destinationsDatabase: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 85,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 2 heures",
     timezone: "GMT+1 (CET)",
     language: "Français",
     currency: "Euro (€)",
     securitySummary: "Paris est généralement une destination sûre pour les voyageurs. La ville dispose d'une forte présence policière et d'infrastructures de sécurité modernes. Restez vigilant dans les zones touristiques très fréquentées où les pickpockets opèrent, particulièrement dans le métro et près des attractions majeures comme la Tour Eiffel et le Louvre.",
-    alerts: [
-      {
-        id: 1,
-        type: "info",
-        title: "Grève des transports",
-        summary: "Perturbations prévues sur les lignes de métro 1, 4 et 14 jeudi 27 février",
-        date: "Aujourd'hui, 14:30"
-      },
-      {
-        id: 2,
-        type: "vigilance",
-        title: "Manifestation prévue",
-        summary: "Rassemblement place de la République samedi 28 février - Évitez la zone entre 14h-19h",
-        date: "Demain, 15:00"
-      }
-    ],
     dangerousAreas: [
       "Certaines zones du 18e et 19e arrondissement la nuit",
       "Gare du Nord et alentours après 22h",
@@ -112,20 +95,10 @@ export const destinationsDatabase: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1598785933375-9f14c25f720b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxUb2t5byUyMEphcGFuJTIwc2t5bGluZXxlbnwxfHx8fDE3NzE5NTUzMTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
     lokascoreSeed: 95,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 1 heure",
     timezone: "GMT+9 (JST)",
     language: "Japonais",
     currency: "Yen (¥)",
     securitySummary: "Tokyo est l'une des villes les plus sûres au monde. Le taux de criminalité est extrêmement bas et vous pouvez vous promener en toute sécurité à toute heure. Les Japonais sont respectueux et serviables. La ville est très propre et bien organisée.",
-    alerts: [
-      {
-        id: 1,
-        type: "info",
-        title: "Typhon prévu",
-        summary: "Saison des typhons: vérifiez la météo régulièrement en août-septembre",
-        date: "Il y a 3 heures"
-      }
-    ],
     dangerousAreas: [
       "Kabukicho (quartier rouge de Shinjuku) tard le soir - restez vigilant",
       "Roppongi la nuit - présence de rabatteurs insistants"

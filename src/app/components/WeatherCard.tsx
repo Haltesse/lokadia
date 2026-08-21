@@ -1,6 +1,28 @@
 import React from 'react';
-import { Wind, Droplets, Sunrise, Sunset, CloudOff } from 'lucide-react';
-import { WeatherData, getWeatherEmoji, getTemperatureColor } from '../services/weatherService';
+import {
+  Wind, Droplets, Sunrise, Sunset, CloudOff,
+  Sun, CloudSun, Cloud, CloudFog, CloudDrizzle, CloudRain, Snowflake, CloudLightning,
+  type LucideIcon,
+} from 'lucide-react';
+import {
+  type WeatherData, type WeatherCondition, getTemperatureColor,
+} from '../services/weatherService';
+
+/**
+ * La carte affichait auparavant le *nom* de l'icône en toutes lettres
+ * (« Sun », « CloudRain ») dans un bloc de texte : reliquat d'une migration
+ * emoji → lucide. On rend ici le vrai composant.
+ */
+const CONDITION_ICONS: Record<WeatherCondition, LucideIcon> = {
+  clear: Sun,
+  'partly-cloudy': CloudSun,
+  cloudy: Cloud,
+  fog: CloudFog,
+  drizzle: CloudDrizzle,
+  rain: CloudRain,
+  snow: Snowflake,
+  thunderstorm: CloudLightning,
+};
 
 interface WeatherCardProps {
   weather: WeatherData;
@@ -8,13 +30,8 @@ interface WeatherCardProps {
 }
 
 export function WeatherCard({ weather, cityName }: WeatherCardProps) {
-  const emoji = getWeatherEmoji(weather.condition);
+  const ConditionIcon = CONDITION_ICONS[weather.condition] ?? Cloud;
   const gradientClass = getTemperatureColor(weather.temperature);
-
-  const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  };
 
   return (
     <div className={`bg-gradient-to-br ${gradientClass} rounded-2xl p-6 text-white shadow-lg`}>
@@ -24,7 +41,7 @@ export function WeatherCard({ weather, cityName }: WeatherCardProps) {
           <h3 className="text-lg font-semibold opacity-90">Météo actuelle</h3>
           <p className="text-sm opacity-75">{cityName}</p>
         </div>
-        <div className="text-5xl">{emoji}</div>
+        <ConditionIcon className="h-14 w-14 flex-shrink-0" strokeWidth={1.5} />
       </div>
 
       {/* Température principale */}
@@ -62,7 +79,7 @@ export function WeatherCard({ weather, cityName }: WeatherCardProps) {
           <Sunrise className="w-5 h-5" />
           <div>
             <p className="text-xs opacity-75">Lever</p>
-            <p className="text-sm font-semibold">{formatTime(weather.sunrise)}</p>
+            <p className="text-sm font-semibold">{weather.sunrise}</p>
           </div>
         </div>
 
@@ -71,14 +88,14 @@ export function WeatherCard({ weather, cityName }: WeatherCardProps) {
           <Sunset className="w-5 h-5" />
           <div>
             <p className="text-xs opacity-75">Coucher</p>
-            <p className="text-sm font-semibold">{formatTime(weather.sunset)}</p>
+            <p className="text-sm font-semibold">{weather.sunset}</p>
           </div>
         </div>
       </div>
 
-      {/* Note API */}
-      <div className="mt-4 text-xs opacity-60 text-center">
-        Données météo en temps réel
+      {/* Source et heure du relevé : la météo est une donnée datée comme une autre. */}
+      <div className="mt-4 text-xs opacity-70 text-center">
+        Relevé de {weather.observedAt} (heure locale) · source {weather.source}
       </div>
     </div>
   );

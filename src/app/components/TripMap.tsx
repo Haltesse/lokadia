@@ -14,7 +14,7 @@ import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Plane, Train, Bus, Bed, ExternalLink } from 'lucide-react';
-import type { LegEstimate } from '../lib/travelOffers';
+import { formatRange, type LegEstimate } from '../lib/travelOffers';
 
 export interface TripMapPoint {
   id: string;
@@ -177,7 +177,7 @@ export function TripMap({ points, legs, startDate, endDate, travelers }: TripMap
                       {modeIcon(incomingLeg.mode)}
                       <span>
                         {modeLabel(incomingLeg.mode)} · {incomingLeg.durationLabel} ·{' '}
-                        {incomingLeg.pricePerPerson}€/pers
+                        {formatRange(incomingLeg)} /pers
                       </span>
                     </div>
                   )}

@@ -1,194 +1,193 @@
 /**
- * Catalogue de réservation — génère des offres réalistes et déterministes
- * pour chaque catégorie d'un voyage, prêtes à être ajoutées au panier.
+ * Postes de budget d'un voyage, et où obtenir le prix réel.
  *
- * ⚠️ Prix = ESTIMATIONS réalistes (seedées par destination + dates), pas des
- * prix live. L'architecture est prête à recevoir les vraies API partenaires
- * (Airalo Partner pour l'e-SIM, Chapka/AXA pour l'assurance, Trainline/SNCF
- * pour le rail, Amadeus/Duffel pour les vols) — chaque generateXxx() peut être
- * remplacé par un fetch sans changer l'UI ni le panier.
+ * Ce fichier produisait auparavant un catalogue d'offres fabriquées : des
+ * « Studio cosy centre-ville » et des « Visite guidée à pied » avec des prix
+ * tirés d'un générateur pseudo-aléatoire seedé sur l'identifiant de la
+ * destination. Le commentaire d'en-tête reconnaissait des « estimations
+ * réalistes », mais l'interface les présentait comme des offres ajoutables au
+ * panier, badge « Best-seller » compris.
+ *
+ * Ne restent que des **ordres de grandeur** assumés, chacun accompagné de sa
+ * méthode et des liens de recherche partenaires où lire le prix réel. Aucune
+ * offre nommée, aucun prix unitaire présenté comme ferme.
  */
 import type { CartCategory } from './cart';
+import {
+  getStayOptions, getEsimOptions, getActivityOptions, chapkaLink, omioLink,
+  type PartnerOption,
+} from './partnerLinks';
+import { estimateAccommodationBudget, formatRange } from './travelOffers';
 
-export interface CatalogOffer {
-  id: string;
+export interface CategoryEstimate {
   category: CartCategory;
-  title: string;
-  subtitle: string;
-  price: number;
-  meta: string;
-  /** badge optionnel (ex: "Le moins cher", "Recommandé") */
-  badge?: string;
-  /** sous-groupe optionnel (ex: type d'hébergement : Hôtel, Appartement…) */
-  group?: string;
-  destinationId?: string;
+  /** Intitulé du poste, ex. « Hébergement ». */
+  label: string;
+  low: number;
+  high: number;
+  /** Comment la fourchette est obtenue — affiché avec le montant. */
+  method: string;
+  /** Où obtenir le prix réel. */
+  partners: PartnerOption[];
 }
 
-// ─── RNG déterministe (même offre pour mêmes paramètres) ───
-function seeded(str: string): () => number {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return () => { h += 0x6d2b79f5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-}
-const round = (n: number, step = 1) => Math.round(n / step) * step;
-function daysBetween(a: string, b: string): number {
-  const d = Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000);
+/** Pays atteignables en train depuis la France (rail pertinent). */
+const RAIL_COUNTRIES = new Set([
+  'France', 'Belgique', 'Pays-Bas', 'Allemagne', 'Suisse', 'Italie',
+  'Espagne', 'Royaume-Uni', 'Luxembourg', 'Autriche',
+]);
+
+const round5 = (n: number) => Math.max(5, Math.round(n / 5) * 5);
+
+function nightsBetween(start: string, end: string): number {
+  const d = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000);
   return Number.isFinite(d) && d > 0 ? d : 7;
 }
 
-// Pays atteignables en train depuis la France (rail pertinent)
-const RAIL_COUNTRIES = new Set(['France', 'Belgique', 'Pays-Bas', 'Allemagne', 'Suisse', 'Italie', 'Espagne', 'Royaume-Uni', 'Luxembourg', 'Autriche']);
-
-// ─── e-SIM (style Airalo) ───────────────────────────────────────────────────
-export function generateEsimOffers(destinationId: string, countryName: string): CatalogOffer[] {
-  const rng = seeded(`esim-${destinationId}`);
-  const factor = 0.9 + rng() * 0.4; // variation régionale plausible
-  const plans = [
-    { gb: '1 GB', days: 7, base: 4.5 },
-    { gb: '3 GB', days: 30, base: 11 },
-    { gb: '5 GB', days: 30, base: 16 },
-    { gb: '10 GB', days: 30, base: 26 },
-    { gb: '20 GB', days: 30, base: 37 },
-  ];
-  return plans.map((p, i) => ({
-    id: `esim-${destinationId}-${i}`,
-    category: 'esim' as CartCategory,
-    title: `e-SIM ${countryName}`,
-    subtitle: `${p.gb} · valable ${p.days} jours · 4G/5G`,
-    price: round(p.base * factor * 2) / 2,
-    meta: `${p.gb} / ${p.days}j`,
-    badge: i === 2 ? 'Populaire' : undefined,
-    destinationId,
-  }));
+/**
+ * e-SIM.
+ *
+ * Les forfaits data prépayés vont d'environ 4 € (1 Go, 7 jours) à 40 € (20 Go,
+ * 30 jours) selon la zone. On annonce cet ordre de grandeur sans prétendre
+ * connaître le catalogue du jour d'un opérateur donné.
+ */
+export function estimateEsim(country: string): CategoryEstimate {
+  return {
+    category: 'esim',
+    label: 'e-SIM data',
+    low: 5,
+    high: 40,
+    method:
+      'Ordre de grandeur des forfaits data prépayés, de 1 Go sur 7 jours à ' +
+      '20 Go sur 30 jours. Le prix du jour se lit chez l\'opérateur.',
+    partners: getEsimOptions(country),
+  };
 }
 
-// ─── Assurance voyage (style Chapka / AXA) ──────────────────────────────────
-export function generateInsuranceOffers(destinationId: string, startDate: string, endDate: string, travelers: number): CatalogOffer[] {
-  const days = daysBetween(startDate, endDate);
-  const tiers = [
-    { name: 'Essentiel', perDay: 2.2, cap: 'Frais médicaux 100 000 €', badge: undefined as string | undefined },
-    { name: 'Confort', perDay: 3.6, cap: 'Frais médicaux 300 000 € + annulation', badge: 'Recommandé' },
-    { name: 'Premium', perDay: 5.5, cap: 'Frais médicaux illimités + rapatriement + sports', badge: undefined },
-  ];
-  return tiers.map((t, i) => ({
-    id: `ins-${destinationId}-${i}`,
-    category: 'insurance' as CartCategory,
-    title: `Assurance ${t.name}`,
-    subtitle: t.cap,
-    price: Math.max(9, round(t.perDay * days * travelers)),
-    meta: `${days} j · ${travelers} voyageur${travelers > 1 ? 's' : ''}`,
-    badge: t.badge,
-    destinationId,
-  }));
+/**
+ * Assurance voyage.
+ *
+ * Les contrats voyage courants se situent entre 2 € et 6 € par jour et par
+ * personne selon le niveau de garantie ; le tarif exact dépend de l'âge, de la
+ * destination et des options, qui ne sont pas connus ici.
+ */
+export function estimateInsurance(
+  startDate: string,
+  endDate: string,
+  travelers: number
+): CategoryEstimate {
+  const days = nightsBetween(startDate, endDate);
+  return {
+    category: 'insurance',
+    label: 'Assurance voyage',
+    low: round5(2 * days * travelers),
+    high: round5(6 * days * travelers),
+    method:
+      `2 à 6 €/jour/personne selon le niveau de garantie, sur ${days} jour${days > 1 ? 's' : ''} ` +
+      `et ${travelers} voyageur${travelers > 1 ? 's' : ''}. Le tarif dépend de l'âge et des options.`,
+    partners: [
+      {
+        id: 'chapka',
+        name: 'Chapka Assurances',
+        description: 'Devis assurance voyage et expatriation',
+        brandColor: '#0F4C81',
+        href: chapkaLink(),
+      },
+    ],
+  };
 }
 
-// ─── Train (rail pertinent depuis l'Europe) ─────────────────────────────────
-export function generateTrainOffers(destinationId: string, countryName: string, startDate: string, travelers: number): CatalogOffer[] {
-  if (!RAIL_COUNTRIES.has(countryName)) return [];
-  const rng = seeded(`train-${destinationId}-${startDate}`);
-  const base = 39 + Math.floor(rng() * 120);
-  const options = [
-    { label: 'TGV / train direct', mult: 1, cls: '2nde classe', badge: 'Le moins cher' },
-    { label: 'Train + flexibilité', mult: 1.35, cls: '2nde classe échangeable', badge: undefined as string | undefined },
-    { label: '1ère classe', mult: 1.8, cls: '1ère classe', badge: undefined },
-  ];
-  return options.map((o, i) => ({
-    id: `train-${destinationId}-${i}`,
-    category: 'train' as CartCategory,
-    title: `Train → ${countryName}`,
-    subtitle: `${o.label} · ${o.cls}`,
-    price: round(base * o.mult * travelers),
-    meta: `${travelers} voyageur${travelers > 1 ? 's' : ''}`,
-    badge: o.badge,
-    destinationId,
-  }));
+/**
+ * Hébergement — délègue à `estimateAccommodationBudget`, qui pondère par
+ * l'indice de coût de la vie du pays.
+ */
+export function estimateLodging(params: {
+  destinationName: string;
+  country: string;
+  startDate: string;
+  endDate: string;
+  travelers: number;
+}): CategoryEstimate {
+  const estimate = estimateAccommodationBudget(params);
+  return {
+    category: 'hotel',
+    label: 'Hébergement',
+    low: estimate.low,
+    high: estimate.high,
+    method: estimate.method,
+    partners: getStayOptions({
+      city: params.destinationName,
+      country: params.country,
+      checkIn: params.startDate,
+      checkOut: params.endDate,
+      adults: params.travelers,
+    }),
+  };
 }
 
-// ─── Hébergements alternatifs : appartements & maisons (style Airbnb) ───────
-const STAY_TEMPLATES = [
-  { type: 'Appartement', label: 'Studio cosy centre-ville', base: 75, guests: '1-2 voyageurs' },
-  { type: 'Appartement', label: 'Appartement 2 chambres', base: 110, guests: '2-4 voyageurs' },
-  { type: 'Appartement', label: 'Loft design avec balcon', base: 135, guests: '2-3 voyageurs' },
-  { type: 'Maison', label: 'Maison entière avec jardin', base: 180, guests: '4-6 voyageurs' },
-  { type: 'Maison', label: 'Villa avec terrasse', base: 240, guests: '6-8 voyageurs' },
-];
-export function generateStayOffers(destinationId: string, destinationName: string, startDate: string, endDate: string, _travelers: number): CatalogOffer[] {
-  const nights = daysBetween(startDate, endDate);
-  const rng = seeded(`stay-${destinationId}`);
-  const cityFactor = 0.85 + rng() * 0.5; // coût de la vie local
-  return STAY_TEMPLATES.map((s, i) => {
-    const perNight = round(s.base * cityFactor * 5) / 5;
-    return {
-      id: `stay-${destinationId}-${i}`,
-      category: 'hotel' as CartCategory, // même catégorie panier qu'un hébergement
-      title: `${s.type} — ${s.label}`,
-      subtitle: `${destinationName} · ${s.guests} · annulation gratuite`,
-      price: round(perNight * nights),
-      meta: `${nights} nuit${nights > 1 ? 's' : ''} · ${perNight}€/nuit`,
-      badge: i === 0 ? 'Coup de cœur' : i === 3 ? 'Idéal famille' : undefined,
-      destinationId,
-    };
-  });
+/**
+ * Activités et visites — 15 à 35 € par jour et par personne, ce qui couvre
+ * aussi bien une entrée de musée qu'une excursion ponctuelle.
+ */
+export function estimateActivities(
+  destinationName: string,
+  startDate: string,
+  endDate: string,
+  travelers: number
+): CategoryEstimate {
+  const days = nightsBetween(startDate, endDate);
+  return {
+    category: 'activity',
+    label: 'Visites et activités',
+    low: round5(15 * days * travelers),
+    high: round5(35 * days * travelers),
+    method:
+      `15 à 35 €/jour/personne — d'une entrée de musée à une excursion — sur ` +
+      `${days} jour${days > 1 ? 's' : ''} et ${travelers} voyageur${travelers > 1 ? 's' : ''}.`,
+    partners: getActivityOptions(destinationName),
+  };
 }
 
-// ─── Hébergement unifié (5 types) pour le funnel guidé ──────────────────────
-// Couvre Hôtel, Appartement, Maison, Airbnb et Hostel — chaque offre porte un
-// `group` pour permettre le filtrage par type dans le funnel.
-const LODGING_TEMPLATES: Array<{ group: string; type: string; label: string; base: number; guests: string; badge?: string }> = [
-  { group: 'Hôtel',       type: 'Hôtel',       label: 'Hôtel 3★ bien situé',          base: 95,  guests: 'Chambre double',  badge: 'Bon plan' },
-  { group: 'Hôtel',       type: 'Hôtel',       label: 'Hôtel 4★ centre-ville',        base: 140, guests: 'Chambre double' },
-  { group: 'Hôtel',       type: 'Hôtel',       label: 'Boutique-hôtel design',        base: 185, guests: 'Chambre double',  badge: 'Coup de cœur' },
-  { group: 'Appartement', type: 'Appartement', label: 'Studio cosy centre-ville',     base: 75,  guests: '1-2 voyageurs' },
-  { group: 'Appartement', type: 'Appartement', label: 'Appartement 2 chambres',       base: 110, guests: '2-4 voyageurs',    badge: 'Familles' },
-  { group: 'Maison',      type: 'Maison',      label: 'Maison entière avec jardin',   base: 180, guests: '4-6 voyageurs' },
-  { group: 'Maison',      type: 'Maison',      label: 'Villa avec terrasse',          base: 240, guests: '6-8 voyageurs' },
-  { group: 'Airbnb',      type: 'Airbnb',      label: 'Loft design avec balcon',      base: 135, guests: '2-3 voyageurs' },
-  { group: 'Airbnb',      type: 'Airbnb',      label: 'Logement entier chez l\'habitant', base: 90, guests: '2 voyageurs' },
-  { group: 'Hostel',      type: 'Auberge',     label: 'Lit en dortoir',               base: 26,  guests: '1 voyageur',       badge: 'Budget' },
-  { group: 'Hostel',      type: 'Auberge',     label: 'Chambre privée en auberge',    base: 55,  guests: '1-2 voyageurs' },
-];
-export function generateLodgingOffers(destinationId: string, destinationName: string, startDate: string, endDate: string, _travelers: number): CatalogOffer[] {
-  const nights = daysBetween(startDate, endDate);
-  const rng = seeded(`lodge-${destinationId}`);
-  const cityFactor = 0.85 + rng() * 0.5; // coût de la vie local
-  return LODGING_TEMPLATES.map((s, i) => {
-    const perNight = round(s.base * cityFactor * 5) / 5;
-    return {
-      id: `lodge-${destinationId}-${i}`,
-      category: 'hotel' as CartCategory, // même catégorie panier pour tout hébergement
-      title: `${s.type} — ${s.label}`,
-      subtitle: `${destinationName} · ${s.guests} · annulation gratuite`,
-      price: round(perNight * nights),
-      meta: `${nights} nuit${nights > 1 ? 's' : ''} · ${perNight}€/nuit`,
-      badge: s.badge,
-      group: s.group,
-      destinationId,
-    };
-  });
+/**
+ * Train, uniquement pour les pays réellement desservis depuis la France.
+ * Renvoie `null` ailleurs plutôt qu'une offre ferroviaire sans réseau.
+ */
+export function estimateTrain(params: {
+  destinationName: string;
+  country: string;
+  startDate: string;
+  travelers: number;
+}): CategoryEstimate | null {
+  const { destinationName, country, startDate, travelers } = params;
+  if (!RAIL_COUNTRIES.has(country)) return null;
+
+  return {
+    category: 'train',
+    label: 'Train',
+    low: round5(40 * travelers),
+    high: round5(190 * travelers),
+    method:
+      `40 à 190 € par personne selon l'anticipation et la classe, pour un trajet ` +
+      `au départ de France vers ${country}. Les tarifs les plus bas exigent une ` +
+      `réservation plusieurs semaines à l'avance.`,
+    partners: [
+      {
+        id: 'omio',
+        name: 'Omio',
+        description: `Trains et bus vers ${destinationName}`,
+        brandColor: '#F4364C',
+        href: omioLink({ toCity: destinationName, depart: startDate }),
+      },
+    ],
+  };
 }
 
-// ─── Activités (style GetYourGuide) ─────────────────────────────────────────
-const ACTIVITY_TEMPLATES = [
-  { t: 'Visite guidée à pied', d: 'Cœur historique avec guide local', base: 22 },
-  { t: 'Pass musées', d: 'Accès coupe-file aux musées majeurs', base: 38 },
-  { t: 'Food tour', d: 'Dégustation des spécialités locales', base: 55 },
-  { t: 'Excursion à la journée', d: 'Découverte des environs en petit groupe', base: 79 },
-  { t: 'Croisière / panorama', d: 'Vue emblématique au coucher du soleil', base: 34 },
-  { t: 'Expérience culturelle', d: 'Atelier ou spectacle traditionnel', base: 45 },
-];
-export function generateActivityOffers(destinationId: string, destinationName: string, travelers: number): CatalogOffer[] {
-  const rng = seeded(`act-${destinationId}`);
-  return ACTIVITY_TEMPLATES.map((a, i) => {
-    const price = round(a.base * (0.85 + rng() * 0.5));
-    return {
-      id: `act-${destinationId}-${i}`,
-      category: 'activity' as CartCategory,
-      title: `${a.t} — ${destinationName}`,
-      subtitle: a.d,
-      price: price * travelers,
-      meta: `${travelers} pers · annulation gratuite`,
-      badge: i === 0 ? 'Best-seller' : undefined,
-      destinationId,
-    };
-  });
+/** Somme des fourchettes de plusieurs postes. */
+export function sumEstimates(estimates: CategoryEstimate[]): { low: number; high: number } {
+  return estimates.reduce(
+    (acc, e) => ({ low: acc.low + e.low, high: acc.high + e.high }),
+    { low: 0, high: 0 }
+  );
 }
+
+export { formatRange };

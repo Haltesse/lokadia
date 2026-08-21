@@ -10,20 +10,10 @@ export const moreDetailedDestinations2: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 93,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 2 heures",
     timezone: "GMT+1 (CET)",
     language: "Norvégien (Anglais excellemment parlé)",
     currency: "Couronne norvégienne (NOK) - 1€ ≈ 11 NOK",
     securitySummary: "Oslo est l'une des capitales les plus sûres d'Europe. La criminalité violente est quasi inexistante. Les pickpockets sont rares mais peuvent opérer dans certaines zones touristiques et le métro. La ville est propre, organisée et les Norvégiens sont respectueux. ATTENTION: Ville EXTRÊMEMENT chère (alcool surtout). Températures très froides en hiver (-15°C possible).",
-    alerts: [
-      {
-        id: 1,
-        type: "info",
-        title: "Froid extrême",
-        summary: "Températures -10°C prévues cette semaine avec neige. Équipez-vous chaudement.",
-        date: "Aujourd'hui, 08:00"
-      }
-    ],
     dangerousAreas: [
       "Grønland tard le soir (dealers présents mais pas dangereux pour touristes)",
       "Gare centrale (Oslo S) après minuit (quelques ivrognes)",
@@ -113,12 +103,10 @@ export const moreDetailedDestinations2: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1509356843151-3e7d96241e11?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 89,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 1 heure",
     timezone: "GMT+1 (CET)",
     language: "Suédois (Anglais excellemment parlé par 90% population)",
     currency: "Couronne suédoise (SEK) - 1€ ≈ 11 SEK",
     securitySummary: "Stockholm est une ville très sûre avec faible taux criminalité. La criminalité violente est rare dans le centre. Attention pickpockets zones touristiques (Gamla Stan, Sergels Torg) et métro. Évitez certaines banlieues périphériques la nuit (Rinkeby, Tensta). Ville propre, organisée, respectueuse environnement. ATTENTION: Très cher (presque autant que Oslo/Copenhague).",
-    alerts: [],
     dangerousAreas: [
       "Rinkeby, Tensta, Husby (banlieues nord-ouest) la nuit",
       "Järvafältet après minuit",
@@ -208,12 +196,10 @@ export const moreDetailedDestinations2: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 88,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 1 heure",
     timezone: "GMT+1 (CET)",
     language: "Danois (Anglais excellemment parlé)",
     currency: "Couronne danoise (DKK) - 1€ ≈ 7.45 DKK",
     securitySummary: "Copenhague est une ville très sûre avec faible criminalité violente. Attention pickpockets zones touristiques (Nyhavn, Strøget, Tivoli) et vélos qui roulent vite. Le quartier de Christiania (communauté hippie) est généralement sûr mais ne photographiez JAMAIS Pusher Street (vente cannabis). Évitez certaines zones de Nørrebro tard le soir. Ville vélo-friendly avec pistes cyclables partout - ATTENTION avant de traverser!",
-    alerts: [],
     dangerousAreas: [
       "Nørrebro certaines rues tard le soir (généralement sûr mais restez vigilant)",
       "Christiania Pusher Street: NE PHOTOGRAPHIEZ JAMAIS (danger réel)",
@@ -301,27 +287,10 @@ export const moreDetailedDestinations2: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1504893524553-b855bce32c67?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 98,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 3 heures",
     timezone: "GMT+0 (toute l'année, pas de changement heure)",
     language: "Islandais (Anglais excellemment parlé par quasi 100% population)",
     currency: "Couronne islandaise (ISK) - 1€ ≈ 150 ISK",
     securitySummary: "Reykjavik et l'Islande sont EXTRÊMEMENT sûres - parmi les pays les plus sûrs au monde. La criminalité est quasi inexistante. Les portes des maisons sont souvent laissées ouvertes. Aucun pickpocket, aucune arnaque. Le SEUL danger vient de la NATURE: météo imprévisible, tempêtes, routes glacées, aurores boréales qui distraient conducteurs. ATTENTION: Prix astronomiques (+ cher qu'Oslo/Zurich). Population: 130,000 habitants à Reykjavik, 380,000 dans tout le pays.",
-    alerts: [
-      {
-        id: 1,
-        type: "vigilance",
-        title: "Tempête hivernale",
-        summary: "Vents violents 80-100 km/h prévus samedi. Routes fermées possible. Consultez safetravel.is",
-        date: "Aujourd'hui, 12:00"
-      },
-      {
-        id: 2,
-        type: "info",
-        title: "Activité volcanique",
-        summary: "Éruption volcanique en cours péninsule Reykjanes (zone inhabitée). Pas de danger Reykjavik.",
-        date: "Il y a 1 jour"
-      }
-    ],
     dangerousAreas: [
       "AUCUNE zone dangereuse en ville (criminalité quasi inexistante)",
       "DANGER = NATURE: tempêtes, routes glacées, chutes d'eau glissantes, zones géothermiques (eau bouillante)",

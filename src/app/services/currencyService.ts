@@ -53,45 +53,16 @@ export const SUPPORTED_CURRENCIES: Currency[] = [
   { code: 'RUB', name: 'Rouble russe', symbol: '₽', flag: 'RU' },
 ];
 
-// Taux de change mock (mis à jour manuellement - base EUR)
-const mockExchangeRates: ExchangeRates = {
-  base: 'EUR',
-  rates: {
-    EUR: 1.0,
-    USD: 1.09,
-    GBP: 0.86,
-    CHF: 0.94,
-    JPY: 163.5,
-    CAD: 1.51,
-    AUD: 1.68,
-    CNY: 7.85,
-    INR: 91.2,
-    BRL: 6.25,
-    MXN: 19.8,
-    AED: 4.0,
-    THB: 37.5,
-    MYR: 5.0,
-    SGD: 1.45,
-    KRW: 1450,
-    TRY: 35.2,
-    MAD: 10.8,
-    EGP: 53.5,
-    ARS: 1075,
-    DKK: 7.46,
-    SEK: 11.35,
-    NOK: 11.75,
-    PLN: 4.31,
-    CZK: 24.7,
-    ISK: 150.5,
-    RUB: 105.0,
-  },
-  lastUpdate: Date.now(),
-};
 
 /**
- * Récupère les taux de change depuis l'API ou retourne les données mock
+ * Taux de change du jour, ou `null` si l'API est injoignable.
+ *
+ * Une table figée servait auparavant de repli, horodatée à `Date.now()` :
+ * l'interface affichait donc « Taux en temps réel · Mis à jour aujourd'hui »
+ * au-dessus de valeurs écrites à la main des mois plus tôt. Sur un montant
+ * que le voyageur va réellement dépenser, mieux vaut ne rien afficher.
  */
-export async function fetchExchangeRates(baseCurrency: string = 'EUR'): Promise<ExchangeRates> {
+export async function fetchExchangeRates(baseCurrency: string = 'EUR'): Promise<ExchangeRates | null> {
   try {
     // Vérifier si les données sont en cache et encore valides
     if (cachedRates && Date.now() - lastFetchTime < CACHE_DURATION && cachedRates.base === baseCurrency) {
@@ -119,26 +90,10 @@ export async function fetchExchangeRates(baseCurrency: string = 'EUR'): Promise<
 
     return exchangeRates;
   } catch (error) {
-    console.error('Erreur taux de change, utilisation des données mock:', error);
-    
-    // En cas d'erreur, utiliser les données mock
-    if (baseCurrency !== 'EUR') {
-      const baseRate = mockExchangeRates.rates[baseCurrency];
-      if (!baseRate) return mockExchangeRates;
-      
-      const convertedRates: { [key: string]: number } = {};
-      Object.entries(mockExchangeRates.rates).forEach(([code, rate]) => {
-        convertedRates[code] = rate / baseRate;
-      });
-      
-      return {
-        base: baseCurrency,
-        rates: convertedRates,
-        lastUpdate: Date.now(),
-      };
-    }
-    
-    return mockExchangeRates;
+    // Aucun repli : un taux périmé présenté comme actuel est pire que pas de
+    // taux du tout, puisqu'il porte sur une dépense réelle.
+    console.warn('Taux de change indisponibles :', error);
+    return null;
   }
 }
 

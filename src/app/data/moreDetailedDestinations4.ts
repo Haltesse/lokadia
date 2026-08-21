@@ -10,27 +10,10 @@ export const moreDetailedDestinations4: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 78,
     safetyLevel: "vigilance",
-    lastUpdate: "Il y a 2 heures",
     timezone: "GMT+1 (CET)",
     language: "Italien (Anglais parlé zones touristiques)",
     currency: "Euro (€)",
     securitySummary: "Rome est modérément sûre mais les pickpockets sont OMNIPRÉSENTS dans tous les lieux touristiques. Les gangs organisés (souvent mineurs roms) opèrent au Colisée, Fontaine de Trevi, Vatican, métro, bus. Arnaques restaurants/taxis fréquentes. Évitez Termini et certains quartiers périphériques la nuit. Circulation chaotique (scooters partout). Chaleur extrême été (38-40°C).",
-    alerts: [
-      {
-        id: 1,
-        type: "vigilance",
-        title: "Recrudescence pickpockets",
-        summary: "Forte activité signalée métro A et zone Colisée-Forum. Gangs de mineurs très actifs.",
-        date: "Aujourd'hui, 11:00"
-      },
-      {
-        id: 2,
-        type: "info",
-        title: "Canicule prévue",
-        summary: "Températures 39-41°C cette semaine. Colisée et Forum fermés 11h-17h. Hydratez-vous.",
-        date: "Il y a 1 jour"
-      }
-    ],
     dangerousAreas: [
       "Gare Termini et alentours après 22h (dealers, prostitution, ivrognes)",
       "Esquilino la nuit (quartier gare)",
@@ -139,20 +122,10 @@ export const moreDetailedDestinations4: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1560969184-10fe8719e047?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 84,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 1 heure",
     timezone: "GMT+1 (CET)",
     language: "Allemand (Anglais bien parlé)",
     currency: "Euro (€)",
     securitySummary: "Berlin est globalement sûre avec faible criminalité violente. Pickpockets actifs zones touristiques (Alexanderplatz, Checkpoint Charlie) et transports. Attention certains quartiers périphériques la nuit (Wedding, Neukölln). Scène alternative/squat dans certaines zones (Friedrichshain, Kreuzberg) - généralement sûre mais ambiance différente. Manifestations politiques fréquentes (souvent pacifiques).",
-    alerts: [
-      {
-        id: 1,
-        type: "info",
-        title: "Manifestation 1er Mai",
-        summary: "Défilés et rassemblements prévus Kreuzberg-Friedrichshain. Évitez la zone, tensions possibles.",
-        date: "Il y a 1 jour"
-      }
-    ],
     dangerousAreas: [
       "Görlitzer Park la nuit (dealers présents mais pas violents)",
       "Certaines parties de Wedding et Moabit après minuit",
@@ -246,27 +219,10 @@ export const moreDetailedDestinations4: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 86,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 2 heures",
     timezone: "GMT+10 (AEDT en été)",
     language: "Anglais",
     currency: "Dollar australien (AUD) - 1€ ≈ 1.65 AUD",
     securitySummary: "Sydney est très sûre avec faible criminalité violente. Attention pickpockets zones touristiques (Circular Quay, Bondi Beach) et transports. Kings Cross la nuit peut être bruyant (bars, ivrognes) mais pas dangereux. DANGER NATURE: Requins, méduses mortelles (box jellyfish), araignées venimeuses, serpents. Soleil TRÈS intense (cancer peau). Ville CHÈRE.",
-    alerts: [
-      {
-        id: 1,
-        type: "vigilance",
-        title: "Méduses dangereuses détectées",
-        summary: "Présence méduses 'Bluebottle' signalée plages nord. Drapeaux rouges installés. Baignade interdite.",
-        date: "Aujourd'hui, 08:00"
-      },
-      {
-        id: 2,
-        type: "info",
-        title: "Vague de chaleur extrême",
-        summary: "Températures 38-42°C prévues cette semaine. Risque feux de brousse. Restez hydratés.",
-        date: "Il y a 1 jour"
-      }
-    ],
     dangerousAreas: [
       "Kings Cross tard le soir (bruyant, ivrognes, bagarres occasionnelles)",
       "Certaines zones de Redfern la nuit",
@@ -357,20 +313,10 @@ export const moreDetailedDestinations4: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1517935706615-2717063c2225?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 85,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 1 heure",
     timezone: "GMT-5 (EST)",
     language: "Anglais, Français",
     currency: "Dollar canadien (CAD) - 1€ ≈ 1.50 CAD",
     securitySummary: "Toronto est très sûre avec faible criminalité. Pickpockets rares mais présents zones touristiques (Dundas Square, CN Tower). Évitez certains quartiers périphériques la nuit (Jane & Finch, Regent Park, Scarborough certaines zones). Hiver EXTRÊMEMENT froid (-20°C possible). Ville multiculturelle, propre, organisée. ATTENTION: Cher (presque autant que New York).",
-    alerts: [
-      {
-        id: 1,
-        type: "vigilance",
-        title: "Froid extrême polar vortex",
-        summary: "Températures ressenties -30°C avec vent. Restez maximum 10min dehors. Risque engelures.",
-        date: "Aujourd'hui, 07:00"
-      }
-    ],
     dangerousAreas: [
       "Jane & Finch la nuit (criminalité plus élevée)",
       "Certaines zones de Scarborough après minuit",
@@ -460,27 +406,10 @@ export const moreDetailedDestinations4: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1669352977004-564294e1025b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxNZXhpY28lMjBDaXR5JTIwWm9jYWxvJTIwY2F0aGVkcmFsfGVufDF8fHx8MTc3MjExNjUzNXww&ixlib=rb-4.1.0&q=80&w=1080",
     lokascoreSeed: 72,
     safetyLevel: "vigilance",
-    lastUpdate: "Il y a 1 heure",
     timezone: "GMT-6 (CST)",
     language: "Espagnol (Anglais limité hors zones touristiques)",
     currency: "Peso mexicain (MXN) - 1€ ≈ 20 MXN",
     securitySummary: "Mexico City nécessite vigilance accrue. Criminalité existe: vols, pickpockets fréquents, enlèvements express (rares mais existent). Quartiers sûrs: Polanco, Condesa, Roma, Coyoacán. ÉVITEZ ABSOLUMENT: Tepito, Iztapalapa, certaines zones périphériques. Taxis rue dangereux (kidnappings). Pollution air élevée. Altitude 2250m = essoufflement. MAIS: Culture riche, nourriture incroyable, gens chaleureux.",
-    alerts: [
-      {
-        id: 1,
-        type: "warning",
-        title: "Recrudescence vols violents",
-        summary: "Augmentation vols avec arme signalée Doctores, Guerrero. Évitez zones après 20h.",
-        date: "Il y a 2 heures"
-      },
-      {
-        id: 2,
-        type: "vigilance",
-        title: "Pollution air élevée",
-        summary: "Alerte qualité air. Évitez activités extérieures intenses. Consultez medias.",
-        date: "Aujourd'hui, 10:00"
-      }
-    ],
     dangerousAreas: [
       "TEPITO (marché noir) - NE JAMAIS Y ALLER (très dangereux)",
       "Iztapalapa - Évitez complètement",
@@ -583,27 +512,10 @@ export const moreDetailedDestinations4: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     lokascoreSeed: 68,
     safetyLevel: "vigilance",
-    lastUpdate: "Il y a 3 heures",
     timezone: "GMT+2 (EET)",
     language: "Arabe (Anglais parlé zones touristiques)",
     currency: "Livre égyptienne (EGP) - 1€ ≈ 55 EGP",
     securitySummary: "Le Caire nécessite vigilance importante. Harcèlement constant vendeurs/faux guides épuisant. Arnaques omniprésentes (taxis, pyramides, bazars). Femmes seules subissent harcèlement verbal/physique. Criminalité violente rare contre touristes mais vols pickpockets fréquents. Circulation ultra-chaotique (pire au monde). Pollution air très élevée. Chaleur extrême été (45°C). Respectez culture locale (tenue modeste). MAIS: Pyramides incroyables, histoire fascinante.",
-    alerts: [
-      {
-        id: 1,
-        type: "warning",
-        title: "Zone Sinaï interdite",
-        summary: "Péninsule Sinaï (sauf stations balnéaires) zone rouge - Attentats terroristes possibles. N'y allez pas.",
-        date: "Permanent"
-      },
-      {
-        id: 2,
-        type: "vigilance",
-        title: "Canicule extrême",
-        summary: "Températures 42-45°C prévues. Pyramides ferment 12h-16h. Hydratation vitale.",
-        date: "Aujourd'hui, 09:00"
-      }
-    ],
     dangerousAreas: [
       "Péninsule du Sinaï (sauf Charm el-Cheikh, Dahab stations balnéaires)",
       "Frontière libyenne - Zone interdite",

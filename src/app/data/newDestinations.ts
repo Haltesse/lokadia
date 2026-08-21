@@ -9,12 +9,10 @@ export const newDestinations: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1768006274464-3f936d65e626?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxTZW91bCUyMFNvdXRoJTIwS29yZWElMjBtb2Rlcm4lMjBza3lsaW5lfGVufDF8fHx8MTc3MjAyNDMzMXww&ixlib=rb-4.1.0&q=80&w=1080",
     lokascoreSeed: 93,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 1 heure",
     timezone: "GMT+9 (KST)",
     language: "Coréen (Anglais limité)",
     currency: "Won sud-coréen (₩) - 1€ ≈ 1,450₩",
     securitySummary: "Séoul est extrêmement sûre, l'une des capitales les plus sécurisées au monde. Criminalité très faible. Vous pouvez vous promener partout à toute heure. Arnaques quasi inexistantes.",
-    alerts: [],
     dangerousAreas: [],
     safetyTips: ["Langue: Anglais peu parlé hors zones touristiques, appli traduction essentielle", "Papago (appli Naver) meilleure que Google Translate pour coréen", "Métro: Système excellent mais tout en coréen", "T-money card: Carte transport essentielle"],
     vaccines: [{ name: "Aucun vaccin obligatoire", status: "none" }],
@@ -48,14 +46,10 @@ export const newDestinations: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1679417302656-9b5170584526?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxCdWVub3MlMjBBaXJlcyUyMEFyZ2VudGluYSUyMGNvbG9yZnVsJTIwYnVpbGRpbmdzfGVufDF8fHx8MTc3MjAyNDMzMnww&ixlib=rb-4.1.0&q=80&w=1080",
     lokascoreSeed: 76,
     safetyLevel: "vigilance",
-    lastUpdate: "Il y a 2 heures",
     timezone: "GMT-3 (ART)",
     language: "Espagnol argentin (accent particulier)",
     currency: "Peso argentin (ARS) - 1€ ≈ 1,000 ARS (inflation élevée)",
     securitySummary: "Buenos Aires relativement sûre dans quartiers touristiques (Palermo, Recoleta, San Telmo) MAIS attention pickpockets omniprésents, vols à l'arraché fréquents. La Boca: SEULEMENT Caminito en journée, dangereux ailleurs. Économie cash (pesos), distributeurs limités.",
-    alerts: [
-      { id: 1, type: "warning", title: "Inflation extrême", summary: "Économie instable. Euros/dollars valent beaucoup plus au change parallèle (blue) qu'officiel. Renseignez-vous.", date: "Permanent" }
-    ],
     dangerousAreas: ["La Boca (hors Caminito)", "Constitución", "Once la nuit", "Retiro gare la nuit"],
     safetyTips: ["La Boca: Caminito JOUR uniquement, 2 rues max", "Pickpockets: Sac devant, attention métro/bus", "Change: Préférez euros/dollars cash (meilleur taux)", "Tard: Uber après 23h"],
     vaccines: [
@@ -93,15 +87,10 @@ export const newDestinations: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1648383249647-528ecf4fdacb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxNb3Njb3clMjBSdXNzaWElMjBSZWQlMjBTcXVhcmUlMjBjYXRoZWRyYWx8ZW58MXx8fHwxNzcyMDI0MzMyfDA&ixlib=rb-4.1.0&q=80&w=1080",
     lokascoreSeed: 79,
     safetyLevel: "vigilance",
-    lastUpdate: "Il y a 3 heures",
     timezone: "GMT+3 (MSK)",
     language: "Russe (Anglais TRÈS limité)",
     currency: "Rouble russe (RUB) - Taux variable selon sanctions",
     securitySummary: "ATTENTION: Contexte géopolitique tendu. Moscou physiquement sûre (criminalité faible) MAIS risques politiques pour étrangers. Police peut contrôler documents. Sanctions économiques: cartes bancaires occidentales ne fonctionnent PAS. Cash euros/dollars obligatoire. Visa difficile à obtenir.",
-    alerts: [
-      { id: 1, type: "danger", title: "Sanctions économiques", summary: "Cartes Visa/Mastercard occidentales NE FONCTIONNENT PAS. Apportez CASH euros/dollars.", date: "Permanent" },
-      { id: 2, type: "warning", title: "Contrôles police", summary: "Gardez TOUJOURS passeport + visa + migration card sur vous. Contrôles fréquents.", date: "Permanent" }
-    ],
     dangerousAreas: ["Banlieues périphériques", "Gares la nuit"],
     safetyTips: ["Documents: Passeport + visa + migration card TOUJOURS", "Cash: Euros/dollars obligatoire (cartes ne marchent pas)", "Langue: Apprenez alphabet cyrillique minimum", "Évitez discussions politiques"],
     vaccines: [
@@ -137,14 +126,10 @@ export const newDestinations: Record<string, DestinationDetails> = {
     image: "https://images.unsplash.com/photo-1592446559204-70a0362cf451?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxLdWFsYSUyMEx1bXB1ciUyME1hbGF5c2lhJTIwUGV0cm9uYXMlMjBUb3dlcnN8ZW58MXx8fHwxNzcyMDI0MzMzfDA&ixlib=rb-4.1.0&q=80&w=1080",
     lokascoreSeed: 84,
     safetyLevel: "safe",
-    lastUpdate: "Il y a 1 heure",
     timezone: "GMT+8 (MYT)",
     language: "Malais, Anglais bien parlé",
     currency: "Ringgit (RM/MYR) - 1€ ≈ 5 RM",
     securitySummary: "Kuala Lumpur est relativement sûre. Criminalité modérée. Attention pickpockets, vols à l'arraché sur scooters (sacs). Pays musulman modéré: habillez-vous respectueusement. Drogue = PEINE DE MORT. Très bon rapport qualité-prix.",
-    alerts: [
-      { id: 1, type: "danger", title: "Drogue = PEINE DE MORT", summary: "Malaisie applique peine de mort pour trafic drogue. NE TRANSPORTEZ RIEN pour quelqu'un.", date: "Permanent" }
-    ],
     dangerousAreas: ["Chow Kit la nuit", "Pudu tard"],
     safetyTips: ["Sacs: Portez côté opposé route (vols scooters)", "Tenue: Modeste mosquées/temples", "Drogue: ABSOLUMENT INTERDITE", "Taxis: Grab app uniquement", "Eau: Potable mais bouteille préférable"],
     vaccines: [
