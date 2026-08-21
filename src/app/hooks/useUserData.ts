@@ -2,17 +2,17 @@
 // NOTE: Ce hook est désactivé suite à la migration complète vers Supabase
 // Utilisez directement les services Supabase (tripService, etc.) à la place
 
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useCallback } from 'react';
 import type { Trip, Favorite, ChecklistItem } from '../lib/db';
 
-export function useUserData() {
-  const { user, isAuthenticated } = useAuth();
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
-  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+// Références stables et typées. Un `[]` littéral serait recréé à chaque rendu
+// (les effets des appelants boucleraient) et s'inférerait en `never[]`, ce qui
+// casse tout appelant lisant un champ sur les éléments.
+const NO_TRIPS: Trip[] = [];
+const NO_FAVORITES: Favorite[] = [];
+const NO_CHECKLIST_ITEMS: ChecklistItem[] = [];
 
+export function useUserData() {
   // Hook désactivé - Migration Supabase complète
   // Les données sont maintenant gérées par tripService, AuthContext, etc.
   // Note: Le warning console a été supprimé pour éviter les messages d'erreur à l'utilisateur
@@ -24,28 +24,28 @@ export function useUserData() {
 
   return {
     // Data (vides)
-    trips: [],
-    favorites: [],
-    checklistItems: [],
+    trips: NO_TRIPS,
+    favorites: NO_FAVORITES,
+    checklistItems: NO_CHECKLIST_ITEMS,
     isLoading: false,
-    
+
     // Trips (désactivés)
     createTrip: noOp,
     updateTrip: noOp,
     deleteTrip: noOp,
-    
+
     // Favorites (désactivés)
     addFavorite: noOp,
     removeFavorite: noOp,
     isFavorite: () => false,
-    
+
     // Checklist (désactivés)
     createChecklistItem: noOp,
     updateChecklistItem: noOp,
     toggleChecklistItem: noOp,
     deleteChecklistItem: noOp,
-    getChecklistForTrip: () => [],
-    
+    getChecklistForTrip: () => NO_CHECKLIST_ITEMS,
+
     // Stats (vides)
     getStats: () => ({
       totalTrips: 0,
@@ -57,7 +57,7 @@ export function useUserData() {
       completedChecklistItems: 0,
       checklistProgress: 0,
     }),
-    
+
     // Refresh (désactivé)
     refresh: noOp,
   };

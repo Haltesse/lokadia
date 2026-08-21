@@ -370,7 +370,7 @@ export default function LokascorePage() {
                   className="flex items-center gap-3 rounded-2xl border p-3"
                   style={{ borderColor: "var(--lokadia-gray-100)" }}
                 >
-                  <meta.Icon className="h-5 w-5 flex-shrink-0" style={{ color: meta.color }} />
+                  <meta.Icon className="h-5 w-5 flex-shrink-0" style={{ color: "var(--lokadia-primary)" }} />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold" style={{ color: "var(--lokadia-gray-900)" }}>
                       {meta.label}

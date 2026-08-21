@@ -78,25 +78,26 @@ function generatePriorityActions(
   const actions: ActionCard[] = [];
 
   // Vérifier passeport/visa
-  if (destination?.visaRequired || destination?.visaInfo) {
+  if (destination?.visaRequired || destination?.visaDetails) {
     const visaPriority = daysUntil < 30 ? 'high' : 'medium';
     actions.push({
       id: 'visa-check',
       title: 'Vérifier visa et passeport',
-      description: destination.visaInfo?.type || 'Vérifiez les conditions d\'entrée',
+      description: destination.visaDetails || 'Vérifiez les conditions d\'entrée',
       priority: visaPriority,
       category: 'document',
       icon: 'FileCheck',
     });
   }
 
-  // Vaccins
-  if (destination?.healthRequirements && destination.healthRequirements.length > 0) {
-    const hasRequired = destination.healthRequirements.some(v => v.required);
+  // Vaccins — « Aucun vaccin obligatoire » (status "none") n'est pas une action
+  const vaccinesToCheck = destination?.vaccines?.filter(v => v.status !== 'none') ?? [];
+  if (vaccinesToCheck.length > 0) {
+    const hasRequired = vaccinesToCheck.some(v => v.status === 'required');
     actions.push({
       id: 'vaccines',
       title: hasRequired ? 'Vaccins obligatoires' : 'Vérifier vaccins recommandés',
-      description: `${destination.healthRequirements.length} vaccin(s) à vérifier`,
+      description: `${vaccinesToCheck.length} vaccin(s) à vérifier`,
       priority: hasRequired ? 'high' : 'medium',
       category: 'health',
       icon: 'Syringe',
@@ -194,13 +195,14 @@ export function generatePreparationSections(
   });
 
   // Santé
-  if (destination.healthRequirements && destination.healthRequirements.length > 0) {
+  const vaccinesToList = destination.vaccines?.filter(v => v.status !== 'none') ?? [];
+  if (vaccinesToList.length > 0) {
     sections.push({
       id: 'health',
       title: 'Santé & Vaccins',
       icon: 'Pill',
-      summary: destination.healthRequirements.map(v => 
-        `${v.vaccine} - ${v.required ? 'Obligatoire' : 'Recommandé'}`
+      summary: vaccinesToList.map(v =>
+        `${v.name} - ${v.status === 'required' ? 'Obligatoire' : v.status === 'optional' ? 'Optionnel' : 'Recommandé'}`
       ),
       canAddToChecklist: true,
     });
@@ -322,7 +324,7 @@ export async function generateTripDashboard(
       alerts.push({
         type: alert.type,
         title: alert.title,
-        message: alert.message || alert.summary || '',
+        message: alert.summary || '',
       });
     });
   }
@@ -335,7 +337,7 @@ export async function generateTripDashboard(
         alerts.push({
           type: alert.type,
           title: `${cityDest.name}: ${alert.title}`,
-          message: alert.message || alert.summary || '',
+          message: alert.summary || '',
         });
       });
     }

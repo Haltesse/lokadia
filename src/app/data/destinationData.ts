@@ -4,10 +4,10 @@ import { moreDetailedDestinations } from "./moreDetailedDestinations";
 import { moreDetailedDestinations2 } from "./moreDetailedDestinations2";
 import { moreDetailedDestinations3 } from "./moreDetailedDestinations3";
 import { moreDetailedDestinations4 } from "./moreDetailedDestinations4";
-import type { DestinationDetails, Alert, HealthRequirement, ScamAlert, VisaInfo, TypicalCost, EmergencyContact } from "./types";
+import type { DestinationDetails, Alert, Vaccine, ScamAlert, PriceItem, EmergencyContact } from "./types";
 
 // Re-export types for backward compatibility
-export type { DestinationDetails, Alert, HealthRequirement, ScamAlert, VisaInfo, TypicalCost, EmergencyContact };
+export type { DestinationDetails, Alert, Vaccine, ScamAlert, PriceItem, EmergencyContact };
 
 export const destinationsDatabase: Record<string, DestinationDetails> = {
   "paris-france": {

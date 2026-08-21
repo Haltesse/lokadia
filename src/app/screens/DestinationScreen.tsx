@@ -677,7 +677,7 @@ function AlertsTab({ destination }: { destination: DestinationDetails }) {
                   {alert.title}
                 </h3>
                 <Badge 
-                  variant={alert.type === "info" ? "info" : alert.type === "danger" ? "danger" : "vigilance"} 
+                  variant={alert.type === "info" ? "info" : alert.type === "danger" ? "urgent" : "vigilance"}
                   size="sm"
                 >
                   {alert.type === "info" ? "Info" : alert.type === "danger" ? "Danger" : "Vigilance"}

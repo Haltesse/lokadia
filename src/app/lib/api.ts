@@ -14,15 +14,18 @@ export async function createTrip(
   startDate: string,
   endDate: string,
   travelers: number,
-  notes?: string
+  notes?: string,
+  // Par défaut la destination elle-même, comme le fait SaveTripModal.
+  countryDestinationId: string = destinationId
 ): Promise<Trip> {
   const now = new Date().toISOString();
-  
+
   const trip: Trip = {
     id: generateId(),
     userId,
     destinationId,
     destinationName,
+    countryDestinationId,
     startDate,
     endDate,
     travelers,

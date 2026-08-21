@@ -520,7 +520,10 @@ async function fetchNASAEONETAlerts(): Promise<RealTimeAlert[]> {
         const lon = coords?.[0];
         
         const nearestDest = findNearestDestination(lat, lon);
-        
+        if (!nearestDest) {
+          return; // Aucune destination suivie à proximité
+        }
+
         // Calculer la distance pour déterminer si c'est pertinent pour les voyageurs
         const distance = calculateDistance(lat, lon, nearestDest.lat, nearestDest.lon);
         
@@ -1157,12 +1160,35 @@ async function fetchTfLTransportAlerts(): Promise<RealTimeAlert[]> {
 // ============================================================================
 // FONCTION UTILITAIRE
 // ============================================================================
-function findNearestDestination(lat: number, lon: number) {
-  if (!lat || !lon) return { name: 'Zone affectée', country: 'International' };
-  
+/**
+ * Distance orthodromique en kilomètres (formule de haversine).
+ *
+ * Elle manquait : `fetchNASAEONETAlerts` l'appelait sans qu'elle existe, la
+ * ReferenceError était avalée par le `catch` par événement, et la source
+ * EONET ne remontait donc jamais la moindre alerte.
+ */
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const earthRadiusKm = 6371;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * earthRadiusKm * Math.asin(Math.sqrt(a));
+}
+
+/**
+ * Destination suivie la plus proche d'un point, ou `null` si l'événement n'en
+ * concerne aucune. On renvoie `null` plutôt qu'un objet « Zone affectée » sans
+ * coordonnées : l'appelant a besoin de `lat`/`lon` pour calculer une distance.
+ */
+function findNearestDestination(lat: number, lon: number): (typeof destinations)[number] | null {
+  if (!lat || !lon) return null;
+
   let nearest = destinations[0];
   let minDistance = Infinity;
-  
+
   destinations.forEach(dest => {
     const distance = Math.sqrt(
       Math.pow(dest.lat - lat, 2) + Math.pow(dest.lon - lon, 2)
@@ -1172,12 +1198,9 @@ function findNearestDestination(lat: number, lon: number) {
       nearest = dest;
     }
   });
-  
-  if (minDistance > 10) {
-    return { name: 'Zone affectée', country: 'International' };
-  }
-  
-  return nearest;
+
+  // ~10° d'écart ≈ 1 100 km : au-delà, aucune destination n'est concernée.
+  return minDistance > 10 ? null : nearest;
 }
 
 // Fonction de traduction simple pour les termes courants

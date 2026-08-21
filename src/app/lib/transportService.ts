@@ -271,7 +271,7 @@ export function formatDuration(minutes: number): string {
  * Obtient l'emoji pour un mode de transport
  */
 export function getTransportEmoji(mode: TripSegment['recommendedMode']): string {
-  const emojis = {
+  const emojis: Record<string, string> = {
     train: 'Train',
     bus: 'Bus',
     flight: 'Flight',

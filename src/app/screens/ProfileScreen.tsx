@@ -51,7 +51,6 @@ import { useAuth } from "../context/AuthContext";
 import { useUserData } from "../hooks/useUserData";
 import { useComments } from "../hooks/useComments";
 import { getUserTrips, deleteTrip as deleteTripService, type Trip } from "../lib/tripService";
-import { getChecklistItemsForTrip } from "../lib/checklistService";
 import { TravelProfileSelector } from "../components/TravelProfileSelector";
 import { NationalitySelector } from "../components/NationalitySelector";
 import { useTravelProfile } from "../context/TravelProfileContext";
@@ -291,11 +290,18 @@ export function ProfileScreen() {
 
     try {
       // Effacer toutes les données utilisateur
-      const { resetUserData } = await import('../lib/demo');
       if (authUser) {
-        await resetUserData(authUser.id);
+        const { eraseTravelerData } = await import('../lib/accountErasure');
+        const report = await eraseTravelerData(authUser.id);
+        if (report.failedTables.length > 0) {
+          alert(
+            "Une partie de vos données n'a pas pu être effacée. " +
+            "Écrivez-nous et nous terminerons l'effacement manuellement."
+          );
+          return;
+        }
       }
-      
+
       // Se déconnecter
       signOut();
       navigate('/login');
@@ -1471,14 +1477,14 @@ function TripCard({
 }) {
   const context = useLanguageSafe();
   const profileLabels = ((context?.t as any)?.profile || {}) as any;
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     planned: "var(--lokadia-info)",
     active: "var(--lokadia-success-green)",
     completed: "var(--lokadia-text-light)",
     cancelled: "var(--lokadia-text-light)",
   };
 
-  const statusLabels = {
+  const statusLabels: Record<string, string> = {
     planned: profileLabels.tripStatusUpcoming,
     active: profileLabels.tripStatusOngoing,
     completed: profileLabels.tripStatusCompleted,
