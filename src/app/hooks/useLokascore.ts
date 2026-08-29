@@ -36,7 +36,7 @@ interface UseLokascoreResult {
   sources: DimensionSources | null;
   hasOfficialSource: boolean;
   usedLiveAdvisories: boolean;
-  /** Alertes catastrophes live pour le pays (USGS/ReliefWeb, données publiques) */
+  /** Alertes catastrophes live pour le pays (GDACS/USGS, données publiques) */
   liveAlerts: LiveAlert[];
   loading: boolean;
   lastUpdate: string;
@@ -56,13 +56,25 @@ function fmt(iso: string | undefined): string {
 
 /**
  * @param destinationId
- * @param opts.live  true sur la fiche destination (advisories temps réel)
+ * @param opts.live  Intègre les advisories temps réel au calcul. **Vrai par
+ *   défaut**, et il faut une bonne raison pour le passer à `false`.
+ *
+ *   Ce défaut était `false`, si bien qu'une même destination affichait deux
+ *   scores selon l'écran : les cartes d'accueil, de recherche et de liste
+ *   appelaient sans `live`, la fiche destination avec. Paris annonçait 91 sur
+ *   la carte et 87 sur sa fiche ; Copenhague 95 puis 91. Le voyageur cliquait
+ *   sur un chiffre et en trouvait un autre, sans explication — sur l'indicateur
+ *   qui est la promesse centrale du produit.
+ *
+ *   La variante temps réel est celle qui fait foi : elle tient compte des
+ *   alertes en cours. Elle coûte environ 0,65 s de plus par destination, amorti
+ *   par le cache client de 30 minutes et le cache serveur des advisories.
  */
 export function useLokascore(
   destinationId: string | undefined,
   opts: { live?: boolean } = {}
 ): UseLokascoreResult {
-  const live = opts.live ?? false;
+  const live = opts.live ?? true;
   const { profile } = useTravelProfile();
 
   const [score, setScore] = useState<number | null>(null);

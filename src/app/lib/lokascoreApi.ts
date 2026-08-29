@@ -156,7 +156,10 @@ export function getCachedLokascore(destinationId: string, profile: string, live 
   const persisted = readPersisted(key);
   if (persisted) return persisted.result;
 
-  // Repli : version non-live si la version live n'a jamais été chargée
-  if (live) return readPersisted(cacheKey(destinationId, profile, false))?.result ?? null;
+  // Pas de repli d'une variante sur l'autre. Il en existait un — la version
+  // non-live servie en attendant la version live — qui reproduisait justement
+  // l'incohérence qu'on vient de supprimer : le cache d'un ancien passage
+  // affichait 91 pour Paris, puis le chiffre sautait à 87 une fois la réponse
+  // arrivée. Mieux vaut l'état de chargement qu'un chiffre qu'on sait faux.
   return null;
 }

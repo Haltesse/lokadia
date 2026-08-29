@@ -178,8 +178,14 @@ export function LokascoreBreakdown({
             <>
               <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--lokadia-success)' }} />
               <p className="text-[10px] leading-relaxed" style={{ color: 'var(--lokadia-gray-700)' }}>
-                <strong style={{ color: 'var(--lokadia-success)' }}>Score officiel</strong> — agrégation propriétaire
-                de sources internationales vérifiables, calculée en continu.
+                {/* Ne jamais écrire « score officiel » : le score est une
+                    agrégation Lokadia, ce sont les *sources* qui sont
+                    officielles. La formulation précédente contredisait la
+                    mention « SCORE INDICATIF » affichée deux cents pixels
+                    plus haut sur le même écran. */}
+                <strong style={{ color: 'var(--lokadia-success)' }}>Sources officielles</strong> — score indicatif
+                agrégé par Lokadia à partir de publications gouvernementales et internationales,
+                recalculé à chaque consultation.
               </p>
             </>
           ) : (
