@@ -49,12 +49,72 @@ function systemPrefersDark(): boolean {
   );
 }
 
+/**
+ * Coupe les transitions le temps d'un battement, puis les rend.
+ *
+ * Sans ça, basculer de thème laissait du texte illisible jusqu'au
+ * rechargement. La cause : nos composants posent leurs couleurs en style
+ * en ligne (`color: var(--lokadia-text-dark)`) sur des éléments qui
+ * portent aussi `transition-colors`. Quand c'est la *custom property* qui
+ * change — et non la déclaration — le moteur ne relance pas la transition
+ * et la couleur reste épinglée sur celle du thème précédent : du texte
+ * quasi blanc restait sur une carte redevenue blanche.
+ *
+ * Neutraliser les transitions pendant le basculement fait appliquer les
+ * nouvelles couleurs d'un coup, sans transition à épingler. Le style est
+ * retiré au repaint suivant, donc les animations d'interface normales
+ * (survol, sélection) sont intactes.
+ */
+let freezeEl: HTMLStyleElement | null = null;
+let freezeTimer: number | undefined;
+
+function withoutTransitions(mutate: () => void): void {
+  if (typeof document === 'undefined') {
+    mutate();
+    return;
+  }
+
+  // Un seul élément réutilisé : en créer un par basculement les laissait
+  // s'empiler dans le `<head>`.
+  if (!freezeEl) {
+    freezeEl = document.createElement('style');
+    freezeEl.setAttribute('data-lokadia-theme-swap', '');
+    freezeEl.textContent =
+      '*,*::before,*::after{transition:none !important;animation-duration:0s !important}';
+  }
+  if (!freezeEl.isConnected) document.head.appendChild(freezeEl);
+
+  mutate();
+
+  // Lecture forcée : le navigateur recalcule les styles avec les
+  // transitions encore coupées, donc les nouvelles couleurs sont acquises
+  // avant qu'on ne relâche.
+  void document.body.offsetHeight;
+
+  const release = () => {
+    window.clearTimeout(freezeTimer);
+    freezeEl?.remove();
+  };
+
+  // On relâche au rendu suivant. Le minuteur est le filet de sécurité :
+  // dans un onglet masqué `requestAnimationFrame` ne se déclenche pas, et
+  // les transitions resteraient coupées pour le reste de la session — ce
+  // qui arrive vraiment quand le système bascule en sombre au coucher du
+  // soleil pendant que l'onglet est en arrière-plan.
+  window.clearTimeout(freezeTimer);
+  freezeTimer = window.setTimeout(release, 120);
+  requestAnimationFrame(() => requestAnimationFrame(release));
+}
+
 function apply(resolved: ResolvedTheme): void {
   const root = document.documentElement;
-  root.classList.toggle('dark', resolved === 'dark');
-  // `color-scheme` fait suivre les éléments natifs (ascenseurs, champs,
-  // sélecteurs de date) sans une ligne de CSS de plus.
-  root.style.colorScheme = resolved;
+
+  withoutTransitions(() => {
+    root.classList.toggle('dark', resolved === 'dark');
+    // `color-scheme` fait suivre les éléments natifs (ascenseurs, champs,
+    // sélecteurs de date) sans une ligne de CSS de plus.
+    root.style.colorScheme = resolved;
+  });
 
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', THEME_COLOR[resolved]);
