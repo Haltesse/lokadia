@@ -51,6 +51,15 @@ export const SUPPORTED_CURRENCIES: Currency[] = [
   { code: 'CZK', name: 'Couronne tchèque', symbol: 'Kč', flag: 'CZ' },
   { code: 'ISK', name: 'Couronne islandaise', symbol: 'kr', flag: 'IS' },
   { code: 'RUB', name: 'Rouble russe', symbol: '₽', flag: 'RU' },
+  // Ces quatre devises apparaissaient dans les prix repères du catalogue
+  // (Hong Kong, Le Cap, Tel-Aviv, Bali) sans figurer ici : `parsePrice` ne
+  // les reconnaissait pas et retombait sur l'euro, si bien que 13 prix
+  // s'affichaient avec le bon nombre mais la mauvaise devise. L'API de taux
+  // les fournit toutes les quatre.
+  { code: 'HKD', name: 'Dollar de Hong Kong', symbol: 'HK$', flag: 'HK' },
+  { code: 'ZAR', name: 'Rand sud-africain', symbol: 'R', flag: 'ZA' },
+  { code: 'ILS', name: 'Shekel israélien', symbol: '₪', flag: 'IL' },
+  { code: 'IDR', name: 'Roupie indonésienne', symbol: 'Rp', flag: 'ID' },
 ];
 
 
@@ -222,52 +231,137 @@ export function detectUserCurrency(): string {
 }
 
 /**
- * Parse un prix avec devise (ex: "€5.00", "$10", "5€", "¥50") et retourne le montant et la devise
- * @param localCurrency - Devise locale pour désambiguïser les symboles partagés (ex: "CNY" pour ¥ en Chine)
+ * Symboles partagés par plusieurs devises. Le code ISO du pays visité
+ * (`localCurrency`) tranche ; sans lui, on prend la valeur la plus courante.
  */
-export function parsePrice(priceString: string, localCurrency?: string): { amount: number; currency: string } | null {
-  // Nettoyer la chaîne
-  const cleaned = priceString.trim();
-  
-  // Si le symbole ¥ est présent et qu'on a un localCurrency hint
-  if (cleaned.includes('¥') && localCurrency) {
-    // Extraire le nombre
-    const numberMatch = cleaned.match(/[\d.,]+/);
-    if (numberMatch) {
-      const numberStr = numberMatch[0].replace(',', '.');
-      const amount = parseFloat(numberStr);
-      if (!isNaN(amount)) {
-        // Utiliser le localCurrency pour désambiguïser ¥ (JPY vs CNY)
-        return { amount, currency: localCurrency };
-      }
+const AMBIGUOUS_SYMBOLS: Record<string, { candidates: string[]; fallback: string }> = {
+  '¥':  { candidates: ['JPY', 'CNY'], fallback: 'JPY' },
+  'kr': { candidates: ['DKK', 'SEK', 'NOK', 'ISK'], fallback: 'DKK' },
+};
+
+/**
+ * Extrait le premier nombre d'une chaîne, séparateurs de milliers compris.
+ *
+ * L'ancienne version faisait `match(/[\d.,]+/)[0].replace(',', '.')` :
+ *   « 1,000 EGP »  → "1.000"    → 1        (mille fois trop petit)
+ *   « 120,000 IDR »→ "120.000"  → 120
+ *   « €1,234.56 »  → "1.234.56" → 1.234
+ * Sur des montants que le voyageur va réellement dépenser, c'est intenable.
+ *
+ * Règles appliquées ici :
+ *   - l'espace (y compris insécable) est toujours un séparateur de milliers ;
+ *   - si « . » et « , » coexistent, le dernier des deux est le séparateur
+ *     décimal (« 1.234,56 » comme « 1,234.56 ») ;
+ *   - seul, un séparateur suivi d'exactement trois chiffres et non suivi
+ *     d'un autre séparateur est un séparateur de milliers (« 1,000 ») ;
+ *     sinon c'est une décimale (« 19,50 », « 12.35 »).
+ */
+function parseAmount(raw: string): number | null {
+  const match = raw.match(/\d[\d\s\u00a0\u202f.,]*\d|\d/);
+  if (!match) return null;
+
+  let token = match[0].replace(/[\s\u00a0\u202f]/g, '');
+
+  const lastDot = token.lastIndexOf('.');
+  const lastComma = token.lastIndexOf(',');
+
+  if (lastDot >= 0 && lastComma >= 0) {
+    // Les deux présents : le dernier est la décimale, l'autre les milliers.
+    const decimalSep = lastDot > lastComma ? '.' : ',';
+    const thousandSep = decimalSep === '.' ? ',' : '.';
+    token = token.split(thousandSep).join('');
+    token = token.replace(decimalSep, '.');
+  } else if (lastDot >= 0 || lastComma >= 0) {
+    const sep = lastDot >= 0 ? '.' : ',';
+    const idx = lastDot >= 0 ? lastDot : lastComma;
+    const after = token.length - idx - 1;
+    const occurrences = token.split(sep).length - 1;
+    // « 1,000 » ou « 1.234.567 » → milliers ; « 19,50 » ou « 12.35 » → décimale
+    if (after === 3 && (occurrences > 1 || idx > 0)) {
+      token = token.split(sep).join('');
+    } else {
+      token = token.replace(sep, '.');
     }
   }
-  
-  // Essayer de trouver la devise
+
+  const amount = Number.parseFloat(token);
+  return Number.isFinite(amount) ? amount : null;
+}
+
+/**
+ * Devise d'une chaîne de prix, ou `null` si aucune n'est reconnue.
+ *
+ * L'ordre compte : un code ISO explicite (« 145 DKK ») l'emporte sur un
+ * symbole, et les symboles sont testés du plus long au plus court pour que
+ * « R$ », « CA$ », « MX$ » ou « E£ » ne soient pas avalés par « $ » et « £ ».
+ * L'ancienne boucle parcourait les devises dans l'ordre de la liste : « R$ 100 »
+ * ressortait en dollars américains, et « CA$ » aussi.
+ */
+function detectCurrency(text: string, localCurrency?: string): string | null {
+  // 1. Code ISO isolé (limites de mot pour ne pas confondre avec un nom propre)
   for (const currency of SUPPORTED_CURRENCIES) {
-    const symbolRegex = new RegExp(currency.symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    if (symbolRegex.test(cleaned) || cleaned.includes(currency.code)) {
-      // Extraire le nombre
-      const numberMatch = cleaned.match(/[\d.,]+/);
-      if (numberMatch) {
-        const numberStr = numberMatch[0].replace(',', '.');
-        const amount = parseFloat(numberStr);
-        if (!isNaN(amount)) {
-          return { amount, currency: currency.code };
-        }
-      }
-    }
+    if (new RegExp(`\\b${currency.code}\\b`).test(text)) return currency.code;
   }
-  
-  // Si aucune devise trouvée, essayer d'extraire juste le nombre
-  const numberMatch = cleaned.match(/[\d.,]+/);
-  if (numberMatch) {
-    const numberStr = numberMatch[0].replace(',', '.');
-    const amount = parseFloat(numberStr);
-    if (!isNaN(amount)) {
-      return { amount, currency: 'EUR' }; // Par défaut EUR
+
+  // 2. Symboles, du plus long au plus court, et uniquement s'ils touchent le
+  //    nombre. L'adjacence est indispensable pour les symboles courts et
+  //    alphabétiques — « R » (rand) apparaîtrait sinon dans n'importe quel
+  //    mot contenant un R majuscule, et « kr » dans n'importe quelle phrase.
+  const bySymbolLength = [...SUPPORTED_CURRENCIES].sort(
+    (a, b) => b.symbol.length - a.symbol.length
+  );
+  for (const currency of bySymbolLength) {
+    const symbol = currency.symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Symbole collé au nombre, avant ou après, avec au plus une espace.
+    const adjacent = new RegExp(`(?:${symbol}\\s?\\d)|(?:\\d\\s?${symbol})`);
+    if (!adjacent.test(text)) continue;
+
+    const ambiguous = AMBIGUOUS_SYMBOLS[currency.symbol];
+    if (ambiguous) {
+      if (localCurrency && ambiguous.candidates.includes(localCurrency)) return localCurrency;
+      return ambiguous.fallback;
     }
+    return currency.code;
   }
-  
+
   return null;
+}
+
+/**
+ * Parse un prix (« 145 DKK (~19.50€) », « €5.00 », « $10-15 », « ¥50 ») et
+ * renvoie le montant et sa devise.
+ *
+ * Le contenu entre parenthèses est retiré avant analyse : dans le catalogue,
+ * il porte une conversion indicative (« (~19.50€) ») et non le prix lui-même.
+ * L'ancienne version le laissait en place, si bien que le « € » du repère
+ * faisait passer *tout* prix étranger pour un prix en euros — « 145 DKK »
+ * s'affichait « 145,00 € » au lieu de « 19,50 € », et « Café latte 45 DKK »
+ * annonçait 45 € au voyageur.
+ *
+ * Pour une fourchette (« 10-20 MAD »), la borne basse est retenue.
+ *
+ * @param localCurrency Code ISO du pays visité, pour trancher entre les
+ *   devises qui partagent un symbole (¥ → JPY ou CNY, kr → DKK, SEK, NOK, ISK).
+ */
+export function parsePrice(
+  priceString: string,
+  localCurrency?: string,
+): { amount: number; currency: string } | null {
+  const original = priceString.trim();
+  if (!original) return null;
+
+  // Retirer les parenthèses (conversion indicative) avant toute analyse.
+  const cleaned = original.replace(/\([^)]*\)/g, ' ').trim();
+  const searchable = cleaned || original;
+
+  const amount = parseAmount(searchable);
+  if (amount === null) return null;
+
+  const currency = detectCurrency(searchable, localCurrency);
+  if (currency) return { amount, currency };
+
+  // Aucune devise reconnue : on suppose la devise locale si elle est connue,
+  // l'euro sinon. Supposer l'euro sur un prix libellé en monnaie locale était
+  // la seconde moitié du bug ci-dessus.
+  return { amount, currency: localCurrency ?? 'EUR' };
 }

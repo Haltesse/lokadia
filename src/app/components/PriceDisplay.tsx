@@ -37,6 +37,13 @@ export function PriceDisplay({
   const convertedPrice = formatAmount(parsed.amount, fromCurrency);
   const isDifferentCurrency = fromCurrency !== selectedCurrency;
 
+  // Le prix du catalogue porte souvent sa propre conversion indicative
+  // (« 39 DKK (~5.20€) »). Puisqu'on affiche désormais la conversion calculée
+  // sur les taux du jour, la répéter donnerait « 5,22 € (39 DKK (~5.20€)) » :
+  // deux parenthèses imbriquées et deux chiffres pour la même chose. On ne
+  // garde que le montant d'origine.
+  const originalWithoutHint = price.replace(/\s*\([^)]*\)/g, '').trim() || price;
+
   // Si on a une période (pour les abonnements)
   if (period) {
     return (
@@ -51,7 +58,7 @@ export function PriceDisplay({
             {period}
           </span>
           {isDifferentCurrency && (
-            <span className="text-xs opacity-60">({price})</span>
+            <span className="text-xs opacity-60">({originalWithoutHint})</span>
           )}
         </div>
       </div>
@@ -63,7 +70,7 @@ export function PriceDisplay({
     return (
       <span className={className}>
         <span className="font-semibold">{convertedPrice}</span>
-        <span className="text-xs opacity-60 ml-1">({price})</span>
+        <span className="text-xs opacity-60 ml-1">({originalWithoutHint})</span>
       </span>
     );
   }
