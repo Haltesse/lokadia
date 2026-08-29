@@ -49,3 +49,10 @@ Document/
 
 # Reglages Claude Code locaux (peuvent contenir des jetons) — jamais versionnes
 .claude/settings.local.json
+
+# Etat local de la CLI Supabase : versions du stack local, projet lie.
+# Change a chaque mise a jour de la CLI et salit le `git status` sans rien
+# apporter. C'est aussi ce que le `.gitignore` genere par Supabase ignore.
+# Le lien au projet se refait avec `supabase link --project-ref <ref>`,
+# ce que fait deja supabase/deploy-functions.ps1.
+supabase/.temp/
