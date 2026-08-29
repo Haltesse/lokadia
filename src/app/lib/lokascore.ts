@@ -163,7 +163,7 @@ export const DIMENSION_META: Record<keyof LokascoreDimensions, DimensionMeta> = 
     label: 'Nature & catastrophes',
     short: 'N',
     Icon: Tornado,
-    sources: ['GDACS', 'ReliefWeb', 'NASA EONET', 'EM-DAT'],
+    sources: ['GDACS', 'NASA EONET', 'EM-DAT', 'USGS'],
     color: 'var(--lokadia-category-culture)',
   },
   infrastructure: {

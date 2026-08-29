@@ -66,7 +66,6 @@ export const SOURCE_HOMEPAGES = {
   who: 'https://www.who.int/countries',
   osac: 'https://www.osac.gov/',
   ecdc: 'https://www.ecdc.europa.eu/en/threats-and-outbreaks',
-  reliefWeb: 'https://reliefweb.int/countries',
   cdc: 'https://wwwnc.cdc.gov/travel/destinations/list',
 };
 

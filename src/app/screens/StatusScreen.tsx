@@ -215,7 +215,6 @@ export default function StatusScreen() {
             ['GDACS — alertes catastrophes (ONU)', SOURCE_HOMEPAGES.gdacs],
             ['OSAC — US Department of State', SOURCE_HOMEPAGES.osac],
             ['CDC Travel Health', SOURCE_HOMEPAGES.cdc],
-            ['ReliefWeb', SOURCE_HOMEPAGES.reliefWeb],
           ].map(([label, url]) => (
             <a
               key={url}

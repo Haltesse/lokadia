@@ -54,11 +54,17 @@ const alertLevelConfig = {
   },
 };
 
+// Sources réellement interrogées par cette page. La liste annonçait
+// « IATA — Transport aérien », alors qu'aucun appel à l'IATA n'existe dans
+// le dépôt : le volet transport vient de TfL. GDACS n'est plus interrogée
+// depuis le navigateur (pas d'en-tête CORS) mais reste agrégée côté serveur
+// par `world-alerts`, dont cette page affiche la carte.
 const sources = [
   { code: "MAE", label: "Ministère Affaires Étrangères" },
   { code: "GDACS", label: "Catastrophes naturelles" },
   { code: "OMS", label: "Santé et sanitaire" },
-  { code: "IATA", label: "Transport aérien" },
+  { code: "NASA", label: "Événements naturels" },
+  { code: "TfL", label: "Transports Londres" },
 ];
 
 export function AlertCenterScreen() {
@@ -336,7 +342,7 @@ export function AlertCenterScreen() {
         <WatchedDestinations />
       </section>
 
-      {/* ───────── ALERTES MONDIALES TEMPS RÉEL (USGS + ReliefWeb) ───────── */}
+      {/* ───────── ALERTES MONDIALES TEMPS RÉEL (GDACS + USGS + OMS) ───────── */}
       <section className="mx-5 mt-6 lg:mx-auto lg:max-w-7xl lg:px-0">
         <div className="mb-3 flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'rgba(239, 68, 68, 0.12)' }}>

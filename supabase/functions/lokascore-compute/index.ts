@@ -162,7 +162,7 @@ const DESTINATION_TO_COUNTRY_ISO: Record<string, string> = {
 const DIM_SOURCES = {
   security: { mae: 'MAE France', fcdo: 'UK FCDO', usState: 'US State Dept', dfat: 'AU DFAT' },
   health: { who: 'OMS', ecdc: 'ECDC', cdc: 'CDC USA', haq: 'Lancet HAQ' },
-  nature: { gdacs: 'GDACS', emdat: 'EM-DAT', usgs: 'USGS', reliefweb: 'ReliefWeb' },
+  nature: { gdacs: 'GDACS', emdat: 'EM-DAT', usgs: 'USGS' },
   infrastructure: { wjp: 'WJP', cpi: 'Transparency Int.', whoRoad: 'WHO Road Safety', wb: 'World Bank', gsma: 'GSMA' },
 };
 
@@ -233,8 +233,8 @@ function computeNature(c: CountryRisk | null, liveSeverity: 'orange' | 'red' | n
   const sources: string[] = [];
   // N_act (60%) : priorité aux alertes live
   let nAct = 100;
-  if (liveSeverity === 'red') { nAct = 30; sources.push(DIM_SOURCES.nature.usgs, DIM_SOURCES.nature.reliefweb); }
-  else if (liveSeverity === 'orange') { nAct = 60; sources.push(DIM_SOURCES.nature.usgs, DIM_SOURCES.nature.reliefweb); }
+  if (liveSeverity === 'red') { nAct = 30; sources.push(DIM_SOURCES.nature.usgs, DIM_SOURCES.nature.gdacs); }
+  else if (liveSeverity === 'orange') { nAct = 60; sources.push(DIM_SOURCES.nature.usgs, DIM_SOURCES.nature.gdacs); }
   else { sources.push(DIM_SOURCES.nature.gdacs); }
   parts.push({ v: nAct, w: 0.60 });
   // N_str (40%) : EM-DAT
@@ -277,7 +277,7 @@ function levelOf(score: number): { level: string; label: string } {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-//  Alertes nature live (USGS + ReliefWeb) — cache global 30 min
+//  Alertes nature live (USGS) — cache global 30 min
 // ════════════════════════════════════════════════════════════════════════
 const ISO3_TO_ISO2: Record<string, string> = {
   FRA:'FR',DEU:'DE',GBR:'GB',ESP:'ES',ITA:'IT',PRT:'PT',NLD:'NL',BEL:'BE',CHE:'CH',AUT:'AT',IRL:'IE',SWE:'SE',NOR:'NO',DNK:'DK',FIN:'FI',ISL:'IS',POL:'PL',CZE:'CZ',GRC:'GR',RUS:'RU',TUR:'TR',USA:'US',CAN:'CA',MEX:'MX',BRA:'BR',ARG:'AR',MAR:'MA',EGY:'EG',ARE:'AE',ISR:'IL',ZAF:'ZA',JPN:'JP',CHN:'CN',HKG:'HK',KOR:'KR',THA:'TH',SGP:'SG',MYS:'MY',IDN:'ID',IND:'IN',AUS:'AU',NZL:'NZ',HUN:'HU',ROU:'RO',HRV:'HR',SVN:'SI',SVK:'SK',EST:'EE',VNM:'VN',PHL:'PH',TWN:'TW',CHL:'CL',COL:'CO',PER:'PE',URY:'UY',KEN:'KE',TUN:'TN',JOR:'JO',SAU:'SA',QAT:'QA',
@@ -313,19 +313,9 @@ async function getNatureAlerts(): Promise<Map<string, 'orange' | 'red'>> {
       }
     }
   } catch { /* ignore */ }
-  // ReliefWeb ongoing disasters
-  try {
-    const r = await fetch('https://api.reliefweb.int/v1/disasters?appname=lokadia.fr&filter[field]=status&filter[value]=ongoing&limit=200&fields[include][]=country', { signal: AbortSignal.timeout(10000) });
-    if (r.ok) {
-      const d = await r.json();
-      for (const item of d.data ?? []) {
-        for (const c of item.fields?.country ?? []) {
-          const iso2 = c.iso3 ? ISO3_TO_ISO2[c.iso3.toUpperCase()] : null;
-          if (iso2 && !sev.has(iso2)) sev.set(iso2, 'orange');
-        }
-      }
-    }
-  } catch { /* ignore */ }
+  // ReliefWeb retiré : son API v1 répond 410 Gone (v2 réservée aux appname
+  // approuvés). Le bloc échouait donc systématiquement, sans effet sur `sev`
+  // mais en citant ReliefWeb parmi les sources du score.
   alertsCache = { sev, ts: Date.now() };
   return sev;
 }

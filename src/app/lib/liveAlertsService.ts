@@ -4,7 +4,6 @@
  * Consomme l'Edge Function `world-alerts` qui agrège côté serveur :
  *   - GDACS (séismes, cyclones, inondations, volcans, sécheresses)
  *   - USGS (séismes M5.5+)
- *   - ReliefWeb (crises humanitaires)
  *   - OMS (épidémies / pandémies)
  *   - Couche géopolitique curée (guerres + instabilité politique)
  *

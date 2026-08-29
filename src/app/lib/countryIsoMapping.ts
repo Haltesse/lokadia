@@ -1,7 +1,7 @@
 /**
  * Mapping ISO 3166-1 alpha-3 → alpha-2
  * Utilisé pour normaliser les codes pays retournés par les APIs
- * externes (ReliefWeb utilise ISO3, on stocke en ISO2).
+ * externes (certaines publient en ISO3, on stocke en ISO2).
  *
  * Couvre les 250 codes officiels.
  */

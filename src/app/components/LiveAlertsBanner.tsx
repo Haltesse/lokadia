@@ -1,6 +1,6 @@
 /**
- * LiveAlertsBanner — bandeau global affichant les alertes catastrophes
- * actives dans le monde (USGS séismes + ReliefWeb catastrophes).
+ * LiveAlertsBanner — bandeau global affichant les alertes mondiales
+ * actives, telles qu'agrégées par l'Edge Function `world-alerts`.
  *
  * Se met à jour automatiquement quand de nouvelles alertes arrivent via
  * `subscribeToLiveAlerts`. Cliquable pour aller au centre d'alertes.
@@ -29,22 +29,23 @@ export function LiveAlertsBanner({ variant = 'mobile' }: LiveAlertsBannerProps) 
     return () => unsub();
   }, []);
 
-  // Pas de rendu si pas encore de snapshot OU aucun pays affecté
-  if (!snapshot || snapshot.byCountry.size === 0) {
+  // Pas de rendu tant qu'aucune alerte n'est connue
+  if (!snapshot || snapshot.alerts.length === 0) {
     return null;
   }
 
-  // Compte total d'alertes (somme sur tous les pays)
-  let totalAlerts = 0;
+  // Le décompte porte sur `alerts`, la liste complète, et non sur la somme
+  // de `byCountry` : ce regroupement écarte les alertes sans code pays
+  // (séismes en mer, notamment). L'accueil annonçait « 31 alertes actives »
+  // quand la carte de la page /alerts, alimentée par le même instantané au
+  // même instant, en affichait 36.
   let redAlerts = 0;
   let earthquakeCount = 0;
-  snapshot.byCountry.forEach((alerts) => {
-    totalAlerts += alerts.length;
-    alerts.forEach((a) => {
-      if (a.severity === 'red') redAlerts++;
-      if (a.type === 'earthquake') earthquakeCount++;
-    });
-  });
+  for (const alert of snapshot.alerts) {
+    if (alert.severity === 'red') redAlerts++;
+    if (alert.type === 'earthquake') earthquakeCount++;
+  }
+  const totalAlerts = snapshot.alerts.length;
   const countriesCount = snapshot.byCountry.size;
 
   const isDesktop = variant === 'desktop';

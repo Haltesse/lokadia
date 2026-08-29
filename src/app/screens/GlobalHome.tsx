@@ -309,7 +309,7 @@ export function GlobalHome() {
         </div>
       </HeroSlideshow>
 
-      {/* ───────── LIVE ALERTS BANNER — USGS + ReliefWeb temps réel ─────────
+      {/* ───────── LIVE ALERTS BANNER — GDACS + USGS + OMS temps réel ─────────
           Affichée uniquement s'il y a des alertes actives (sinon titre orphelin). */}
       {hasAlerts && (
         <div className="px-5 pt-5 relative z-10 mb-5 max-w-3xl mx-auto w-full lk-fade-in-up lk-delay-1">

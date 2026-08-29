@@ -6,7 +6,7 @@
  *  Combine :
  *    - GDACS (ONU/UE)      : séismes, cyclones, inondations, volcans, sécheresses
  *    - USGS                : séismes M4.5+ (complète GDACS, coords précises)
- *    - ReliefWeb (OCHA)    : crises humanitaires en cours
+ *    - (ReliefWeb retirée : API v1 en 410 Gone, v2 sur appname approuvé)
  *    - OMS (WHO RSS)       : épidémies / pandémies
  *    - Couche géopolitique : guerres + instabilité politique (curée, basée sur
  *                            les advisories officiels — information publique)
@@ -200,40 +200,14 @@ async function fetchUSGS(): Promise<WorldAlert[]> {
   return alerts;
 }
 
-async function fetchReliefWeb(): Promise<WorldAlert[]> {
-  const url = 'https://api.reliefweb.int/v1/disasters?appname=lokadia.fr&filter[field]=status&filter[value]=ongoing&limit=100&fields[include][]=name&fields[include][]=country&fields[include][]=primary_type&fields[include][]=date';
-  const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
-  if (!r.ok) throw new Error(`ReliefWeb ${r.status}`);
-  const d = await r.json();
-  const alerts: WorldAlert[] = [];
-  for (const item of d.data ?? []) {
-    const f = item.fields ?? {};
-    const typeName: string = (f.primary_type?.name ?? '').toLowerCase();
-    let type: AlertType = 'humanitarian';
-    if (typeName.includes('flood')) type = 'flood';
-    else if (typeName.includes('earthquake')) type = 'earthquake';
-    else if (typeName.includes('cyclone') || typeName.includes('storm')) type = 'cyclone';
-    else if (typeName.includes('drought')) type = 'drought';
-    else if (typeName.includes('volcano')) type = 'volcano';
-    else if (typeName.includes('epidemic') || typeName.includes('outbreak')) type = 'epidemic';
-    const c = (f.country ?? [])[0];
-    const iso = c?.iso3 ? ISO3_TO_ISO2[c.iso3.toUpperCase()] ?? null : null;
-    const cn = CENTROIDS[iso ?? ''] ?? null;
-    alerts.push({
-      id: `rw-${item.id}`,
-      type,
-      severity: 'orange',
-      title: f.name ?? 'Crise humanitaire',
-      countryIso: iso,
-      countryName: c?.name ?? '—',
-      lat: cn?.lat ?? null,
-      lon: cn?.lon ?? null,
-      source: 'ReliefWeb',
-      date: f.date?.created ? new Date(f.date.created).toISOString() : new Date().toISOString(),
-    });
-  }
-  return alerts;
-}
+/*
+ * fetchReliefWeb a été supprimée : l API v1 de ReliefWeb répond désormais
+ * 410 Gone, et la v2 exige un appname approuvé (403 sans enregistrement).
+ * La fonction levait donc à chaque appel, Promise.allSettled absorbait
+ * l échec en silence, et la source disparaissait de la liste sans que
+ * personne ne le voie. Si un appname est obtenu un jour, la brancher sur
+ * https://api.reliefweb.int/v2/disasters.
+ */
 
 const HEALTH_KW = ['outbreak','epidemic','pandemic','cholera','ebola','marburg','dengue','zika','measles','polio','mpox','monkeypox','h5n1','avian','plague','meningitis','lassa','nipah','yellow fever'];
 async function fetchWHO(): Promise<WorldAlert[]> {
@@ -305,11 +279,14 @@ serve(async (req) => {
   const sources: string[] = [];
   const raw: WorldAlert[] = [];
 
-  const [gd, us, rw, who] = await Promise.allSettled([fetchGDACS(), fetchUSGS(), fetchReliefWeb(), fetchWHO()]);
-  if (gd.status === 'fulfilled') { sources.push('GDACS'); raw.push(...gd.value); }
-  if (us.status === 'fulfilled') { sources.push('USGS'); raw.push(...us.value); }
-  if (rw.status === 'fulfilled') { sources.push('ReliefWeb'); raw.push(...rw.value); }
-  if (who.status === 'fulfilled') { sources.push('OMS'); raw.push(...who.value); }
+  const [gd, us, who] = await Promise.allSettled([fetchGDACS(), fetchUSGS(), fetchWHO()]);
+  // Une source n'est créditée que si elle a effectivement produit quelque
+  // chose. Se contenter de `status === 'fulfilled'` faisait afficher « OMS »
+  // sous la carte alors qu'elle ne contribuait aucune alerte : le flux
+  // répondait, mais aucun de ses articles ne passait le filtre sanitaire.
+  if (gd.status === 'fulfilled' && gd.value.length > 0) { sources.push('GDACS'); raw.push(...gd.value); }
+  if (us.status === 'fulfilled' && us.value.length > 0) { sources.push('USGS'); raw.push(...us.value); }
+  if (who.status === 'fulfilled' && who.value.length > 0) { sources.push('OMS'); raw.push(...who.value); }
   // Couche géopolitique (toujours présente, structurelle)
   sources.push('Advisories');
   raw.push(...geopoliticalAlerts());

@@ -5,7 +5,7 @@
  * (GDACS/USGS) ou au centroïde pays (épidémies, guerres, crises). Couleur
  * par sévérité, icône/label par type. Popup détaillé au clic.
  *
- * Sources agrégées : GDACS · USGS · ReliefWeb · OMS · géopolitique.
+ * Sources agrégées : GDACS · USGS · OMS · géopolitique.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';

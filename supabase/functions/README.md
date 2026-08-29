@@ -10,7 +10,7 @@ Proxies serveur pour les sources officielles non-CORS qu'on ne peut pas appeler 
 | `advisories-us-state` | US Department of State | `/functions/v1/advisories-us-state?country=JP` |
 | `advisories-who` | OMS Disease Outbreak News (RSS) | `/functions/v1/advisories-who?country=JP` |
 
-(Note : USGS Earthquakes et ReliefWeb sont déjà CORS-friendly et fetchés directement depuis le navigateur via `src/app/lib/liveAlertsService.ts`.)
+(Note : les alertes mondiales sont agrégées côté serveur par `world-alerts` ; le navigateur ne consulte plus GDACS directement, faute d'en-tête CORS.)
 
 ## Déploiement
 

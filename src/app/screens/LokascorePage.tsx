@@ -57,7 +57,7 @@ export default function LokascorePage() {
     {
       meta: DIMENSION_META.nature,
       detail: "Mesure le risque actuel et structurel face aux catastrophes naturelles : séismes, cyclones, inondations.",
-      sources: "GDACS · ReliefWeb · NASA EONET · EM-DAT · USGS",
+      sources: "GDACS · NASA EONET · EM-DAT · USGS",
       Icon: AlertTriangle,
     },
     {
@@ -108,7 +108,6 @@ export default function LokascorePage() {
     { name: "CDC USA", full: "Travel Health Notices", url: "https://wwwnc.cdc.gov/travel/notices", dim: "Santé", color: "var(--lokadia-category-transport)", bg: "var(--lokadia-category-transport-bg)", Icon: Heart },
     { name: "Lancet HAQ", full: "Healthcare Access & Quality", url: "https://www.healthdata.org/research-analysis/library/measuring-performance-healthcare-access-and-quality-index-195", dim: "Santé", color: "var(--lokadia-category-transport)", bg: "var(--lokadia-category-transport-bg)", Icon: Heart },
     { name: "GDACS", full: "Global Disaster Alert (UE+ONU)", url: "https://www.gdacs.org/", dim: "Nature", color: "var(--lokadia-category-culture)", bg: "var(--lokadia-category-culture-bg)", Icon: AlertTriangle },
-    { name: "ReliefWeb", full: "OCHA - Humanitarian alerts", url: "https://reliefweb.int/", dim: "Nature", color: "var(--lokadia-category-culture)", bg: "var(--lokadia-category-culture-bg)", Icon: AlertTriangle },
     { name: "USGS", full: "Earthquakes feed", url: "https://earthquake.usgs.gov/", dim: "Nature", color: "var(--lokadia-category-culture)", bg: "var(--lokadia-category-culture-bg)", Icon: AlertTriangle },
     { name: "EM-DAT", full: "Emergency Events Database", url: "https://www.emdat.be/", dim: "Nature", color: "var(--lokadia-category-culture)", bg: "var(--lokadia-category-culture-bg)", Icon: AlertTriangle },
     { name: "WJP", full: "World Justice Project Rule of Law", url: "https://worldjusticeproject.org/rule-of-law-index/", dim: "Infra", color: "var(--lokadia-success)", bg: "var(--lokadia-success-bg)", Icon: Database },

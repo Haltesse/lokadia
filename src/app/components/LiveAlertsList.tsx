@@ -1,6 +1,7 @@
 /**
- * LiveAlertsList — liste détaillée de toutes les alertes live USGS + ReliefWeb
- * groupées par pays, avec recherche par destinations Lokadia.
+ * LiveAlertsList — liste détaillée de toutes les alertes live (GDACS, USGS,
+ * OMS, conseils aux voyageurs) groupées par pays, avec recherche par
+ * destinations Lokadia.
  *
  * Utilisable dans AlertCenterScreen ou page dédiée.
  */
@@ -91,6 +92,42 @@ export function LiveAlertsList() {
     );
   }
 
+  // Une collecte en échec et un monde calme rendaient exactement la même
+  // chose : le bandeau vert rassurant. `ok` distingue les deux — il vaut
+  // `false` quand aucune source n'a répondu — et il n'était lu nulle part.
+  if (groups.length === 0 && !snapshot.ok) {
+    return (
+      <div
+        className="rounded-2xl p-5 flex items-start gap-3"
+        style={{
+          background: 'var(--lokadia-warning-bg)',
+          border: '1px solid var(--lokadia-warning)',
+        }}
+      >
+        <AlertTriangle className="h-8 w-8 flex-shrink-0" style={{ color: 'var(--lokadia-warning)' }} />
+        <div>
+          <h3 className="font-bold text-sm" style={{ color: 'var(--lokadia-warning)' }}>
+            Alertes mondiales indisponibles
+          </h3>
+          <p className="text-xs mt-1" style={{ color: 'var(--lokadia-warning)' }}>
+            Nous n'avons pas pu joindre les sources. Cet écran ne dit donc rien de la
+            situation réelle : en cas de doute, consultez directement les conseils aux
+            voyageurs de votre ministère des Affaires étrangères.
+          </p>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
+            style={{ background: 'var(--lokadia-surface)', color: 'var(--lokadia-warning)' }}
+          >
+            <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (groups.length === 0) {
     return (
       <div
@@ -106,7 +143,8 @@ export function LiveAlertsList() {
             Aucune alerte majeure dans le monde
           </h3>
           <p className="text-xs mt-1" style={{ color: 'var(--lokadia-success)' }}>
-            Aucun séisme M≥6 ni catastrophe ReliefWeb active. Sources : {snapshot.sources.join(' + ')}
+            Aucun séisme majeur ni crise en cours signalés par les sources consultées.
+            Sources : {snapshot.sources.join(' + ')}
           </p>
           <button
             onClick={handleRefresh}

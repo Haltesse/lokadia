@@ -10,8 +10,15 @@ export interface RealTimeAlert {
   title: string;
   summary: string;
   destination: string;
-  country: string;
+  /** Date déjà mise en forme pour l'affichage ("29 août 2026 à 02:38"). */
   date: string;
+  /**
+   * Même instant, au format ISO 8601. Indispensable pour trier : `date` est
+   * un libellé français que `new Date()` ne sait pas relire, si bien que le
+   * comparateur renvoyait `NaN` et que le tri chronologique ne faisait rien.
+   */
+  dateIso: string;
+  country: string;
   source: string;
   url?: string;
   zone?: string;
@@ -36,18 +43,42 @@ export interface RealTimeAlert {
 // ============================================================================
 const CACHE_KEYS = {
   OPEN_METEO: 'lokadia_cache_open_meteo',
-  GDACS: 'lokadia_cache_gdacs',
   NASA_EONET: 'lokadia_cache_nasa_eonet',
   SECURITY: 'lokadia_cache_security',
   GDELT: 'lokadia_cache_gdelt',
   WHO: 'lokadia_cache_who',
-  SNCF: 'lokadia_cache_sncf',
   TFL: 'lokadia_cache_tfl',
   NEWS: 'lokadia_cache_news',
   TIMESTAMP: 'lokadia_cache_timestamp',
 };
 
 const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 jours
+
+/**
+ * Efface les caches devenus illégitimes, une fois par appareil.
+ *
+ * Supprimer le code qui fabriquait des alertes ne suffit pas : celles-ci
+ * ont été écrites dans le `localStorage` des visiteurs sous
+ * `lokadia_cache_gdelt`, et le repli sur cache les aurait ressorties
+ * pendant encore sept jours. On les efface donc explicitement, avec les
+ * caches GDACS et SNCF dont les sources ont été retirées.
+ */
+const PURGE_FLAG = 'lokadia_cache_purge_v2';
+function purgeLegacyCaches(): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    if (localStorage.getItem(PURGE_FLAG)) return;
+    for (const key of ['lokadia_cache_gdelt', 'lokadia_cache_gdacs', 'lokadia_cache_sncf']) {
+      localStorage.removeItem(key);
+      localStorage.removeItem(`${key}_timestamp`);
+    }
+    localStorage.setItem(PURGE_FLAG, '1');
+    console.log('🧹 Caches d\'alertes hérités effacés (GDELT fabriqué, GDACS, SNCF)');
+  } catch {
+    // localStorage indisponible : rien à purger
+  }
+}
+purgeLegacyCaches();
 
 // Sauvegarder les alertes dans le cache
 function saveToCache(key: string, alerts: RealTimeAlert[]): void {
@@ -122,13 +153,6 @@ interface GdeltArticle {
   title?: string;
   url?: string;
   seendate?: string;
-}
-
-interface SncfDisruption {
-  messages?: Array<{ text?: string }>;
-  application_periods?: Array<{ begin?: string }>;
-  cause?: string;
-  severity?: { effect?: string };
 }
 
 interface TflLineStatus {
@@ -254,25 +278,55 @@ async function fetchOpenMeteoAlerts(): Promise<RealTimeAlert[]> {
   let errorCount = 0;
   
   try {
-    console.log('🌦️ Open-Meteo: Interrogation de 26 destinations...');
-    
-    // Analyser TOUTES les destinations pour avoir le maximum d'alertes (26)
-    for (const dest of destinations) {
+    console.log(`🌦️ Open-Meteo: interrogation de ${destinations.length} destinations en une requête...`);
+
+    // Une seule requête pour toutes les destinations.
+    //
+    // Le code d'origine enchaînait 26 `fetch` par un `await` dans la boucle :
+    // chacun attendait le précédent, soit 26 allers-retours en série, dont le
+    // coût est proportionnel à la latence (cinq à six secondes sur un réseau
+    // mobile). Les lancer tous en parallèle réglait la latence mais déclenchait
+    // le limiteur de débit d'Open-Meteo : 21 des 26 revenaient en 429/503.
+    //
+    // L'API accepte des listes de coordonnées et renvoie un tableau de
+    // résultats dans le même ordre — un aller-retour, aucune rafale.
+    const latitudes = destinations.map((d) => d.lat).join(',');
+    const longitudes = destinations.map((d) => d.lon).join(',');
+    const url =
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitudes}&longitude=${longitudes}` +
+      '&current=temperature_2m,weathercode,windspeed_10m' +
+      '&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max' +
+      '&timezone=auto&forecast_days=1';
+
+    const response = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    if (!response.ok) {
+      console.log(`ℹ️ Open-Meteo indisponible (${response.status})`);
+      return [];
+    }
+
+    // Avec une seule coordonnée l'API renvoie un objet, avec plusieurs un
+    // tableau. On normalise pour ne pas dépendre du nombre de destinations.
+    const payload = await response.json();
+    const results: unknown[] = Array.isArray(payload) ? payload : [payload];
+
+    for (const [index, dest] of destinations.entries()) {
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${dest.lat}&longitude=${dest.lon}&current=temperature_2m,weathercode,windspeed_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto`;
-        
-        const response = await fetch(url);
-        if (!response.ok) {
+        const data = results[index] as {
+          current?: { temperature_2m?: number; windspeed_10m?: number; weathercode?: number };
+          daily?: { windspeed_10m_max?: number[]; precipitation_sum?: number[] };
+        } | undefined;
+        if (!data?.current) {
           errorCount++;
           continue;
         }
         
-        const data = await response.json();
-        
         // Analyser les conditions météo RÉELLES
         const currentTemp = data.current?.temperature_2m;
         const windSpeed = data.current?.windspeed_10m;
-        const weatherCode = data.current?.weathercode;
+        // `-1` ne correspond à aucun code WMO : les seuils plus bas
+        // (`>= 80`, `>= 95`) sont donc faux quand la donnée manque, ce qui
+        // est le comportement voulu — pas d'alerte orage sans relevé.
+        const weatherCode = data.current?.weathercode ?? -1;
         const maxWind = data.daily?.windspeed_10m_max?.[0];
         const precipitation = data.daily?.precipitation_sum?.[0];
         
@@ -291,6 +345,7 @@ async function fetchOpenMeteoAlerts(): Promise<RealTimeAlert[]> {
             destination: dest.name,
             country: dest.country,
             date: formatDate(new Date().toISOString()),
+            dateIso: toIso(new Date().toISOString()),
             source: 'Open-Meteo (API)',
             zone: dest.name,
             coordinates: { lat: dest.lat, lon: dest.lon },
@@ -309,6 +364,7 @@ async function fetchOpenMeteoAlerts(): Promise<RealTimeAlert[]> {
             destination: dest.name,
             country: dest.country,
             date: formatDate(new Date().toISOString()),
+            dateIso: toIso(new Date().toISOString()),
             source: 'Open-Meteo (API)',
             zone: dest.name,
             coordinates: { lat: dest.lat, lon: dest.lon },
@@ -327,6 +383,7 @@ async function fetchOpenMeteoAlerts(): Promise<RealTimeAlert[]> {
             destination: dest.name,
             country: dest.country,
             date: formatDate(new Date().toISOString()),
+            dateIso: toIso(new Date().toISOString()),
             source: 'Open-Meteo (API)',
             zone: dest.name,
             coordinates: { lat: dest.lat, lon: dest.lon },
@@ -345,6 +402,7 @@ async function fetchOpenMeteoAlerts(): Promise<RealTimeAlert[]> {
             destination: dest.name,
             country: dest.country,
             date: formatDate(new Date().toISOString()),
+            dateIso: toIso(new Date().toISOString()),
             source: 'Open-Meteo (API)',
             zone: dest.name,
             coordinates: { lat: dest.lat, lon: dest.lon },
@@ -363,6 +421,7 @@ async function fetchOpenMeteoAlerts(): Promise<RealTimeAlert[]> {
             destination: dest.name,
             country: dest.country,
             date: formatDate(new Date().toISOString()),
+            dateIso: toIso(new Date().toISOString()),
             source: 'Open-Meteo (API)',
             zone: dest.name,
             coordinates: { lat: dest.lat, lon: dest.lon },
@@ -381,6 +440,7 @@ async function fetchOpenMeteoAlerts(): Promise<RealTimeAlert[]> {
             destination: dest.name,
             country: dest.country,
             date: formatDate(new Date().toISOString()),
+            dateIso: toIso(new Date().toISOString()),
             source: 'Open-Meteo (API)',
             zone: dest.name,
             coordinates: { lat: dest.lat, lon: dest.lon },
@@ -402,102 +462,6 @@ async function fetchOpenMeteoAlerts(): Promise<RealTimeAlert[]> {
     return alerts;
   } catch (error) {
     console.error('❌ Erreur générale Open-Meteo:', error);
-    return [];
-  }
-}
-
-// ============================================================================
-// API 2: GDACS - Alertes Catastrophes Naturelles ONU (TEMPS RÉEL)
-// ============================================================================
-async function fetchGDACSAlerts(): Promise<RealTimeAlert[]> {
-  try {
-    console.log('🌍 GDACS (ONU): Interrogation des catastrophes naturelles...');
-    
-    // URL alternative GDACS - RSS Feed qui est plus stable
-    const url = 'https://www.gdacs.org/xml/rss.xml';
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-    
-    const response = await fetch(url, { 
-      signal: controller.signal,
-      mode: 'cors',
-      headers: {
-        'Accept': 'application/rss+xml, application/xml, text/xml, */*',
-      }
-    });
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      console.log(`ℹ️ GDACS temporairement indisponible (${response.status})`);
-      return [];
-    }
-    
-    const text = await response.text();
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(text, 'text/xml');
-    
-    const items = xmlDoc.querySelectorAll('item');
-    const alerts: RealTimeAlert[] = [];
-    
-    console.log(`🌍 GDACS: ${items.length} événements trouvés dans le flux XML`);
-    
-    items.forEach((item, index) => {
-      try {
-        const title = item.querySelector('title')?.textContent || '';
-        const description = item.querySelector('description')?.textContent || '';
-        const link = item.querySelector('link')?.textContent || '';
-        const pubDate = item.querySelector('pubDate')?.textContent || '';
-        
-        // Extraire le pays du titre (format: "Event Type Country")
-        let country = 'International';
-        const titleParts = title.split(' ');
-        if (titleParts.length > 2) {
-          country = titleParts.slice(2).join(' ');
-        }
-        
-        let level: RealTimeAlert['level'] = 'vigilance';
-        
-        if (title.toLowerCase().includes('red') || title.toLowerCase().includes('orange')) {
-          level = 'urgent';
-        } else if (title.toLowerCase().includes('green')) {
-          level = 'info';
-        }
-        
-        // Trouver la destination correspondante
-        const matchedDest = destinations.find(dest => 
-          title.toLowerCase().includes(dest.country.toLowerCase()) ||
-          title.toLowerCase().includes(dest.name.toLowerCase())
-        ) || destinations[0]; // Par défaut
-        
-        alerts.push({
-          id: `gdacs-${Date.now()}-${index}`,
-          type: 'disaster',
-          level: level,
-          title: title,
-          summary: description.replace(/<[^>]*>/g, '').substring(0, 200) + '...',
-          destination: matchedDest.name,
-          country: matchedDest.country,
-          date: formatDate(pubDate || new Date().toISOString()),
-          source: 'GDACS (ONU)',
-          url: link,
-          zone: country,
-          coordinates: { lat: matchedDest.lat, lon: matchedDest.lon },
-        });
-      } catch {
-        // Ignorer les items invalides
-      }
-    });
-    
-    console.log(`✅ GDACS: ${alerts.length} alertes générées`);
-    return alerts;
-    
-  } catch (error) {
-    if ((error as Error).name === 'AbortError') {
-      console.log('ℹ️ GDACS timeout');
-    } else {
-      console.log('ℹ️ GDACS temporairement indisponible:', (error as Error).message);
-    }
     return [];
   }
 }
@@ -590,11 +554,17 @@ async function fetchNASAEONETAlerts(): Promise<RealTimeAlert[]> {
           id: `nasa-${event.id}`,
           type: type,
           level: level,
-          title: `${translateToFrench(category)} - ${event.title}`,
-          summary: `${translateToFrench(category)} détecté ${locationDescription}. ${event.description ? translateToFrench(event.description) + '. ' : ''}Consultez les autorités locales pour plus d'informations.`,
+          // Le libellé de catégorie est traduit (vocabulaire fermé publié par
+          // la NASA) ; le titre et la description de l'événement sont laissés
+          // dans leur langue d'origine et signalés comme tels.
+          title: `${translateLabel(category)} — ${event.title}`,
+          summary: `${translateLabel(category)} signalé ${locationDescription}.${
+            event.description ? ` Description NASA (en anglais) : « ${event.description.trim()} ».` : ''
+          } Consultez les autorités locales pour plus d'informations.`,
           destination: nearestDest.name,
           country: nearestDest.country,
           date: formatDate(event.geometry?.[0]?.date || new Date().toISOString()),
+          dateIso: toIso(event.geometry?.[0]?.date || new Date().toISOString()),
           source: 'NASA EONET',
           url: event.sources?.[0]?.url,
           zone: locationDescription,
@@ -673,6 +643,7 @@ function fetchSecurityAdvisoriesAlerts(): RealTimeAlert[] {
         destination: dest.name,
         country: dest.country,
         date: formatDate(updated),
+        dateIso: toIso(updated),
         source: 'Conseils officiels — relevé Lokadia',
         url: 'https://www.diplomatie.gouv.fr/fr/conseils-aux-voyageurs/',
         zone: dest.name,
@@ -706,16 +677,16 @@ async function fetchGDELTAlerts(): Promise<RealTimeAlert[]> {
     clearTimeout(timeoutId);
     
     if (!response.ok) {
-      console.log('ℹ️ GDELT temporairement indisponible, génération d\'alertes basées sur les données de sécurité...');
-      return generatePoliticalAlertsFromSecurityData();
+      console.log(`ℹ️ GDELT indisponible (${response.status}) — aucune alerte politique ce tour-ci`);
+      return [];
     }
-    
+
     const data = await response.json();
     const alerts: RealTimeAlert[] = [];
-    
+
     if (!data.articles || !Array.isArray(data.articles)) {
-      console.log('ℹ️ GDELT: Pas d\'articles, génération d\'alertes basées sur les données de sécurité...');
-      return generatePoliticalAlertsFromSecurityData();
+      console.log('ℹ️ GDELT: pas d\'articles dans la réponse');
+      return [];
     }
     
     console.log(`🏛️ GDELT: ${data.articles.length} événements trouvés`);
@@ -761,6 +732,7 @@ async function fetchGDELTAlerts(): Promise<RealTimeAlert[]> {
           destination: matchedDest.name,
           country: matchedDest.country,
           date: formatDate(seenDate || new Date().toISOString()),
+          dateIso: toIso(seenDate || new Date().toISOString()),
           source: 'GDELT Project',
           url: url,
           zone: matchedDest.name,
@@ -772,161 +744,25 @@ async function fetchGDELTAlerts(): Promise<RealTimeAlert[]> {
     });
     
     console.log(`✅ GDELT: ${alerts.length} alertes politiques générées`);
-    
-    // Si aucune alerte générée par l'API, utiliser le fallback
-    if (alerts.length === 0) {
-      console.log('ℹ️ GDELT: Aucune alerte générée, utilisation du fallback...');
-      return generatePoliticalAlertsFromSecurityData();
-    }
-    
     return alerts;
-    
+
   } catch (error) {
+    // Aucun repli. Il en existait un — `generatePoliticalAlertsFromSecurityData()` —
+    // qui renvoyait des événements écrits en dur (« Manifestations agricoles ·
+    // Mumbai », « Grèves des transports · Athènes ») horodatés au jour de la
+    // consultation, mis en cache et journalisés « TEMPS RÉEL ». C'était de la
+    // donnée inventée présentée comme une alerte du jour. Quand GDELT ne
+    // répond pas — son certificat TLS a expiré le 28/08/2026 — le produit
+    // n'affiche rien pour cette source, et c'est la bonne réponse.
     if ((error as Error).name === 'AbortError') {
-      console.log('ℹ️ GDELT timeout, génération d\'alertes basées sur les données de sécurité...');
+      console.log('ℹ️ GDELT timeout');
     } else {
-      console.log('ℹ️ GDELT temporairement indisponible, génération d\'alertes basées sur les données de sécurité...');
+      console.log('ℹ️ GDELT injoignable:', (error as Error).message);
     }
-    return generatePoliticalAlertsFromSecurityData();
+    return [];
   }
 }
 
-// Fonction de fallback : Génération d'alertes politiques basées sur les scores de sécurité
-function generatePoliticalAlertsFromSecurityData(): RealTimeAlert[] {
-  console.log('🏛️ Génération d\'alertes politiques à partir des données de sécurité...');
-  const alerts: RealTimeAlert[] = [];
-  
-  // Événements politiques réels basés sur les niveaux de sécurité
-  const politicalEvents: Record<string, { title: string; summary: string; level: 'urgent' | 'vigilance' | 'info'; city?: string }[]> = {
-    'TR': [ // Turquie (Istanbul)
-      {
-        title: 'Tensions politiques persistantes - Istanbul',
-        summary: 'Manifestations sporadiques dans certains quartiers d\'Istanbul. Évitez les rassemblements et restez informé de la situation locale.',
-        level: 'vigilance',
-        city: 'Istanbul'
-      }
-    ],
-    'TH': [ // Thaïlande (Bangkok)
-      {
-        title: 'Manifestations pro-démocratie - Bangkok',
-        summary: 'Des manifestations pacifiques sont organisées régulièrement à Bangkok. Évitez les zones de rassemblement et suivez les consignes des autorités.',
-        level: 'info',
-        city: 'Bangkok'
-      }
-    ],
-    'EG': [ // Égypte (Le Caire)
-      {
-        title: 'Contexte sécuritaire sensible - Le Caire',
-        summary: 'Situation politique stable mais sensible. Évitez les discussions politiques en public et les rassemblements.',
-        level: 'vigilance',
-        city: 'Le Caire'
-      }
-    ],
-    'MX': [ // Mexique (Mexico)
-      {
-        title: 'Tensions sociales localisées - Mexico',
-        summary: 'Manifestations sociales fréquentes dans le centre de Mexico City. Circulation peut être perturbée. Restez vigilant.',
-        level: 'vigilance',
-        city: 'Mexico'
-      }
-    ],
-    'BR': [ // Brésil (Rio)
-      {
-        title: 'Grèves sporadiques - Rio de Janeiro',
-        summary: 'Grèves occasionnelles des transports publics et services. Prévoyez des solutions alternatives et consultez l\'actualité locale.',
-        level: 'info',
-        city: 'Rio de Janeiro'
-      }
-    ],
-    'IN': [ // Inde (Mumbai)
-      {
-        title: 'Manifestations agricoles - Mumbai',
-        summary: 'Des manifestations agricoles peuvent affecter la circulation. Évitez les zones de rassemblement et prévoyez des délais.',
-        level: 'info',
-        city: 'Mumbai'
-      }
-    ],
-    'FR': [ // France (Paris)
-      {
-        title: 'Mouvements sociaux - Paris',
-        summary: 'Manifestations syndicales régulières, notamment les jeudis et samedis. Transports peuvent être perturbés. Évitez les Champs-Élysées lors des manifestations.',
-        level: 'info',
-        city: 'Paris'
-      }
-    ],
-    'GR': [ // Grèce (Athènes)
-      {
-        title: 'Grèves des transports - Athènes',
-        summary: 'Grèves occasionnelles des transports publics. Vérifiez les horaires avant vos déplacements.',
-        level: 'info',
-        city: 'Athènes'
-      }
-    ],
-    'ES': [ // Espagne (Barcelone)
-      {
-        title: 'Tensions indépendantistes - Barcelone',
-        summary: 'Manifestations occasionnelles liées à l\'indépendance catalane. Généralement pacifiques mais évitez les rassemblements.',
-        level: 'info',
-        city: 'Barcelone'
-      }
-    ],
-  };
-  
-  // Générer des alertes pour chaque destination avec un score de sécurité élevé
-  destinations.forEach(dest => {
-    const advisory = securityAdvisories.find(adv => adv.countryCode === dest.countryCode);
-    
-    if (!advisory) return;
-    
-    const score = advisory.score;
-    const events = politicalEvents[dest.countryCode];
-    
-    // Si des événements spécifiques existent pour ce pays
-    if (events && events.length > 0) {
-      events.forEach((event, index) => {
-        // Vérifier si l'événement est pour cette ville spécifique
-        if (event.city && event.city !== dest.name) {
-          return; // Ignorer si l'événement n'est pas pour cette ville
-        }
-        
-        alerts.push({
-          id: `political-${dest.countryCode}-${dest.name.replace(/\s+/g, '-')}-${index}`,
-          type: 'political',
-          level: event.level,
-          title: event.title,
-          summary: event.summary,
-          destination: dest.name,
-          country: dest.country,
-          date: formatDate(new Date().toISOString()),
-          source: 'Analyse Sécurité',
-          zone: dest.name,
-          coordinates: { lat: dest.lat, lon: dest.lon },
-        });
-      });
-    }
-    // Sinon, générer des alertes basées sur le score
-    else if (score >= 3.0) {
-      alerts.push({
-        id: `political-score-${dest.countryCode}-${dest.name.replace(/\s+/g, '-')}`,
-        type: 'political',
-        level: score >= 4.0 ? 'urgent' : 'vigilance',
-        title: `Contexte politique sensible - ${dest.name}`,
-        summary: `Niveau de risque sécuritaire élevé (${score.toFixed(1)}/5). Situation politique pouvant être instable. Évitez les rassemblements et suivez l'actualité locale.`,
-        destination: dest.name,
-        country: dest.country,
-        date: formatDate(new Date().toISOString()),
-        source: 'Analyse Sécurité',
-        zone: dest.name,
-        coordinates: { lat: dest.lat, lon: dest.lon },
-      });
-    }
-  });
-  
-  console.log(`✅ ${alerts.length} alertes politiques générées à partir des données de sécurité`);
-  return alerts;
-}
-
-// ============================================================================
 // API 6: WHO Disease Outbreak News (TEMPS RÉEL)
 // ============================================================================
 async function fetchWHOHealthAlerts(): Promise<RealTimeAlert[]> {
@@ -1019,6 +855,7 @@ async function fetchWHOHealthAlerts(): Promise<RealTimeAlert[]> {
             destination: matchedDest.name,
             country: matchedDest.country,
             date: formatDate(pubDate || new Date().toISOString()),
+            dateIso: toIso(pubDate || new Date().toISOString()),
             source: 'OMS/WHO',
             url: link,
             zone: matchedDest.name,
@@ -1050,76 +887,6 @@ async function fetchWHOHealthAlerts(): Promise<RealTimeAlert[]> {
 }
 
 // ============================================================================
-// API 7: Transport Régional - SNCF API (France)
-// ============================================================================
-async function fetchSNCFTransportAlerts(): Promise<RealTimeAlert[]> {
-  try {
-    console.log('🚄 SNCF: Interrogation des perturbations transport France...');
-    
-    // SNCF Open Data API - Perturbations en temps réel
-    const url = 'https://api.sncf.com/v1/coverage/sncf/disruptions?depth=1';
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-    
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      console.log('ℹ️ SNCF API temporairement indisponible');
-      return [];
-    }
-    
-    const data = await response.json();
-    const alerts: RealTimeAlert[] = [];
-    
-    if (!data.disruptions || !Array.isArray(data.disruptions)) {
-      return [];
-    }
-    
-    console.log(`🚄 SNCF: ${data.disruptions.length} perturbations trouvées`);
-    
-    // Prendre les perturbations actives
-    data.disruptions.slice(0, 10).forEach((disruption: SncfDisruption, index: number) => {
-      try {
-        const message = disruption.messages?.[0]?.text || disruption.cause || 'Perturbation signalée';
-        const severity = disruption.severity?.effect || 'unknown';
-        
-        let level: RealTimeAlert['level'] = 'info';
-        if (severity === 'NO_SERVICE' || severity === 'REDUCED_SERVICE') {
-          level = 'urgent';
-        } else if (severity === 'SIGNIFICANT_DELAYS') {
-          level = 'vigilance';
-        }
-        
-        alerts.push({
-          id: `sncf-${Date.now()}-${index}`,
-          type: 'transport',
-          level: level,
-          title: `Perturbation SNCF - Paris`,
-          summary: message.substring(0, 200),
-          destination: 'Paris',
-          country: 'France',
-          date: formatDate(disruption.application_periods?.[0]?.begin || new Date().toISOString()),
-          source: 'SNCF',
-          zone: 'Réseau SNCF',
-          coordinates: { lat: 48.8566, lon: 2.3522 },
-        });
-      } catch {
-        // Ignorer en cas d'erreur
-      }
-    });
-    
-    console.log(`✅ SNCF: ${alerts.length} alertes transport générées`);
-    return alerts;
-    
-  } catch {
-    console.log('ℹ️ SNCF temporairement indisponible');
-    return [];
-  }
-}
-
-// ============================================================================
 // API 8: Transport Régional - TfL (Londres)
 // ============================================================================
 async function fetchTfLTransportAlerts(): Promise<RealTimeAlert[]> {
@@ -1141,58 +908,92 @@ async function fetchTfLTransportAlerts(): Promise<RealTimeAlert[]> {
     }
     
     const data = await response.json();
-    const alerts: RealTimeAlert[] = [];
-    
     if (!Array.isArray(data)) {
       return [];
     }
-    
+
     console.log(`🚇 TfL: ${data.length} lignes vérifiées`);
-    
-    let disruptionCount = 0;
-    
-    // Analyser chaque ligne de métro
+
+    // TfL publie une même perturbation une fois par ligne ET par statut :
+    // l'incendie de Neasden du 29/08 occupait trois cartes consécutives, dont
+    // deux au texte strictement identique. On regroupe donc AVANT de rédiger,
+    // sur le motif brut renvoyé par l'opérateur — regrouper après aurait été
+    // sans effet, puisque le texte rédigé contient déjà le nom de la ligne et
+    // diffère donc d'une ligne à l'autre.
+    interface TflDisruption {
+      lines: string[];
+      statusSeverity: string;
+      reason: string;
+      level: RealTimeAlert['level'];
+    }
+    const byReason = new Map<string, TflDisruption>();
+
     data.forEach((line: TflLine) => {
       try {
         const lineName = line.name || '';
-        const lineStatuses = line.lineStatuses || [];
-        
-        lineStatuses.forEach((status: TflLineStatus, statusIndex: number) => {
+        for (const status of line.lineStatuses ?? []) {
           const statusSeverity = status.statusSeverityDescription || '';
-          const reason = status.reason || '';
-          
-          // Ignorer les lignes avec "Good Service"
-          if (statusSeverity === 'Good Service') return;
-          
+          const reason = (status.reason || '').trim();
+
+          // Ignorer les lignes qui circulent normalement
+          if (statusSeverity === 'Good Service') continue;
+
           let level: RealTimeAlert['level'] = 'info';
           if (statusSeverity.includes('Severe') || statusSeverity.includes('Suspended')) {
             level = 'urgent';
           } else if (statusSeverity.includes('Delays') || statusSeverity.includes('Reduced')) {
             level = 'vigilance';
           }
-          
-          alerts.push({
-            id: `tfl-${lineName}-${statusIndex}-${Date.now()}-${disruptionCount}`,
-            type: 'transport',
-            level: level,
-            title: `Perturbation ${lineName} - Londres`,
-            summary: translateToFrench(reason) || `${translateToFrench(statusSeverity)} sur la ligne ${lineName}. Prévoyez des délais supplémentaires.`,
-            destination: 'Londres',
-            country: 'Royaume-Uni',
-            date: formatDate(new Date().toISOString()),
-            source: 'TfL (Transport for London)',
-            zone: `Ligne ${lineName}`,
-            coordinates: { lat: 51.5074, lon: -0.1278 },
-          });
-          
-          disruptionCount++;
-        });
+
+          // Sans motif, l'incident n'est identifiable que par son statut : on
+          // regroupe alors par ligne, pour ne pas fusionner à tort deux
+          // perturbations distinctes qui partagent le même libellé.
+          const key = reason
+            ? reason.toLowerCase()
+            : `${statusSeverity.toLowerCase()}|${lineName.toLowerCase()}`;
+
+          const existing = byReason.get(key);
+          if (existing) {
+            if (lineName && !existing.lines.includes(lineName)) existing.lines.push(lineName);
+            // Le niveau retenu est le plus sévère des lignes concernées.
+            const rank = { urgent: 3, vigilance: 2, info: 1 } as const;
+            if (rank[level] > rank[existing.level]) existing.level = level;
+          } else {
+            byReason.set(key, { lines: lineName ? [lineName] : [], statusSeverity, reason, level });
+          }
+        }
       } catch {
         // Ignorer en cas d'erreur
       }
     });
-    
-    console.log(`✅ TfL: ${alerts.length} alertes transport générées`);
+
+    const now = new Date().toISOString();
+    const alerts: RealTimeAlert[] = [...byReason.values()].map((disruption, index) => {
+      const lineLabel = disruption.lines.join(', ') || 'réseau';
+      const plural = disruption.lines.length > 1;
+      return {
+        id: `tfl-${disruption.lines.join('-') || 'reseau'}-${index}`,
+        type: 'transport' as const,
+        level: disruption.level,
+        title: `Perturbation ${lineLabel} - Londres`,
+        // Le statut vient d'une liste fermée publiée par TfL, donc traduit.
+        // Le motif est du texte libre rédigé par l'opérateur : il est affiché
+        // tel quel, avec sa langue annoncée — c'est la règle déjà appliquée
+        // au texte de l'OMS.
+        summary: disruption.reason
+          ? `${translateLabel(disruption.statusSeverity)} sur ${plural ? 'les lignes' : 'la ligne'} ${lineLabel}. Motif TfL (texte original, en anglais) : « ${disruption.reason} »`
+          : `${translateLabel(disruption.statusSeverity)} sur ${plural ? 'les lignes' : 'la ligne'} ${lineLabel}. Prévoyez des délais supplémentaires.`,
+        destination: 'Londres',
+        country: 'Royaume-Uni',
+        date: formatDate(now),
+        dateIso: toIso(now),
+        source: 'TfL (Transport for London)',
+        zone: `${plural ? 'Lignes' : 'Ligne'} ${lineLabel}`,
+        coordinates: { lat: 51.5074, lon: -0.1278 },
+      };
+    });
+
+    console.log(`✅ TfL: ${alerts.length} perturbations distinctes`);
     return alerts;
     
   } catch {
@@ -1247,137 +1048,89 @@ function findNearestDestination(lat: number, lon: number): (typeof destinations)
   return minDistance > 10 ? null : nearest;
 }
 
-// Fonction de traduction simple pour les termes courants
-function translateToFrench(text: string): string {
-  if (!text) return '';
-  
-  const translations: Record<string, string> = {
-    // Événements naturels
-    'Wildfires': 'Incendies',
-    'Wildfire': 'Incendie',
-    'Severe Storms': 'Tempêtes sévères',
-    'Severe Storm': 'Tempête sévère',
-    'Floods': 'Inondations',
-    'Flood': 'Inondation',
-    'Volcanoes': 'Volcans',
-    'Volcano': 'Volcan',
-    'Drought': 'Sécheresse',
-    'Earthquakes': 'Tremblements de terre',
-    'Earthquake': 'Tremblement de terre',
-    'Sea and Lake Ice': 'Glace marine',
-    'Snow': 'Neige',
-    'Dust and Haze': 'Poussière et brume',
-    'Manmade': 'Origine humaine',
-    'Water Color': 'Qualité de l\'eau',
-    'Landslides': 'Glissements de terrain',
-    'Landslide': 'Glissement de terrain',
-    'Tropical Storm': 'Tempête tropicale',
-    'Hurricane': 'Ouragan',
-    'Cyclone': 'Cyclone',
-    'Typhoon': 'Typhon',
-    
-    // Santé
-    'disease': 'maladie',
-    'outbreak': 'épidémie',
-    'epidemic': 'épidémie',
-    'pandemic': 'pandémie',
-    'health': 'santé',
-    'virus': 'virus',
-    'infection': 'infection',
-    'vaccination': 'vaccination',
-    'dengue': 'dengue',
-    'malaria': 'paludisme',
-    'cholera': 'choléra',
-    'measles': 'rougeole',
-    'influenza': 'grippe',
-    'flu': 'grippe',
-    'Ebola': 'Ebola',
-    'Zika': 'Zika',
-    'COVID': 'COVID',
-    'tuberculosis': 'tuberculose',
-    'emergency': 'urgence',
-    'situation report': 'rapport de situation',
-    'confirmed cases': 'cas confirmés',
-    'deaths': 'décès',
-    'cases': 'cas',
-    
-    // Politique
-    'protest': 'manifestation',
-    'protests': 'manifestations',
-    'strike': 'grève',
-    'strikes': 'grèves',
-    'demonstration': 'manifestation',
-    'demonstrations': 'manifestations',
-    'riot': 'émeute',
-    'riots': 'émeutes',
-    'political tension': 'tension politique',
-    'violence': 'violence',
-    'clash': 'affrontement',
-    'clashes': 'affrontements',
-    'unrest': 'troubles',
-    'civil unrest': 'troubles civils',
-    
-    // Transport
-    'Good Service': 'Service normal',
-    'Minor Delays': 'Retards mineurs',
-    'Severe Delays': 'Retards importants',
-    'Suspended': 'Suspendu',
-    'Part Suspended': 'Partiellement suspendu',
-    'Planned Closure': 'Fermeture prévue',
-    'Part Closure': 'Fermeture partielle',
-    'Service Closed': 'Service fermé',
-    'Reduced Service': 'Service réduit',
-    'disruption': 'perturbation',
-    'disruptions': 'perturbations',
-    'delays': 'retards',
-    'delay': 'retard',
-    'cancelled': 'annulé',
-    'cancellation': 'annulation',
-    
-    // Niveaux et couleurs
-    'Red': 'Rouge',
-    'Orange': 'Orange',
-    'Green': 'Vert',
-    'Yellow': 'Jaune',
-    'Alert': 'Alerte',
-    
-    // Mots courants
-    'detected': 'détecté',
-    'alert': 'alerte',
-    'warning': 'avertissement',
-    'expected': 'prévu',
-    'currently': 'actuellement',
-    'reported': 'signalé',
-    'in': 'à',
-    'at': 'à',
-    'near': 'près de',
-    'Line': 'Ligne',
-    'due to': 'en raison de',
-    'because of': 'à cause de',
-    'following': 'suite à',
-    'between': 'entre',
-    'until': 'jusqu\'à',
-    'from': 'depuis',
-    'affecting': 'affectant',
-  };
-  
-  let translated = text;
-  
-  // Remplacer les termes (sensible à la casse pour les débuts de phrase)
-  Object.keys(translations).forEach(key => {
-    const value = translations[key];
-    // Remplacer le mot seul (avec des limites de mots)
-    const regex = new RegExp(`\\b${key}\\b`, 'gi');
-    translated = translated.replace(regex, (match) => {
-      // Garder la casse du premier caractère
-      if (match[0] === match[0].toUpperCase()) {
-        return value.charAt(0).toUpperCase() + value.slice(1);
-      }
-      return value;
-    });
-  });
-  
-  return translated;
+/**
+ * Traduit un LIBELLÉ de catégorie, et rien d'autre.
+ *
+ * La version précédente, `translateToFrench`, appliquait un dictionnaire de
+ * ~90 entrées par expression régulière `\bmot\b/gi` sur du texte libre.
+ * Elle traduisait `in`, `at`, `from`, `until`, `Line` et `Green` — si bien
+ * que l'alerte TfL réellement affichée disait « No service entre Wembley
+ * Park and *Willesden Vert* », le nom d'une station. Le reste tenait du
+ * franglais illisible : « The urgence services are responding to a large
+ * fire près de the railway à Neasden ».
+ *
+ * Le fichier se contredisait : quarante lignes plus bas, un commentaire
+ * expliquait que le texte de l'OMS n'est volontairement pas traduit, parce
+ * qu'altérer une source officielle par une traduction machine, c'est en
+ * changer le sens sans pouvoir en répondre. La même règle s'applique ici.
+ *
+ * Ne subsiste donc qu'une correspondance **exacte** sur un vocabulaire
+ * fermé — les catégories NASA EONET et les statuts TfL, deux listes
+ * publiées et finies. Un libellé inconnu est renvoyé tel quel plutôt que
+ * charcuté.
+ */
+const CATEGORY_LABELS: Record<string, string> = {
+  // Catégories NASA EONET (https://eonet.gsfc.nasa.gov/api/v3/categories)
+  'Wildfires': 'Incendie de forêt',
+  'Severe Storms': 'Tempête violente',
+  'Floods': 'Inondation',
+  'Volcanoes': 'Activité volcanique',
+  'Drought': 'Sécheresse',
+  'Earthquakes': 'Séisme',
+  'Sea and Lake Ice': 'Glace marine',
+  'Snow': 'Neige',
+  'Dust and Haze': 'Poussière et brume',
+  'Manmade': 'Événement d\'origine humaine',
+  'Landslides': 'Glissement de terrain',
+  'Water Color': 'Anomalie de couleur de l\'eau',
+  'Temperature Extremes': 'Températures extrêmes',
+
+  // Statuts de ligne TfL (https://api.tfl.gov.uk/Line/Meta/Severity)
+  'Good Service': 'Service normal',
+  'Minor Delays': 'Retards mineurs',
+  'Severe Delays': 'Retards importants',
+  'Part Suspended': 'Partiellement suspendue',
+  'Suspended': 'Suspendue',
+  'Planned Closure': 'Fermeture programmée',
+  'Part Closure': 'Fermeture partielle',
+  'Service Closed': 'Service fermé',
+  'Reduced Service': 'Service réduit',
+  'Bus Service': 'Remplacement par bus',
+  'Special Service': 'Service spécial',
+  'Diverted': 'Itinéraire dévié',
+  'Exit Only': 'Sortie uniquement',
+  'No Step Free Access': 'Accès sans marche indisponible',
+  'Change of frequency': 'Fréquence modifiée',
+  'Issues Reported': 'Perturbations signalées',
+  'No Issues': 'Aucune perturbation',
+  'Information': 'Information',
+};
+
+function translateLabel(label: string): string {
+  if (!label) return '';
+  return CATEGORY_LABELS[label.trim()] ?? label.trim();
+}
+
+/**
+ * Normalise en ISO 8601 la même entrée que reçoit `formatDate`.
+ *
+ * Les deux vont toujours par paire : `date` sert à l'affichage, `dateIso`
+ * au tri. Deux formats demandent un traitement particulier :
+ *   - GDELT renvoie « 20260829T023800Z », que `new Date()` ne sait pas lire ;
+ *   - une date absente ou invalide retombe sur maintenant, comme le fait
+ *     déjà `formatDate`, pour que les deux champs restent cohérents.
+ */
+function toIso(rawDate: string): string {
+  if (rawDate) {
+    const compact = rawDate.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);
+    if (compact) {
+      const [, y, mo, d, h, mi, s] = compact;
+      return `${y}-${mo}-${d}T${h}:${mi}:${s}Z`;
+    }
+    const parsed = new Date(rawDate);
+    if (!Number.isNaN(parsed.getTime())) return parsed.toISOString();
+  }
+  return new Date().toISOString();
 }
 
 function formatDate(isoDate: string): string {
@@ -1430,14 +1183,18 @@ export async function fetchRealTimeAlerts(): Promise<RealTimeAlert[]> {
     }
     
     // Charger les APIs externes en parallèle (NEWS API EN PREMIER pour guerres/conflits)
-    const [newsResult, openMeteoResult, gdacsResult, nasaEonetResult, gdeltResult, whoResult, sncfResult, tflResult] = await Promise.allSettled([
+    //
+    // GDACS et SNCF ont été retirées d'ici. GDACS ne répond pas aux appels
+    // navigateur (pas d'en-tête CORS) : la source est déjà agrégée côté
+    // serveur par l'Edge Function `world-alerts`. SNCF exige une clé d'API
+    // que le front n'a pas — et n'a pas à avoir — et répondait 401 à chaque
+    // chargement. Les deux ne renvoyaient donc jamais rien.
+    const [newsResult, openMeteoResult, nasaEonetResult, gdeltResult, whoResult, tflResult] = await Promise.allSettled([
       fetchNewsAlerts(),
       fetchOpenMeteoAlerts(),
-      fetchGDACSAlerts(),
       fetchNASAEONETAlerts(),
       fetchGDELTAlerts(),
       fetchWHOHealthAlerts(),
-      fetchSNCFTransportAlerts(),
       fetchTfLTransportAlerts(),
     ]);
 
@@ -1473,21 +1230,6 @@ export async function fetchRealTimeAlerts(): Promise<RealTimeAlert[]> {
         alerts.push(...cached);
       } else {
         console.log('📭 Pas de cache disponible pour Open-Meteo');
-      }
-    }
-    
-    // GDACS avec cache
-    if (gdacsResult.status === 'fulfilled' && gdacsResult.value.length > 0) {
-      saveToCache(CACHE_KEYS.GDACS, gdacsResult.value);
-      alerts.push(...gdacsResult.value);
-      console.log(`✅ GDACS (ONU): ${gdacsResult.value.length} alertes (TEMPS RÉEL)`);
-    } else {
-      console.log('⚠️ GDACS indisponible, recherche dans le cache...');
-      const cached = getFromCache(CACHE_KEYS.GDACS);
-      if (cached && cached.length > 0) {
-        alerts.push(...cached);
-      } else {
-        console.log('📭 Pas de cache disponible pour GDACS');
       }
     }
     
@@ -1536,21 +1278,6 @@ export async function fetchRealTimeAlerts(): Promise<RealTimeAlert[]> {
       }
     }
 
-    // SNCF avec cache
-    if (sncfResult.status === 'fulfilled' && sncfResult.value.length > 0) {
-      saveToCache(CACHE_KEYS.SNCF, sncfResult.value);
-      alerts.push(...sncfResult.value);
-      console.log(`✅ SNCF: ${sncfResult.value.length} alertes (TEMPS RÉEL)`);
-    } else {
-      console.log('⚠️ SNCF indisponible, recherche dans le cache...');
-      const cached = getFromCache(CACHE_KEYS.SNCF);
-      if (cached && cached.length > 0) {
-        alerts.push(...cached);
-      } else {
-        console.log('📭 Pas de cache disponible pour SNCF');
-      }
-    }
-
     // TfL avec cache
     if (tflResult.status === 'fulfilled' && tflResult.value.length > 0) {
       saveToCache(CACHE_KEYS.TFL, tflResult.value);
@@ -1577,12 +1304,27 @@ export async function fetchRealTimeAlerts(): Promise<RealTimeAlert[]> {
     }
     console.log('');
 
-    // Trier par niveau d'importance puis par date
+    // Trier par niveau d'importance puis par date, de la plus récente à la
+    // plus ancienne.
+    //
+    // Le tri chronologique ne faisait rien : il lisait `a.date`, qui est
+    // déjà un libellé français mis en forme par `formatDate()`. Or
+    // `new Date('29 août 2026 à 02:38')` vaut `Invalid Date`, la
+    // soustraction donnait `NaN`, et un comparateur qui renvoie `NaN`
+    // laisse l'ordre d'origine — celui d'arrivée des sources. On trie
+    // donc sur `dateIso`, conservé à côté pour cet usage.
+    const levelOrder = { urgent: 3, vigilance: 2, info: 1 };
+    const timestamp = (alert: RealTimeAlert): number => {
+      const parsed = new Date(alert.dateIso ?? '').getTime();
+      // Les alertes venant d'un cache écrit avant l'ajout de `dateIso`
+      // n'en ont pas : on les place en fin de liste plutôt que de casser
+      // le tri de toutes les autres.
+      return Number.isNaN(parsed) ? 0 : parsed;
+    };
     const sorted = alerts.sort((a, b) => {
-      const levelOrder = { urgent: 3, vigilance: 2, info: 1 };
       const levelDiff = levelOrder[b.level] - levelOrder[a.level];
       if (levelDiff !== 0) return levelDiff;
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
+      return timestamp(b) - timestamp(a);
     });
     
     // Retourner jusqu'à 200 alertes maximum
@@ -1595,7 +1337,7 @@ export async function fetchRealTimeAlerts(): Promise<RealTimeAlert[]> {
     console.log('🆘 Tentative de récupération complète depuis le cache...');
     const allCached: RealTimeAlert[] = [];
     
-    [CACHE_KEYS.SECURITY, CACHE_KEYS.OPEN_METEO, CACHE_KEYS.GDACS, CACHE_KEYS.NASA_EONET, CACHE_KEYS.GDELT, CACHE_KEYS.WHO, CACHE_KEYS.SNCF, CACHE_KEYS.TFL].forEach(key => {
+    [CACHE_KEYS.SECURITY, CACHE_KEYS.OPEN_METEO, CACHE_KEYS.NASA_EONET, CACHE_KEYS.GDELT, CACHE_KEYS.WHO, CACHE_KEYS.TFL].forEach(key => {
       const cached = getFromCache(key);
       if (cached) {
         allCached.push(...cached);
