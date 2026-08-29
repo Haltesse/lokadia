@@ -176,30 +176,30 @@ export function LiveAlertsList() {
       <div
         className="rounded-2xl p-4 flex items-center justify-between gap-3"
         style={{
-          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.06), rgba(245, 158, 11, 0.06))',
-          border: '1px solid rgba(239, 68, 68, 0.2)',
+          background: 'linear-gradient(135deg, rgba(15, 76, 129, 0.05), rgba(6, 182, 212, 0.05))',
+          border: '1px solid var(--lokadia-gray-100)',
         }}
       >
         <div className="flex items-center gap-3 min-w-0">
           <div
             className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl"
-            style={{ background: 'rgba(239, 68, 68, 0.12)' }}
+            style={{ background: 'rgba(15, 76, 129, 0.10)' }}
           >
-            <Globe className="h-5 w-5" style={{ color: '#dc2626' }} />
+            <Globe className="h-5 w-5" style={{ color: 'var(--lokadia-primary)' }} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold" style={{ color: 'var(--lokadia-danger)' }}>
+            <p className="text-sm font-bold" style={{ color: 'var(--lokadia-primary)' }}>
               {totalAlerts} alerte{totalAlerts > 1 ? 's' : ''} active{totalAlerts > 1 ? 's' : ''} dans {groups.length} pays
               {redCount > 0 && (
                 <span
                   className="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold text-white tabular-nums"
-                  style={{ background: '#dc2626' }}
+                  style={{ background: 'var(--lokadia-gray-600)' }}
                 >
                   {redCount} critique
                 </span>
               )}
             </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--lokadia-danger)' }}>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--lokadia-primary)' }}>
               Sources temps réel : {snapshot.sources.join(' + ')} ·{' '}
               <span className="font-bold">
                 MAJ {new Date(snapshot.lastFetch).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
@@ -215,7 +215,7 @@ export function LiveAlertsList() {
         >
           <RefreshCw
             className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`}
-            style={{ color: '#dc2626' }}
+            style={{ color: 'var(--lokadia-primary)' }}
           />
         </button>
       </div>
@@ -229,7 +229,7 @@ export function LiveAlertsList() {
               key={group.iso}
               className="rounded-2xl bg-white p-4 transition-all hover:shadow-md"
               style={{
-                border: `1px solid ${group.hasRed ? 'rgba(239, 68, 68, 0.3)' : 'var(--lokadia-gray-100)'}`,
+                border: `1px solid ${group.hasRed ? 'rgba(51, 65, 85, 0.28)' : 'var(--lokadia-gray-100)'}`,
               }}
             >
               <div className="flex items-start justify-between gap-3 mb-3">
@@ -249,7 +249,7 @@ export function LiveAlertsList() {
                 {group.hasRed && (
                   <span
                     className="flex-shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white tabular-nums"
-                    style={{ background: '#dc2626' }}
+                    style={{ background: 'var(--lokadia-gray-600)' }}
                   >
                     <AlertTriangle className="h-3 w-3" /> ROUGE
                   </span>
@@ -265,7 +265,7 @@ export function LiveAlertsList() {
                       key={i}
                       className="flex items-start gap-2 rounded-lg p-2"
                       style={{
-                        background: alert.severity === 'red' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(245, 158, 11, 0.05)',
+                        background: alert.severity === 'red' ? 'rgba(51, 65, 85, 0.05)' : 'rgba(245, 158, 11, 0.05)',
                       }}
                     >
                       <meta.Icon className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: meta.color }} />

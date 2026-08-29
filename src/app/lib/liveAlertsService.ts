@@ -10,7 +10,7 @@
  * Chaque alerte est catégorisée, géolocalisée (lat/lon) et notée en sévérité.
  */
 
-import { Activity, Tornado, Waves, Mountain, Sun, Flame, Biohazard, Swords, Landmark, LifeBuoy, Wind, AlertTriangle, type LucideIcon } from 'lucide-react';
+import { Activity, Tornado, Waves, Mountain, Sun, Flame, Stethoscope, Shield, Landmark, LifeBuoy, Wind, Info, type LucideIcon } from 'lucide-react';
 
 export type AlertSeverity = 'orange' | 'red';
 export type AlertType =
@@ -52,20 +52,28 @@ export interface LiveAlertsSnapshot {
   ok: boolean;
 }
 
-/** Métadonnées d'affichage par type d'alerte (label FR, emoji, couleur) */
+/**
+ * Métadonnées d'affichage par type d'alerte.
+ *
+ * Le nom de l'événement reste factuel — un conflit armé s'appelle un conflit
+ * armé — mais aucune de ces catégories n'est rouge. Le rouge est réservé aux
+ * interdictions, et signaler un séisme ou une épidémie n'en est pas une.
+ * Les pictogrammes les plus dramatiques (épées croisées, symbole biohazard)
+ * laissent la place à des icônes qui informent sans mettre en scène.
+ */
 export const ALERT_TYPE_META: Record<string, { label: string; Icon: LucideIcon; color: string }> = {
-  earthquake:   { label: 'Séisme',              Icon: Activity,      color: '#b45309' },
-  cyclone:      { label: 'Cyclone / Tempête',   Icon: Tornado,       color: '#0369a1' },
-  flood:        { label: 'Inondation',          Icon: Waves,         color: '#0e7490' },
-  volcano:      { label: 'Volcan',              Icon: Mountain,      color: '#c2410c' },
-  drought:      { label: 'Sécheresse',          Icon: Sun,           color: '#a16207' },
-  wildfire:     { label: 'Incendie',            Icon: Flame,         color: '#dc2626' },
-  epidemic:     { label: 'Épidémie',            Icon: Biohazard,     color: '#7c3aed' },
-  war:          { label: 'Guerre / Conflit',    Icon: Swords,        color: '#991b1b' },
-  political:    { label: 'Instabilité politique', Icon: Landmark,    color: '#b91c1c' },
-  humanitarian: { label: 'Crise humanitaire',   Icon: LifeBuoy,      color: '#be123c' },
-  storm:        { label: 'Tempête',             Icon: Wind,          color: '#0369a1' },
-  other:        { label: 'Alerte',              Icon: AlertTriangle, color: '#dc2626' },
+  earthquake:   { label: 'Séisme',                Icon: Activity,     color: '#b45309' },
+  cyclone:      { label: 'Cyclone / Tempête',     Icon: Tornado,      color: '#0369a1' },
+  flood:        { label: 'Inondation',            Icon: Waves,        color: '#0e7490' },
+  volcano:      { label: 'Volcan',                Icon: Mountain,     color: '#c2410c' },
+  drought:      { label: 'Sécheresse',            Icon: Sun,          color: '#a16207' },
+  wildfire:     { label: 'Incendie',              Icon: Flame,        color: '#c2410c' },
+  epidemic:     { label: 'Épidémie',              Icon: Stethoscope,  color: '#7c3aed' },
+  war:          { label: 'Conflit armé',          Icon: Shield,       color: '#7c2d12' },
+  political:    { label: 'Instabilité politique', Icon: Landmark,     color: '#9a3412' },
+  humanitarian: { label: 'Situation humanitaire', Icon: LifeBuoy,     color: '#92400e' },
+  storm:        { label: 'Tempête',               Icon: Wind,         color: '#0369a1' },
+  other:        { label: 'Information',           Icon: Info,         color: '#475569' },
 };
 
 const CACHE_DURATION = 20 * 60 * 1000; // 20 min

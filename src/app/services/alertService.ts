@@ -619,16 +619,22 @@ function fetchSecurityAdvisoriesAlerts(): RealTimeAlert[] {
       let title = '';
       let summary = '';
       
-      // Générer le titre et le résumé en fonction du score
+      // Titre et résumé selon le score.
+      //
+      // Ils annonçaient « Vigilance renforcée » puis « Niveau de risque élevé
+      // (3.6/5) » : deux formulations qui disent au voyageur d'avoir peur
+      // avant de lui dire quoi faire, et un second score sur 5 qui entre en
+      // plus en concurrence avec le Lokascore sur 100. On garde le conseil,
+      // on retire le verdict et le chiffre concurrent.
       if (score >= 3.5) {
-        title = `Vigilance renforcée - ${dest.name}`;
-        summary = `Niveau de risque élevé (${score.toFixed(1)}/5). ${message}`;
+        title = `À lire avant de partir - ${dest.name}`;
+        summary = message;
       } else if (score >= 2.5) {
-        title = `Restez vigilant - ${dest.name}`;
-        summary = `Niveau de risque modéré (${score.toFixed(1)}/5). ${message}`;
+        title = `Bon à savoir - ${dest.name}`;
+        summary = message;
       } else if (score >= 1.5) {
-        title = `Précautions standard - ${dest.name}`;
-        summary = `Niveau de risque faible (${score.toFixed(1)}/5). ${message}`;
+        title = `Quelques réflexes - ${dest.name}`;
+        summary = message;
       } else {
         // Ne pas créer d'alerte pour les destinations très sûres (pas intéressant pour les voyageurs)
         return;

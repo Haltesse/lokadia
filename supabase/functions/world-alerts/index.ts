@@ -63,35 +63,43 @@ const NAME_TO_ISO: Record<string, string> = {
   'Japan':'JP','China':'CN','Indonesia':'ID','Philippines':'PH','Mexico':'MX','Chile':'CL','Peru':'PE','Turkey':'TR','Türkiye':'TR','Greece':'GR','Italy':'IT','United States':'US','USA':'US','Russia':'RU','India':'IN','Taiwan':'TW','New Zealand':'NZ','Colombia':'CO','Argentina':'AR','Morocco':'MA','Egypt':'EG','Thailand':'TH','Malaysia':'MY','South Africa':'ZA','France':'FR','Spain':'ES','Vietnam':'VN','Viet Nam':'VN','Nepal':'NP','Pakistan':'PK','Bangladesh':'BD','Myanmar':'MM','Papua New Guinea':'PG','Iran':'IR','Iraq':'IQ','Afghanistan':'AF','Ethiopia':'ET','Kenya':'KE','Somalia':'SO','Sudan':'SD','Nigeria':'NG','Mali':'ML','Mozambique':'MZ','Haiti':'HT','Ecuador':'EC','Guatemala':'GT','Sri Lanka':'LK','Portugal':'PT','Algeria':'DZ','Tunisia':'TN','Yemen':'YE','Syria':'SY','Ukraine':'UA','Venezuela':'VE','Australia':'AU','Vanuatu':'VU','Fiji':'FJ','Tonga':'TO','Chad':'TD','Niger':'NE','Burkina Faso':'BF',
 };
 
-// ─── Couche géopolitique curée (guerres + instabilité politique) ────────────
+// ─── Couche géopolitique curée ──────────────────────────────────────────────
 // Information publique dérivée des advisories officiels MAE/FCDO/US State.
 // Rafraîchie manuellement (pas d'API temps réel gratuite fiable).
+//
+// Les titres énoncent le fait constaté, et rien de plus. Ils portaient
+// auparavant le commentaire avec : « risque d'enrôlement », « zone de
+// combat », « effondrement sécuritaire », « zone rouge intégrale »,
+// « attentats possibles », « enlèvements ». Ce vocabulaire effraie sans rien
+// apprendre à qui prépare un départ, et ce n'est pas à Lokadia de qualifier
+// la gravité — le détail autoritatif est dans l'avis officiel, vers lequel
+// chaque alerte renvoie déjà par sa source.
 const GEOPOLITICAL: Array<{ iso: string; type: AlertType; severity: Severity; title: string }> = [
-  { iso: 'UA', type: 'war', severity: 'red', title: 'Conflit armé majeur en cours — voyage formellement déconseillé' },
-  { iso: 'RU', type: 'war', severity: 'red', title: 'Pays en guerre — risque d\'enrôlement, sanctions, espace aérien fermé' },
-  { iso: 'SY', type: 'war', severity: 'red', title: 'Guerre civile et terrorisme — zone de combat' },
-  { iso: 'YE', type: 'war', severity: 'red', title: 'Guerre civile — crise humanitaire majeure' },
-  { iso: 'SD', type: 'war', severity: 'red', title: 'Conflit armé généralisé — effondrement sécuritaire' },
-  { iso: 'ML', type: 'war', severity: 'red', title: 'Terrorisme et conflit armé — zone rouge intégrale' },
-  { iso: 'BF', type: 'war', severity: 'red', title: 'Insurrection djihadiste — voyage formellement déconseillé' },
-  { iso: 'NE', type: 'war', severity: 'red', title: 'Coup d\'État et terrorisme — instabilité extrême' },
-  { iso: 'SO', type: 'war', severity: 'red', title: 'Conflit armé et terrorisme (Al-Shabaab)' },
-  { iso: 'AF', type: 'war', severity: 'red', title: 'Régime taliban — terrorisme, voyage formellement déconseillé' },
-  { iso: 'CD', type: 'war', severity: 'red', title: 'Conflit armé à l\'est (M23) — violences graves' },
-  { iso: 'HT', type: 'war', severity: 'red', title: 'Effondrement de l\'État — gangs armés, enlèvements' },
-  { iso: 'PS', type: 'war', severity: 'red', title: 'Conflit Gaza/Cisjordanie — zone de guerre' },
-  { iso: 'LB', type: 'political', severity: 'red', title: 'Tensions armées frontalières — situation volatile' },
-  { iso: 'VE', type: 'political', severity: 'orange', title: 'Crise politique et économique — instabilité, criminalité' },
-  { iso: 'IR', type: 'political', severity: 'orange', title: 'Tensions régionales et risque d\'arrestation arbitraire' },
-  { iso: 'IQ', type: 'political', severity: 'orange', title: 'Instabilité sécuritaire — attentats possibles' },
-  { iso: 'LY', type: 'war', severity: 'red', title: 'Conflit armé et milices — pas de contrôle étatique' },
-  { iso: 'ET', type: 'political', severity: 'orange', title: 'Tensions ethniques et conflits régionaux' },
-  { iso: 'NG', type: 'political', severity: 'orange', title: 'Terrorisme (nord) et enlèvements' },
-  { iso: 'MZ', type: 'political', severity: 'orange', title: 'Insurrection djihadiste (Cabo Delgado)' },
-  { iso: 'TD', type: 'political', severity: 'orange', title: 'Instabilité politique et terrorisme' },
-  { iso: 'CF', type: 'war', severity: 'red', title: 'Conflit armé — présence de groupes rebelles' },
-  { iso: 'MM', type: 'war', severity: 'red', title: 'Guerre civile post-coup d\'État' },
-  { iso: 'PK', type: 'political', severity: 'orange', title: 'Terrorisme régional et instabilité politique' },
+  { iso: 'UA', type: 'war', severity: 'red', title: 'Conflit armé en cours' },
+  { iso: 'RU', type: 'war', severity: 'red', title: 'Pays engagé dans un conflit armé — espace aérien fermé à de nombreux vols' },
+  { iso: 'SY', type: 'war', severity: 'red', title: 'Conflit armé en cours' },
+  { iso: 'YE', type: 'war', severity: 'red', title: 'Conflit armé en cours et situation humanitaire dégradée' },
+  { iso: 'SD', type: 'war', severity: 'red', title: 'Conflit armé en cours' },
+  { iso: 'ML', type: 'war', severity: 'red', title: 'Conflit armé et présence de groupes armés' },
+  { iso: 'BF', type: 'war', severity: 'red', title: 'Conflit armé et présence de groupes armés' },
+  { iso: 'NE', type: 'war', severity: 'red', title: 'Transition politique et présence de groupes armés' },
+  { iso: 'SO', type: 'war', severity: 'red', title: 'Conflit armé et présence de groupes armés' },
+  { iso: 'AF', type: 'war', severity: 'red', title: 'Conflit armé résiduel et cadre légal très restrictif' },
+  { iso: 'CD', type: 'war', severity: 'red', title: 'Conflit armé dans l\'est du pays' },
+  { iso: 'HT', type: 'war', severity: 'red', title: 'Autorité de l\'État très affaiblie — groupes armés actifs' },
+  { iso: 'PS', type: 'war', severity: 'red', title: 'Conflit armé en cours' },
+  { iso: 'LB', type: 'political', severity: 'red', title: 'Tensions frontalières — situation évolutive' },
+  { iso: 'VE', type: 'political', severity: 'orange', title: 'Contexte politique et économique instable' },
+  { iso: 'IR', type: 'political', severity: 'orange', title: 'Tensions régionales — cadre judiciaire imprévisible pour les étrangers' },
+  { iso: 'IQ', type: 'political', severity: 'orange', title: 'Situation sécuritaire instable' },
+  { iso: 'LY', type: 'war', severity: 'red', title: 'Conflit armé — contrôle de l\'État limité' },
+  { iso: 'ET', type: 'political', severity: 'orange', title: 'Tensions régionales dans certaines zones' },
+  { iso: 'NG', type: 'political', severity: 'orange', title: 'Groupes armés actifs dans le nord du pays' },
+  { iso: 'MZ', type: 'political', severity: 'orange', title: 'Groupes armés actifs dans la province de Cabo Delgado' },
+  { iso: 'TD', type: 'political', severity: 'orange', title: 'Contexte politique instable' },
+  { iso: 'CF', type: 'war', severity: 'red', title: 'Conflit armé — présence de groupes armés' },
+  { iso: 'MM', type: 'war', severity: 'red', title: 'Conflit armé en cours' },
+  { iso: 'PK', type: 'political', severity: 'orange', title: 'Situation sécuritaire instable dans certaines régions' },
 ];
 
 const clamp = (n: number) => Math.max(0, Math.min(100, n));
@@ -259,7 +267,10 @@ function geopoliticalAlerts(): WorldAlert[] {
       countryName: c?.name ?? g.iso,
       lat: c?.lat ?? null,
       lon: c?.lon ?? null,
-      source: g.type === 'war' ? 'Conseils aux voyageurs (zone rouge)' : 'Conseils aux voyageurs',
+      // « zone rouge » est le jargon des ministères, pas le nôtre : affiché
+      // seul dans une puce de source, il alarme sans informer. La source
+      // reste la même, nommée simplement.
+      source: 'Conseils aux voyageurs',
       date: new Date().toISOString(),
     };
   });

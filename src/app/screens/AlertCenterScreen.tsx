@@ -1,11 +1,12 @@
 import {
-  AlertTriangle,
   Bell,
   CheckCircle2,
   Cloud,
   Filter,
+  Info,
   Flame,
   Flag,
+  Globe,
   Heart,
   MapPin,
   RefreshCw,
@@ -23,31 +24,38 @@ import { WorldAlertsMap } from "../components/WorldAlertsMap";
 type AlertType = "all" | "weather" | "security" | "transport" | "health" | "political" | "disaster";
 type AlertLevel = "all" | "info" | "vigilance" | "urgent";
 
+// Aucune pastille de catégorie n'est rouge : « Sécurité » et « Catastrophe »
+// l'étaient. Elles servent à filtrer, pas à alarmer.
 const alertTypeConfig = {
   weather: { icon: Cloud, label: "Météo", color: "#06B6D4" },
-  security: { icon: Shield, label: "Sécurité", color: "#EF4444" },
-  disaster: { icon: Flame, label: "Catastrophe", color: "#DC2626" },
+  security: { icon: Shield, label: "Sécurité", color: "#c2410c" },
+  disaster: { icon: Flame, label: "Nature", color: "#b45309" },
   transport: { icon: Train, label: "Transport", color: "#8B5CF6" },
   health: { icon: Heart, label: "Santé", color: "#EC4899" },
   political: { icon: Flag, label: "Politique", color: "#F59E0B" },
-  all: { icon: AlertTriangle, label: "Toutes", color: "#0F4C81" },
+  all: { icon: Sparkles, label: "Toutes", color: "#0F4C81" },
 };
 
+// Ces trois libellés disaient « Urgent », « Vigilance », « Info », le premier
+// en rouge. Ils décrivent maintenant l'actualité de l'information plutôt que
+// son degré d'alarme : ce qui se passe en ce moment, ce qui mérite un œil,
+// ce qui est là pour information. Le rouge est réservé aux interdictions, et
+// une alerte n'en est pas une.
 const alertLevelConfig = {
   urgent: {
-    label: "Urgent",
-    bg: "rgba(239, 68, 68, 0.1)",
-    color: "#EF4444",
-    borderColor: "rgba(239, 68, 68, 0.24)",
+    label: "En cours",
+    bg: "rgba(194, 65, 12, 0.10)",
+    color: "#c2410c",
+    borderColor: "rgba(194, 65, 12, 0.24)",
   },
   vigilance: {
-    label: "Vigilance",
+    label: "À surveiller",
     bg: "rgba(245, 158, 11, 0.1)",
     color: "#F59E0B",
     borderColor: "rgba(245, 158, 11, 0.24)",
   },
   info: {
-    label: "Info",
+    label: "Pour information",
     bg: "rgba(6, 182, 212, 0.1)",
     color: "#06B6D4",
     borderColor: "rgba(6, 182, 212, 0.24)",
@@ -318,9 +326,9 @@ export function AlertCenterScreen() {
             {!loading && (
               <div className="mt-4 grid grid-cols-3 gap-3">
                 {[
-                  { label: "Urgent", count: urgentCount, Icon: AlertTriangle, bg: "rgba(239,68,68,0.16)" },
-                  { label: "Vigilance", count: vigilanceCount, Icon: Bell, bg: "rgba(245,158,11,0.16)" },
-                  { label: "Info", count: infoCount, Icon: Sparkles, bg: "rgba(6,182,212,0.16)" },
+                  { label: "En cours", count: urgentCount, Icon: Bell, bg: "rgba(194,65,12,0.14)" },
+                  { label: "À surveiller", count: vigilanceCount, Icon: Sparkles, bg: "rgba(245,158,11,0.16)" },
+                  { label: "Pour information", count: infoCount, Icon: Info, bg: "rgba(6,182,212,0.16)" },
                 ].map((stat) => {
                   const Icon = stat.Icon;
                   return (
@@ -345,11 +353,11 @@ export function AlertCenterScreen() {
       {/* ───────── ALERTES MONDIALES TEMPS RÉEL (GDACS + USGS + OMS) ───────── */}
       <section className="mx-5 mt-6 lg:mx-auto lg:max-w-7xl lg:px-0">
         <div className="mb-3 flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'rgba(239, 68, 68, 0.12)' }}>
-            <AlertTriangle className="h-4 w-4" style={{ color: '#dc2626' }} />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'rgba(15, 76, 129, 0.10)' }}>
+            <Globe className="h-4 w-4" style={{ color: 'var(--lokadia-primary)' }} />
           </div>
           <h2 className="text-lg font-bold tracking-tight" style={{ color: 'var(--lokadia-gray-900)' }}>
-            Alertes mondiales temps réel
+            Ce qui se passe dans le monde
           </h2>
           <span className="ml-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'rgba(34, 197, 94, 0.12)', color: 'var(--lokadia-success)' }}>
             <span className="relative flex h-1.5 w-1.5">

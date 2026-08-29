@@ -127,7 +127,7 @@ export function WorldAlertsMap() {
                 center={[a.lat!, a.lon!]}
                 radius={radius}
                 pathOptions={{
-                  color: isRed ? '#dc2626' : meta.color,
+                  color: isRed ? '#334155' : meta.color,
                   fillColor: meta.color,
                   fillOpacity: 0.7,
                   weight: isRed ? 2.5 : 1.5,
@@ -173,8 +173,13 @@ export function WorldAlertsMap() {
         <div className="absolute top-3 right-3 z-[400] rounded-xl bg-white p-2.5 shadow-md" style={{ border: '1px solid var(--lokadia-gray-100)' }}>
           <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--lokadia-gray-600)' }}>En direct</p>
           <p className="text-xl font-bold tabular-nums leading-none mt-0.5" style={{ color: 'var(--lokadia-gray-900)' }}>{located.length}</p>
+          {/* Le décompte des alertes les plus sévères s'affichait en rouge
+              avec la mention « critiques ». Il indique maintenant, en gris,
+              combien sont à suivre de près — l'information reste, le signal
+              d'alarme part. */}
           <p className="text-[10px] font-bold" style={{ color: 'var(--lokadia-gray-500)' }}>
-            alertes {redCount > 0 && <span style={{ color: '#dc2626' }}>· {redCount} critique{redCount > 1 ? 's' : ''}</span>}
+            événement{located.length > 1 ? 's' : ''}
+            {redCount > 0 && ` · ${redCount} à suivre`}
           </p>
         </div>
 

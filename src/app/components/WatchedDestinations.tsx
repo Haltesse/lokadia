@@ -23,7 +23,7 @@ import {
  */
 
 const SEVERITY_STYLE = {
-  urgent: { bg: 'var(--lokadia-danger-bg)', color: 'var(--lokadia-danger)', label: 'Urgent' },
+  urgent: { bg: 'rgba(194, 65, 12, 0.10)', color: '#c2410c', label: 'En cours' },
   vigilance: { bg: 'var(--lokadia-warning-bg)', color: 'var(--lokadia-warning)', label: 'Vigilance' },
   info: { bg: 'var(--lokadia-info-bg)', color: 'var(--lokadia-primary)', label: 'Info' },
 } as const;
@@ -126,7 +126,7 @@ export function WatchedDestinations() {
           {unread.length > 0 && (
             <span
               className="rounded-full px-2 py-0.5 text-xs font-bold text-white"
-              style={{ background: 'var(--lokadia-danger)' }}
+              style={{ background: 'var(--lokadia-primary)' }}
             >
               {unread.length}
             </span>
