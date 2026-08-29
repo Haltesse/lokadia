@@ -1389,6 +1389,9 @@ export default function TripMapPlannerScreen() {
             <p className="text-[11px] text-center text-gray-500 flex items-center justify-center gap-1">
               <Info size={11} />
               Modes affichés : uniquement ceux faisables pour la distance du trajet.
+              Durées et prix par tronçon sont des <strong>estimations</strong> calculées à
+              partir de la distance à vol d'oiseau et d'une vitesse moyenne par mode — ce ne
+              sont pas des horaires ni des tarifs relevés chez un transporteur.
             </p>
         </div>
       </motion.div>

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
+import { useSearchParams } from "react-router-dom";
 import { 
   ArrowLeft, 
   Heart, 
@@ -45,7 +46,11 @@ import { CurrencySelector } from "../components/CurrencySelector";
 import { CurrencyExchangeRate } from "../components/CurrencyExchangeRate";
 import { PriceDisplay } from "../components/PriceDisplay";
 
-type Tab = "overview" | "weather" | "alerts" | "safety" | "health" | "entry" | "scams" | "emergency" | "culture";
+const TABS = [
+  "overview", "weather", "alerts", "safety",
+  "health", "entry", "scams", "emergency", "culture",
+] as const;
+type Tab = (typeof TABS)[number];
 
 export function DestinationScreen() {
   const navigate = useNavigate();
@@ -113,7 +118,15 @@ function DestinationSeo({ destination }: { destination: DestinationDetails }) {
 function DestinationScreenContent({ destination }: { destination: DestinationDetails }) {
   const navigate = useNavigate();
   const { t } = useLanguageSafe();
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+
+  // L'onglet peut être imposé par l'URL (?tab=entry). Le brief de voyage y
+  // renvoie depuis ses boutons « Voir détails » : sans ça, ils arrivaient
+  // systématiquement sur l'aperçu, quel que soit le sujet demandé.
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<Tab>(
+    TABS.includes(requestedTab as Tab) ? (requestedTab as Tab) : "overview"
+  );
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSourcesModal, setShowSourcesModal] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -625,7 +638,7 @@ function WeatherTab({ destination }: { destination: DestinationDetails }) {
  * Alertes en cours pour la destination.
  *
  * Uniquement des alertes réelles : celles remontées par la fonction
- * `world-alerts` depuis GDACS, l'OMS, ReliefWeb et l'USGS, chacune avec sa
+ * `world-alerts` depuis GDACS, l'OMS et l'USGS, chacune avec sa
  * source et sa date de détection. Les fiches portaient auparavant des alertes
  * écrites en dur (« Grève des transports — Aujourd'hui, 14:30 ») qui ne
  * bougeaient jamais : un horodatage perpétuellement frais sur un évènement
@@ -652,7 +665,7 @@ function AlertsTab({ destination }: { destination: DestinationDetails }) {
           Aucune alerte en cours pour cette destination
         </p>
         <p className="mt-2 text-xs" style={{ color: "var(--lokadia-text-light)" }}>
-          Sources consultées : GDACS, OMS, ReliefWeb, USGS. Cette absence
+          Sources consultées : GDACS, OMS, USGS. Cette absence
           d'alerte ne remplace pas les conseils aux voyageurs de votre ministère
           des Affaires étrangères.
         </p>

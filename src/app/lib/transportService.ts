@@ -1,4 +1,13 @@
-// Service de calcul de transport entre destinations
+/**
+ * Estimation des trajets entre deux étapes.
+ *
+ * Rien ici n'est relevé chez un transporteur : les durées sortent de la
+ * distance orthodromique divisée par une vitesse moyenne par mode, plus une
+ * pénalité forfaitaire (accès aux gares, temps d'aéroport) ; les coûts sont
+ * des fourchettes par tranche de distance. C'est une estimation avec sa
+ * méthode, pas un horaire ni un tarif — et l'interface doit le dire là où
+ * ces valeurs s'affichent.
+ */
 import type { TripStop, TripSegment } from './tripStopService';
 
 export interface TransportOption {

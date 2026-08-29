@@ -76,41 +76,53 @@ async function fetchWikipediaThumb(
   const existing = wikiInflight.get(key);
   if (existing) return existing;
 
-  // On tente plusieurs requêtes pour maximiser la chance d'avoir
-  // une vraie photo et pas un emblème :
-  //   1. "Ville, Pays" en FR (souvent désambiguïse vers la fiche ville)
-  //   2. "Ville" en FR
-  //   3. "Ville, Pays" en EN
-  //   4. "Ville" en EN
-  const queries: Array<{ lang: 'fr' | 'en'; title: string }> = [];
-  if (countryName) {
-    queries.push({ lang: 'fr', title: `${cityName}, ${countryName}` });
-  }
-  queries.push({ lang: 'fr', title: cityName });
-  if (countryName) {
-    queries.push({ lang: 'en', title: `${cityName}, ${countryName}` });
-  }
-  queries.push({ lang: 'en', title: cityName });
-
+  // La version précédente demandait « Ville, Pays ». Cette forme n'existe pas
+  // comme titre d'article Wikipédia : elle renvoyait 404 à tous les coups.
+  // Elle passait en plus le nom français au Wikipédia anglophone (« Dubaï »
+  // au lieu de « Dubai »), 404 lui aussi. Sur /all-destinations, 76 des 166
+  // requêtes externes échouaient — près de la moitié, perdues d'avance.
+  //
+  // On essaie maintenant, dans l'ordre :
+  //   1. "Ville" en FR — suffit pour la grande majorité des destinations
+  //   2. "Ville" en EN — le nom coïncide souvent, et l'article anglais a
+  //      généralement une photo là où l'article français ouvre sur un blason
+  //   3. "Ville (Pays)" en FR — la convention de homonymie de Wikipédia,
+  //      tentée UNIQUEMENT si l'étape 1 est tombée sur une page d'homonymie
+  //      ("Vienne"). L'essayer systématiquement ne faisait qu'ajouter des 404,
+  //      puisque l'article parenthésé n'existe que pour les noms ambigus.
   const promise = (async (): Promise<string | null> => {
-    for (const q of queries) {
+    const tryTitle = async (
+      lang: 'fr' | 'en',
+      title: string,
+    ): Promise<{ thumb: string | null; disambiguation: boolean }> => {
       try {
-        const title = encodeURIComponent(q.title.replace(/\s+/g, '_'));
-        const url = `https://${q.lang}.wikipedia.org/api/rest_v1/page/summary/${title}?redirect=true`;
+        const encoded = encodeURIComponent(title.replace(/\s+/g, '_'));
+        const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encoded}?redirect=true`;
         const res = await fetch(url);
-        if (!res.ok) continue;
+        if (!res.ok) return { thumb: null, disambiguation: false };
         const data = await res.json();
+        if (data?.type === 'disambiguation') return { thumb: null, disambiguation: true };
         const thumb = data?.thumbnail?.source || data?.originalimage?.source;
         if (thumb && typeof thumb === 'string' && isAcceptableImage(thumb)) {
-          // Upgrade le thumb à une résolution lisible (Wikipedia sert 320px par défaut)
-          const upgraded = thumb.replace(/\/\d+px-/, '/800px-');
-          return upgraded;
+          // Monter la vignette à une résolution lisible (Wikipédia sert 320px)
+          return { thumb: thumb.replace(/\/\d+px-/, '/800px-'), disambiguation: false };
         }
+        return { thumb: null, disambiguation: false };
       } catch {
-        // ignore et passe à la requête suivante
+        return { thumb: null, disambiguation: false };
       }
+    };
+
+    const fr = await tryTitle('fr', cityName);
+    if (fr.thumb) return fr.thumb;
+
+    if (fr.disambiguation && countryName) {
+      const disambiguated = await tryTitle('fr', `${cityName} (${countryName})`);
+      if (disambiguated.thumb) return disambiguated.thumb;
     }
-    return null;
+
+    const en = await tryTitle('en', cityName);
+    return en.thumb;
   })();
 
   wikiInflight.set(key, promise);
