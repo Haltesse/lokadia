@@ -7,7 +7,7 @@
  * ⚠️ Les pondérations et la formule ne sont jamais affichées (secret de
  * fabrique). Seuls les résultats et les noms de sources sont montrés.
  */
-import { Info, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Info, CheckCircle2 } from 'lucide-react';
 import {
   DIMENSION_META,
   PROFILE_META,
@@ -93,20 +93,20 @@ export function LokascoreBreakdown({
         )}
       </div>
 
-      {/* ⚠️ Alertes live actives */}
+      {/* Événements en cours sur la destination */}
       {liveAlerts && liveAlerts.length > 0 && (
         <div
           className="mb-3 p-3 rounded-xl flex items-start gap-2.5"
-          style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.25)' }}
+          style={{ background: 'rgba(15, 76, 129, 0.06)', border: '1px solid var(--lokadia-gray-100)' }}
         >
-          <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: '#dc2626' }} />
+          <Info className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--lokadia-primary)' }} />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold" style={{ color: 'var(--lokadia-danger)' }}>
-              {liveAlerts.length} alerte{liveAlerts.length > 1 ? 's' : ''} active{liveAlerts.length > 1 ? 's' : ''}
+            <p className="text-xs font-bold" style={{ color: 'var(--lokadia-primary)' }}>
+              {liveAlerts.length} événement{liveAlerts.length > 1 ? 's' : ''} suivi{liveAlerts.length > 1 ? 's' : ''} en ce moment
             </p>
             <ul className="mt-1 space-y-0.5">
               {liveAlerts.slice(0, 3).map((alert, i) => (
-                <li key={i} className="text-[10px] leading-snug" style={{ color: 'var(--lokadia-danger)' }}>
+                <li key={i} className="text-[10px] leading-snug" style={{ color: 'var(--lokadia-gray-700)' }}>
                   <span className="font-bold">[{alert.source}]</span> {alert.description}
                 </li>
               ))}

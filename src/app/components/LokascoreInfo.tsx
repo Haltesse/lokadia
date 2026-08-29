@@ -18,7 +18,7 @@ import {
   Database,
   Shield,
   Heart,
-  AlertTriangle,
+  Tornado,
 } from 'lucide-react';
 import {
   getOfficialSources,
@@ -46,10 +46,10 @@ const CATEGORY_META: Record<
   },
   health: { label: 'Santé', color: 'var(--lokadia-category-transport)', bg: 'var(--lokadia-category-transport-bg)', Icon: Heart },
   disaster: {
-    label: 'Catastrophes',
-    color: 'var(--lokadia-danger)',
-    bg: 'var(--lokadia-danger-bg)',
-    Icon: AlertTriangle,
+    label: 'Nature',
+    color: 'var(--lokadia-category-culture)',
+    bg: 'var(--lokadia-category-culture-bg)',
+    Icon: Tornado,
   },
 };
 

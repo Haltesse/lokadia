@@ -15,7 +15,7 @@
 import {
   Globe, GraduationCap, Laptop, Backpack, Users, HeartPulse, Briefcase, HeartHandshake, Palmtree,
   Shield, Stethoscope, Tornado, Building2,
-  ShieldCheck, Eye, AlertTriangle, AlertOctagon, Ban, Clock,
+  ShieldCheck, Lightbulb, ClipboardList, Compass, Landmark, Clock,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -203,64 +203,84 @@ export interface LokascoreLevelConfig {
   max: number;
 }
 
+/**
+ * Les cinq bandes du Lokascore.
+ *
+ * Elles disaient auparavant à quel point une destination était dangereuse :
+ * « Risque élevé », « Très risqué », « Interdit », et pour la dernière
+ * « Pays en guerre ou crise extrême. Toute présence est dangereuse. » Un
+ * voyageur qui ouvre Lokadia pour préparer un départ n'a pas besoin d'un
+ * verdict qui lui coupe l'envie ; il a besoin de savoir ce qu'il y a à
+ * préparer.
+ *
+ * L'échelle mesure donc désormais l'effort de préparation, pas le danger.
+ * Le fait ne bouge pas — c'est le même score, calculé sur les mêmes sources
+ * officielles — mais Lokadia ne prononce plus l'interdiction : quand les
+ * autorités déconseillent un voyage, on le dit comme ce que c'est, l'avis
+ * d'un ministère, attribué et daté, et on renvoie à la source.
+ *
+ * Aucune bande n'est rouge. Le rouge est réservé aux interdictions, et
+ * Lokadia n'en prononce pas. La gravité de la dernière bande passe par un
+ * graphite sombre : elle se distingue sans alarmer.
+ */
 export const LOKASCORE_LEVELS: Record<Exclude<LokascoreLevel, 'unknown'>, LokascoreLevelConfig> = {
   safe: {
     level: 'safe',
-    label: 'Sécurisée',
-    short: 'Vert',
+    label: 'Sereine',
+    short: 'Sereine',
     color: '#15803d',
     bgColor: 'rgba(34, 197, 94, 0.12)',
     fillColor: '#22c55e',
     Icon: ShieldCheck,
-    description: 'Voyage standard, précautions habituelles. Pas d\'alerte spécifique.',
+    description: 'Les précautions d\'un départ ordinaire, rien de plus.',
     min: 80,
     max: 100,
   },
   vigilance: {
     level: 'vigilance',
-    label: 'Vigilance',
-    short: 'Jaune',
+    label: 'Quelques réflexes',
+    short: 'Réflexes',
     color: '#a16207',
     bgColor: 'rgba(234, 179, 8, 0.14)',
     fillColor: '#eab308',
-    Icon: Eye,
-    description: 'Quelques précautions ciblées (quartiers, transports, horaires).',
+    Icon: Lightbulb,
+    description: 'Deux ou trois habitudes à prendre sur place : quartiers, transports, horaires.',
     min: 60,
     max: 79,
   },
   risk: {
     level: 'risk',
-    label: 'Risque élevé',
-    short: 'Orange',
+    label: 'À préparer',
+    short: 'À préparer',
     color: '#c2410c',
     bgColor: 'rgba(249, 115, 22, 0.14)',
     fillColor: '#f97316',
-    Icon: AlertTriangle,
-    description: 'Vigilance renforcée, certains déplacements déconseillés.',
+    Icon: ClipboardList,
+    description: 'Ça se prépare : lisez les formalités et les conseils avant de réserver.',
     min: 40,
     max: 59,
   },
   'high-risk': {
     level: 'high-risk',
-    label: 'Très risqué',
-    short: 'Rouge',
-    color: '#b91c1c',
-    bgColor: 'rgba(239, 68, 68, 0.14)',
-    fillColor: '#ef4444',
-    Icon: AlertOctagon,
-    description: 'Voyage formellement déconseillé sauf raison impérative.',
+    label: 'Voyageur averti',
+    short: 'Averti',
+    color: '#9a3412',
+    bgColor: 'rgba(154, 52, 18, 0.12)',
+    fillColor: '#c2410c',
+    Icon: Compass,
+    description: 'Destination exigeante. Les autorités émettent des recommandations fortes : à lire avant de décider.',
     min: 20,
     max: 39,
   },
   forbidden: {
     level: 'forbidden',
-    label: 'Interdit',
-    short: 'Noir',
-    color: '#111827',
-    bgColor: 'rgba(17, 24, 39, 0.16)',
-    fillColor: '#1f2937',
-    Icon: Ban,
-    description: 'Pays en guerre ou crise extrême. Toute présence est dangereuse.',
+    label: 'Avis officiel à consulter',
+    short: 'Avis officiel',
+    color: '#334155',
+    bgColor: 'rgba(51, 65, 85, 0.12)',
+    fillColor: '#475569',
+    Icon: Landmark,
+    description: 'Les autorités déconseillent le voyage. Lokadia ne prépare pas de séjour ici — consultez leur avis à jour.',
     min: 0,
     max: 19,
   },
