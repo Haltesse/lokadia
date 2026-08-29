@@ -42,7 +42,7 @@ const ICON_BY_NAME: Record<string, LucideIcon> = {
 
 function ContactIcon({ icon }: { icon: string }) {
   const Known = ICON_BY_NAME[icon];
-  if (Known) return <Known className="h-5 w-5" style={{ color: '#DC2626' }} aria-hidden="true" />;
+  if (Known) return <Known className="h-5 w-5" style={{ color: 'var(--lokadia-primary)' }} aria-hidden="true" />;
   return (
     <span className="text-2xl" aria-hidden="true">
       {icon}
@@ -106,7 +106,7 @@ export function EmergencyContacts({
           {localNumbers.map((emergency, index) => (
             <div
               key={`${emergency.name}-${index}`}
-              className="flex items-center justify-between gap-3 rounded-xl border-2 border-red-100 bg-red-50 p-4"
+              className="flex items-center justify-between gap-3 rounded-xl border-2 border-slate-200 bg-slate-50 p-4"
             >
               <div className="flex items-center gap-3">
                 <ContactIcon icon={emergency.icon} />
@@ -117,7 +117,7 @@ export function EmergencyContacts({
               <a
                 href={`tel:${emergency.number}`}
                 className="flex-shrink-0 rounded-xl px-5 py-2.5 font-bold text-white shadow-sm"
-                style={{ backgroundColor: '#DC2626' }}
+                style={{ backgroundColor: 'var(--lokadia-primary)' }}
                 aria-label={`Appeler ${emergency.name} au ${emergency.number}`}
               >
                 {emergency.number}

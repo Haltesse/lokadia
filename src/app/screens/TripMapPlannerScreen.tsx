@@ -45,7 +45,7 @@ const MODE_META = {
   flight: { label: 'Avion',   color: '#6366F1', bg: '#EEF2FF', Icon: Plane, dashed: true  },
   train:  { label: 'Train',   color: '#10B981', bg: '#ECFDF5', Icon: Train, dashed: false },
   bus:    { label: 'Bus',     color: '#F59E0B', bg: '#FFFBEB', Icon: Bus,   dashed: false },
-  car:    { label: 'Voiture', color: '#EF4444', bg: '#FEF2F2', Icon: Car,   dashed: false },
+  car:    { label: 'Voiture', color: '#0284c7', bg: '#F0F9FF', Icon: Car,   dashed: false },
   ferry:  { label: 'Ferry',   color: '#0EA5E9', bg: '#F0F9FF', Icon: Ship,  dashed: true  },
 } as const;
 type ModeKey = keyof typeof MODE_META;
@@ -68,7 +68,7 @@ function formatDuration(minutes: number): string {
 }
 
 // Palette de couleurs par jour d'itinéraire (le départ reste vert)
-const DAY_COLORS = ['#6366F1', '#F59E0B', '#EC4899', '#06B6D4', '#8B5CF6', '#EF4444', '#14B8A6', '#F97316'];
+const DAY_COLORS = ['#6366F1', '#F59E0B', '#EC4899', '#06B6D4', '#8B5CF6', '#0284c7', '#14B8A6', '#F97316'];
 const dayColor = (day: number) => DAY_COLORS[(Math.max(1, day) - 1) % DAY_COLORS.length];
 
 // Marqueur numéroté (étape sélectionnée), coloré par jour

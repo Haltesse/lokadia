@@ -67,8 +67,8 @@ export const BOOKING_PARTNERS: BookingPartner[] = [
     description: 'Comparateur multi-compagnies avec alertes prix.',
     provider: 'Kiwi · Skyscanner',
     icon: Plane,
-    color: '#EF4444',
-    bg: 'rgba(239, 68, 68, 0.08)',
+    color: '#0284c7',
+    bg: 'rgba(2, 132, 199, 0.08)',
     href: 'https://www.kiwi.com/',
   },
 ];

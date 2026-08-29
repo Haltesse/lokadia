@@ -131,8 +131,8 @@ export default function TripOnLocationTab({ dashboard, trip }: Props) {
       <LocalActivitiesSection cityName={locationInfo.cityName} />
 
       {/* Urgences */}
-      <section className="bg-red-50 border-2 border-red-300 rounded-xl overflow-hidden">
-        <div className="bg-red-600 text-white px-5 py-3">
+      <section className="rounded-xl overflow-hidden border-2" style={{ borderColor: "var(--lokadia-primary-light, #1E6BA8)", background: "rgba(15, 76, 129, 0.05)" }}>
+        <div className="px-5 py-3 text-white" style={{ background: "var(--lokadia-primary)" }}>
           <h2 className="text-lg font-bold flex items-center gap-2">
             <Phone size={22} />
             Urgences - {locationInfo.cityName}
@@ -145,12 +145,12 @@ export default function TripOnLocationTab({ dashboard, trip }: Props) {
               <a
                 key={index}
                 href={`tel:${contact.number}`}
-                className="flex items-center gap-3 p-3 bg-white rounded-lg border border-red-200 hover:bg-red-50 transition-colors"
+                className="flex items-center gap-3 p-3 bg-white rounded-lg border transition-colors" style={{ borderColor: "var(--lokadia-gray-100)" }}
               >
-                <EmergencyIcon className="text-red-600 flex-shrink-0" size={28} />
+                <EmergencyIcon className="flex-shrink-0" style={{ color: "var(--lokadia-primary)" }} size={28} />
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">{contact.name}</p>
-                  <p className="text-red-700 font-bold">{contact.number}</p>
+                  <p className="font-bold" style={{ color: "var(--lokadia-primary)" }}>{contact.number}</p>
                 </div>
               </a>
             );
@@ -180,17 +180,17 @@ export default function TripOnLocationTab({ dashboard, trip }: Props) {
       {locationInfo.commonScams.length > 0 && (
         <section className="bg-white border border-gray-200 rounded-xl p-5">
           <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <ShieldAlert className="text-red-600" size={22} />
+            <ShieldAlert className="text-amber-600" size={22} />
             Arnaques fréquentes
           </h2>
           <div className="space-y-3">
             {locationInfo.commonScams.map((scam, index) => (
-              <div key={index} className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h3 className="font-semibold text-red-900 mb-2 flex items-center gap-2">
+              <div key={index} className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <h3 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
                   <Ban className="flex-shrink-0" size={20} />
                   {scam.title}
                 </h3>
-                <p className="text-sm text-red-800">{scam.desc}</p>
+                <p className="text-sm text-amber-900">{scam.desc}</p>
               </div>
             ))}
           </div>

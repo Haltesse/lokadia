@@ -161,7 +161,7 @@ export function ChecklistScreen() {
     { name: "Argent", icon: CreditCard, color: "#F59E0B" },
     { name: "Tech", icon: Smartphone, color: "#3B82F6" },
     { name: "Bagages", icon: ShoppingBag, color: "#8B5CF6" },
-    { name: "Sécurité", icon: Shield, color: "#EF4444" },
+    { name: "Sécurité", icon: Shield, color: "#c2410c" },
   ];
 
   const toggleItem = (id: number) => {

@@ -58,7 +58,7 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
   } = useLokascore(trip.destinationId, { live: true });
 
   const getPriorityColor = (priority: string) => {
-    if (priority === 'high') return 'border-l-red-500 bg-red-50';
+    if (priority === 'high') return 'border-l-amber-500 bg-amber-50';
     if (priority === 'medium') return 'border-l-orange-500 bg-orange-50';
     return 'border-l-blue-500 bg-blue-50';
   };
@@ -112,7 +112,7 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
                   key={`${alert.source}-${index}`}
                   className={`border rounded-xl p-4 ${
                     alert.severity === 'red'
-                      ? 'border-l-4 border-l-red-500 bg-red-50'
+                      ? 'border-l-4 border-l-amber-500 bg-amber-50'
                       : 'border-l-4 border-l-orange-500 bg-orange-50'
                   }`}
                 >
@@ -194,7 +194,7 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
       {destination?.emergencyNumbers && destination.emergencyNumbers.length > 0 && (
         <section className="bg-white border border-gray-200 rounded-xl p-5">
           <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Phone className="text-red-600" size={22} />
+            <Phone style={{ color: "var(--lokadia-primary)" }} size={22} />
             Contacts d'urgence
           </h2>
           <div className="space-y-2">
@@ -202,7 +202,7 @@ export default function TripOverviewTab({ dashboard, trip }: Props) {
               const EmergencyIcon = getEmergencyIcon(contact.icon);
               return (
                 <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <EmergencyIcon className="text-red-600 flex-shrink-0" size={28} />
+                  <EmergencyIcon className="flex-shrink-0" style={{ color: "var(--lokadia-primary)" }} size={28} />
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">{contact.name}</p>
                     <a

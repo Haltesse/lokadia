@@ -11,7 +11,7 @@ export function Badge({ children, variant = "neutral", size = "md", className = 
   const variantStyles = {
     info: "bg-blue-100 text-blue-800",
     vigilance: "bg-orange-100 text-orange-800",
-    urgent: "bg-red-100 text-red-800",
+    urgent: "bg-orange-200 text-orange-900",
     safe: "bg-green-100 text-green-800",
     neutral: "bg-gray-100 text-gray-800",
   };
